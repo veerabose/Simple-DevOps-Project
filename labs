@@ -2942,5 +2942,14 @@ Completing the Guided Exercise: Creating an Application with a Template
  · Removing registry.access.redhat.com/ubi7/ubi:7.7 image......  SUCCESS
 [student@workstation nodejs]$ 
 
+Summary
+In this chapter, you learned:
+• Kubernetes and OpenShift create a software-defined network between all containers in a pod.
+• Within the same project, Kubernetes injects a set of variables for each service into all pods.
+• Kubernetes templates automate creating applications consisting of multiple resources.
+Template parameters allow using the same values when creating multiple resources.
+
+
+----------------------------------------------------------------DAY 4 ----------------------------------------------
 
 
