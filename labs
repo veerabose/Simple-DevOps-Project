@@ -1,0 +1,2946 @@
+-------------------------------------------------------------------
+Day 1 : 
+---------------------------------------------------------------------
+
+Containers, Kubernetes, and Red Hat OpenShift Administration II
+
+Command
+------------
+podman inspect -l -f "{{.NetworkSettings.IPAddress}}"
+sudo podman run -e GREET=Hello -e NAME=RedHat rhel7:7.5 printenv GREET NAME
+sudo podman run --name mysql-basic -e MYSQL_USER=user1 -e MYSQL_PASSWORD=mypa55 -e MYSQL_DATABASE=items -e MYSQL_ROOT_PASSWORD=r00tpa55  -d rhscl/mysql-57-rhel7:5.7-3.14
+podman run --name mysql -d -e MYSQL_USER=user1 -e MYSQL_PASSWORD=mypa55 -e MYSQL_DATABASE=items -e MYSQL_ROOT_PASSWORD=r00tpa55 rhscl/mysql-57-rhel7
+podman inspect -l -f "{{.NetworkSettings.IPAddress}}" mysql
+podman inspect  -f '{{ .NetworkSettings.IPAddress }}' mysql
+mysql -uuser1 -h 10.88.0.9 -pmypa55 items < /home/student/DO180/labs/manage-lifecycle/db.sql
+podman run --name mysql-2 -it rhscl/mysql-57-rhel7 /bin/bash
+podman exec mysql /bin/bash -c 'mysql -uuser1 -pmypa55 -e "select * from items.Projects;"'
+sudo semanage fcontext -a -t container_file_t '/var/local/mysql(/.*)?'
+podman run --name persist-db -d -v /var/local/mysql:/var/lib/mysql/data -e MYSQL_USER=user1 -e MYSQL_PASSWORD=mypa55 -e MYSQL_DATABASE=items -e MYSQL_ROOT_PASSWORD=r00tpa55 rhscl/mysql-57-rhel7
+----------------------------------------------------------------------------------------------------------------------
+                                                              Day1
+--------------------------------------------------------------------------------------------------------------------
+[root@workstation ~]# podman images
+REPOSITORY   TAG   IMAGE ID   CREATED   SIZE
+[root@workstation ~]# podman search rhel |wc -l
+51
+[root@workstation ~]# podman pull rhel
+Trying to pull registry.access.redhat.com/rhel...
+Getting image source signatures
+Copying blob 91592046c71b done
+Copying blob b77bb434db5a done
+Copying config c61e4f9e8a done
+Writing manifest to image destination
+Storing signatures
+c61e4f9e8adadac1824f46868b670f06f4a4c66f7043eaf4a68194af4d9097bc
+[root@workstation ~]# podman images
+REPOSITORY                        TAG      IMAGE ID       CREATED       SIZE
+registry.access.redhat.com/rhel   latest   c61e4f9e8ada   6 weeks ago   216 MB
+[root@workstation ~]# podman run ubi7/ubi:7.7 echo 'Hello!'
+Trying to pull registry.access.redhat.com/ubi7/ubi:7.7...
+Getting image source signatures
+Copying blob 09dbbf8834d2 done
+Copying blob fcd63ccfdd0c done
+Copying config 0355cd652b done
+Writing manifest to image destination
+Storing signatures
+Hello!
+[root@workstation ~]# podman run -d rhscl/httpd-24-rhel7:2.4-36.8
+Trying to pull registry.access.redhat.com/rhscl/httpd-24-rhel7:2.4-36.8...
+Getting image source signatures
+Copying blob 258c04e7cfdc done
+Copying blob 202f3871a68d done
+Copying blob e373541ccf6a done
+Copying blob c5d2e9481169 done
+Writing manifest to image destination
+Storing signatures
+e616daba9b177a4848664342826bbe366a2ae224de0f816ebba386b9e548e530
+[root@workstation ~]# podman inspect -l -f "{{.NetworkSettings.IPAddress}}"
+10.88.0.3
+[root@workstation ~]# ^C
+[root@workstation ~]# curl http://10.88.0.68:8080
+curl: (7) Failed to connect to 10.88.0.68 port 8080: No route to host
+[root@workstation ~]# podman run -it ubi7/ubi:7.7 /bin/bash
+[root@de89ca6ca57e /]# ls
+bin  boot  dev  etc  home  lib  lib64  media  mnt  opt  proc  root  run  sbin  srv  sys  tmp  usr  var
+[root@de89ca6ca57e /]# who am i
+[root@de89ca6ca57e /]# whoami
+root
+[root@de89ca6ca57e /]# exit
+exit
+[root@workstation ~]# podman ps 
+CONTAINER ID  IMAGE                                                     COMMAND               CREATED        STATUS            PORTS  NAMES
+e616daba9b17  registry.access.redhat.com/rhscl/httpd-24-rhel7:2.4-36.8  /usr/bin/run-http...  5 minutes ago  Up 5 minutes ago         admiring_yalow
+[root@workstation ~]# 
+[root@workstation ~]# podman run -it ubi7/ubi:7.7 /bin/bash
+[root@6ea278959c61 /]# ls
+bin  boot  dev  etc  home  lib  lib64  media  mnt  opt  proc  root  run  sbin  srv  sys  tmp  usr  var
+[root@6ea278959c61 /]# whoami
+root
+[root@6ea278959c61 /]# uname -r
+4.18.0-193.el8.x86_64
+[root@6ea278959c61 /]# exit
+exit
+[root@workstation ~]# podman ps
+CONTAINER ID  IMAGE                                                     COMMAND               CREATED         STATUS             PORTS  NAMES
+e616daba9b17  registry.access.redhat.com/rhscl/httpd-24-rhel7:2.4-36.8  /usr/bin/run-http...  10 minutes ago  Up 10 minutes ago         admiring_yalow
+[root@workstation ~]# podman ps -a
+CONTAINER ID  IMAGE                                                     COMMAND               CREATED         STATUS                     PORTS  NAMES
+6ea278959c61  registry.access.redhat.com/ubi7/ubi:7.7                   /bin/bash             23 seconds ago  Exited (0) 10 seconds ago         dreamy_brattain
+de89ca6ca57e  registry.access.redhat.com/ubi7/ubi:7.7                   /bin/bash             6 minutes ago   Exited (0) 5 minutes ago          sad_yalow
+e616daba9b17  registry.access.redhat.com/rhscl/httpd-24-rhel7:2.4-36.8  /usr/bin/run-http...  11 minutes ago  Up 11 minutes ago                 admiring_yalow
+ca7d6f42db1c  registry.access.redhat.com/ubi7/ubi:7.7                   echo Hello!           11 minutes ago  Exited (0) 11 minutes ago         nifty_torvalds
+[root@workstation ~]# 
+
+[root@workstation ~]# curl http://10.88.0.68:8080
+curl: (7) Failed to connect to 10.88.0.68 port 8080: No route to host
+[root@workstation ~]# podman run -it ubi7/ubi:7.7 /bin/bash
+[root@de89ca6ca57e /]# ls
+bin  boot  dev  etc  home  lib  lib64  media  mnt  opt  proc  root  run  sbin  srv  sys  tmp  usr  var
+[root@de89ca6ca57e /]# who am i
+[root@de89ca6ca57e /]# whoami
+root
+[root@de89ca6ca57e /]# exit
+exit
+[root@workstation ~]# podman ps 
+CONTAINER ID  IMAGE                                                     COMMAND               CREATED        STATUS            PORTS  NAMES
+e616daba9b17  registry.access.redhat.com/rhscl/httpd-24-rhel7:2.4-36.8  /usr/bin/run-http...  5 minutes ago  Up 5 minutes ago         admiring_yalow
+[root@workstation ~]# podman run -it ubi7/ubi:7.7 /bin/bash
+[root@6ea278959c61 /]# ls
+bin  boot  dev  etc  home  lib  lib64  media  mnt  opt  proc  root  run  sbin  srv  sys  tmp  usr  var
+[root@6ea278959c61 /]# whoami
+root
+[root@6ea278959c61 /]# uname -r
+4.18.0-193.el8.x86_64
+[root@6ea278959c61 /]# exit
+exit
+[root@workstation ~]# podman ps
+CONTAINER ID  IMAGE                                                     COMMAND               CREATED         STATUS             PORTS  NAMES
+e616daba9b17  registry.access.redhat.com/rhscl/httpd-24-rhel7:2.4-36.8  /usr/bin/run-http...  10 minutes ago  Up 10 minutes ago         admiring_yalow
+[root@workstation ~]# podman ps -a
+CONTAINER ID  IMAGE                                                     COMMAND               CREATED         STATUS                     PORTS  NAMES
+6ea278959c61  registry.access.redhat.com/ubi7/ubi:7.7                   /bin/bash             23 seconds ago  Exited (0) 10 seconds ago         dreamy_brattain
+de89ca6ca57e  registry.access.redhat.com/ubi7/ubi:7.7                   /bin/bash             6 minutes ago   Exited (0) 5 minutes ago          sad_yalow
+e616daba9b17  registry.access.redhat.com/rhscl/httpd-24-rhel7:2.4-36.8  /usr/bin/run-http...  11 minutes ago  Up 11 minutes ago                 admiring_yalow
+ca7d6f42db1c  registry.access.redhat.com/ubi7/ubi:7.7                   echo Hello!           11 minutes ago  Exited (0) 11 minutes ago         nifty_torvalds
+[root@workstation ~]# podman run -e GREET=Hello -e NAME=RedHat rhel7:7.5 printenv GREET NAME
+Trying to pull registry.access.redhat.com/rhel7:7.5...
+Getting image source signatures
+Copying blob 92058cf44053 done
+Copying blob 8d846904080d done
+Copying config 7b875638cf done
+Writing manifest to image destination
+Storing signatures
+Hello
+RedHat
+[root@workstation ~]# clear
+
+
+
+Lab2
+------
+
+
+[root@workstation ~]# lab container-create start
+
+Setting up workstation for the Guided Exercise: Creating a MySQL database instance
+
+ · Checking podman configuration...............................  SUCCESS
+ · Creating create_table.txt file..............................  SUCCESS
+[root@workstation ~]# podman run --name mysql-basic -e MYSQL_USER=user1 -e MYSQL_PASSWORD=mypa55 -e MYSQL_DATABASE=items -e MYSQL_ROOT_PASSWORD=r00tpa55  -d rhscl/mysql-57-rhel7:5.7-3.14
+Trying to pull registry.access.redhat.com/rhscl/mysql-57-rhel7:5.7-3.14...
+Getting image source signatures
+Copying blob c5d2e9481169 skipped: already exists
+Copying blob e373541ccf6a skipped: already exists
+Copying blob b3949aed10eb done
+Writing manifest to image destination
+Storing signatures
+0bc39d114d30153d5bb677957d7ce019c56fff23c2b9a804d1158e7abcff386f
+[root@workstation ~]# podman exec -it mysql-basic /bin/bash
+bash-4.2$ mysql -u root
+Welcome to the MySQL monitor.  Commands end with ; or \g.
+Your MySQL connection id is 2
+Server version: 5.7.16 MySQL Community Server (GPL)
+
+Copyright (c) 2000, 2016, Oracle and/or its affiliates. All rights reserved.
+
+Oracle is a registered trademark of Oracle Corporation and/or its
+affiliates. Other names may be trademarks of their respective
+owners.
+
+Type 'help;' or '\h' for help. Type '\c' to clear the current input statement.
+
+mysql> shot databases;
+ERROR 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near 'shot databases' at line 1
+mysql> show databases;
++--------------------+
+| Database           |
++--------------------+
+| information_schema |
+| items              |
+| mysql              |
+| performance_schema |
+| sys                |
++--------------------+
+5 rows in set (0.00 sec)
+
+mysql> use items;
+Database changed
+mysql> CREATE TABLE Projects (id int(11) NOT NULL
+    -> exit
+exit
+^C
+mysql> CREATE TABLE Projects (id int(11) NOT NULL,
+    -> name varchar(255) DEFAULT NULL,
+    -> code varchar(255) DEFAULT NULL,
+    -> PRIMARY KEY (id));
+Query OK, 0 rows affected (0.12 sec)
+
+mysql> show tables;
++-----------------+
+| Tables_in_items |
++-----------------+
+| Projects        |
++-----------------+
+1 row in set (0.00 sec)
+
+mysql> insert into Projects (id, name, code) values (1,'DevOps','DO180');
+Query OK, 1 row affected (0.04 sec)
+
+mysql> select * from Projects;
++----+--------+-------+
+| id | name   | code  |
++----+--------+-------+
+|  1 | DevOps | DO180 |
++----+--------+-------+
+1 row in set (0.00 sec)
+
+mysql> exit
+Bye
+bash-4.2$ exit  
+exit
+[root@workstation ~]# podman ps 
+CONTAINER ID  IMAGE                                                     COMMAND               CREATED         STATUS             PORTS  NAMES
+0bc39d114d30  registry.access.redhat.com/rhscl/mysql-57-rhel7:5.7-3.14  run-mysqld            3 minutes ago   Up 3 minutes ago          mysql-basic
+e616daba9b17  registry.access.redhat.com/rhscl/httpd-24-rhel7:2.4-36.8  /usr/bin/run-http...  36 minutes ago  Up 36 minutes ago         admiring_yalow
+[root@workstation ~]# lab container-create finish
+
+Completing the Guided Exercise: Creating a MySQL database instance
+
+ · Removing "mysql-basic" container............................  SUCCESS
+ · Removing "rhscl/mysql-57-rhel7:5.7-3.14" image..............  SUCCESS
+[root@workstation ~]# 
+
+Summary
+----------
+• Podman allows users to search for and download images from local or remote registries.
+• The podman run command creates and starts a container from a container image.
+• Containers are executed in the background by using the -d flag, or interactively by using the -
+it flag.
+• Some container images require environment variables that are set using the -e option from the
+podman run command.
+• Red Hat Container Catalog assists in searching, exploring, and analyzing container images from
+Red Hat's official container image repository.
+
+CHP -3 GE
+-----------
+[root@workstation ~]# lab manage-lifecycle start
+
+Setting up workstation for the Guided Excercise: Managing a MySQL Container
+
+ · Checking podman configuration...............................  SUCCESS
+ · Setting up labs folder......................................  SUCCESS
+ · Downloading starter project.................................  SUCCESS
+ · Downloading solution project................................  SUCCESS
+
+Setup successful. Please proceed with the exercise.
+
+[root@workstation ~]# podman run --name mysql-db rhscl/mysql-57-rhel7
+Trying to pull registry.access.redhat.com/rhscl/mysql-57-rhel7...
+Getting image source signatures
+Copying blob 1c9f515fc6ab done
+Copying blob f1e961fe4c51 done
+Copying blob 9f1840c3b3bd done
+Copying blob 1d2c4ce43b78 done
+Copying config 60726b33a0 done
+Writing manifest to image destination
+Storing signatures
+=> sourcing 20-validate-variables.sh ...
+You must either specify the following environment variables:
+  MYSQL_USER (regex: '^[a-zA-Z0-9_]+$')
+  MYSQL_PASSWORD (regex: '^[a-zA-Z0-9_~!@#$%^&*()-=<>,.?;:|]+$')
+  MYSQL_DATABASE (regex: '^[a-zA-Z0-9_]+$')
+Or the following environment variable:
+  MYSQL_ROOT_PASSWORD (regex: '^[a-zA-Z0-9_~!@#$%^&*()-=<>,.?;:|]+$')
+Or both.
+Optional Settings:
+  MYSQL_LOWER_CASE_TABLE_NAMES (default: 0)
+  MYSQL_LOG_QUERIES_ENABLED (default: 0)
+  MYSQL_MAX_CONNECTIONS (default: 151)
+  MYSQL_FT_MIN_WORD_LEN (default: 4)
+  MYSQL_FT_MAX_WORD_LEN (default: 20)
+  MYSQL_AIO (default: 1)
+  MYSQL_KEY_BUFFER_SIZE (default: 32M or 10% of available memory)
+  MYSQL_MAX_ALLOWED_PACKET (default: 200M)
+  MYSQL_TABLE_OPEN_CACHE (default: 400)
+  MYSQL_SORT_BUFFER_SIZE (default: 256K)
+  MYSQL_READ_BUFFER_SIZE (default: 8M or 5% of available memory)
+  MYSQL_INNODB_BUFFER_POOL_SIZE (default: 32M or 50% of available memory)
+  MYSQL_INNODB_LOG_FILE_SIZE (default: 8M or 15% of available memory)
+  MYSQL_INNODB_LOG_BUFFER_SIZE (default: 8M or 15% of available memory)
+
+For more information, see https://github.com/sclorg/mysql-container
+[root@workstation ~]# podman logs mysql-db
+=> sourcing 20-validate-variables.sh ...
+You must either specify the following environment variables:
+  MYSQL_USER (regex: '^[a-zA-Z0-9_]+$')
+  MYSQL_PASSWORD (regex: '^[a-zA-Z0-9_~!@#$%^&*()-=<>,.?;:|]+$')
+  MYSQL_DATABASE (regex: '^[a-zA-Z0-9_]+$')
+Or the following environment variable:
+  MYSQL_ROOT_PASSWORD (regex: '^[a-zA-Z0-9_~!@#$%^&*()-=<>,.?;:|]+$')
+Or both.
+Optional Settings:
+  MYSQL_LOWER_CASE_TABLE_NAMES (default: 0)
+  MYSQL_LOG_QUERIES_ENABLED (default: 0)
+  MYSQL_MAX_CONNECTIONS (default: 151)
+  MYSQL_FT_MIN_WORD_LEN (default: 4)
+  MYSQL_FT_MAX_WORD_LEN (default: 20)
+  MYSQL_AIO (default: 1)
+  MYSQL_KEY_BUFFER_SIZE (default: 32M or 10% of available memory)
+  MYSQL_MAX_ALLOWED_PACKET (default: 200M)
+  MYSQL_TABLE_OPEN_CACHE (default: 400)
+  MYSQL_SORT_BUFFER_SIZE (default: 256K)
+  MYSQL_READ_BUFFER_SIZE (default: 8M or 5% of available memory)
+  MYSQL_INNODB_BUFFER_POOL_SIZE (default: 32M or 50% of available memory)
+  MYSQL_INNODB_LOG_FILE_SIZE (default: 8M or 15% of available memory)
+  MYSQL_INNODB_LOG_BUFFER_SIZE (default: 8M or 15% of available memory)
+
+For more information, see https://github.com/sclorg/mysql-container
+[root@workstation ~]# podman run --name mysql -d -e MYSQL_USER=user1 -e MYSQL_PASSWORD=mypa55 -e MYSQL_DATABASE=items -e MYSQL_ROOT_PASSWORD=r00tpa55 rhscl/mysql-57-rhel7
+3317a92edcbe892a2f0da830fd5040249bf7d1f73ffca8bc71c7997676e2b15e
+[root@workstation ~]# podman ps
+CONTAINER ID  IMAGE                                                     COMMAND               CREATED         STATUS             PORTS  NAMES
+3317a92edcbe  registry.access.redhat.com/rhscl/mysql-57-rhel7:latest    run-mysqld            17 seconds ago  Up 16 seconds ago         mysql
+e616daba9b17  registry.access.redhat.com/rhscl/httpd-24-rhel7:2.4-36.8  /usr/bin/run-http...  2 hours ago     Up 2 hours ago            admiring_yalow
+[root@workstation ~]# podman inspect -l -f "{{.NetworkSettings.IPAddress}}" mysq
+Error: you cannot provide additional arguments with --latest
+[root@workstation ~]# podman inspect -l -f "{{.NetworkSettings.IPAddress}}" mysql
+Error: you cannot provide additional arguments with --latest
+[root@workstation ~]# podman inspect  -f '{{ .NetworkSettings.IPAddress }}' mysql
+10.88.0.9
+[root@workstation ~]# pwd
+/root
+[root@workstation ~]#  cd /home/student/DO180/
+[root@workstation DO180]# cd labs/
+[root@workstation labs]# ls
+manage-lifecycle
+[root@workstation labs]# cd manage-lifecycle/
+[root@workstation manage-lifecycle]# ls
+db.sql
+[root@workstation manage-lifecycle]# pwd
+/home/student/DO180/labs/manage-lifecycle
+[root@workstation manage-lifecycle]# mysql -uuser1 -h 10.88.0.9 -pmypa55 items < /home/student/DO180/labs/manage-lifecycle/db.sql
+[root@workstation manage-lifecycle]# podman run --name mysql-2 -it rhscl/mysql-57-rhel7 /bin/bash
+bash-4.2$ mysql -uroot
+ERROR 2002 (HY000): Can't connect to local MySQL server through socket '/var/lib/mysql/mysql.sock' (2)
+bash-4.2$ exit
+exit
+[root@workstation manage-lifecycle]# podman ps -a
+CONTAINER ID  IMAGE                                                     COMMAND               CREATED         STATUS                     PORTS  NAMES
+975e1763eaad  registry.access.redhat.com/rhscl/mysql-57-rhel7:latest    /bin/bash             38 seconds ago  Exited (1) 12 seconds ago         mysql-2
+3317a92edcbe  registry.access.redhat.com/rhscl/mysql-57-rhel7:latest    run-mysqld            4 minutes ago   Up 4 minutes ago                  mysql
+8deac2afa067  registry.access.redhat.com/rhscl/mysql-57-rhel7:latest    run-mysqld            6 minutes ago   Exited (1) 6 minutes ago          mysql-db
+96b6a5462d16  registry.access.redhat.com/rhel7:7.5                      printenv GREET NA...  2 hours ago     Exited (0) 2 hours ago            thirsty_feynman
+6ea278959c61  registry.access.redhat.com/ubi7/ubi:7.7                   /bin/bash             2 hours ago     Exited (0) 2 hours ago            dreamy_brattain
+de89ca6ca57e  registry.access.redhat.com/ubi7/ubi:7.7                   /bin/bash             2 hours ago     Exited (0) 2 hours ago            sad_yalow
+e616daba9b17  registry.access.redhat.com/rhscl/httpd-24-rhel7:2.4-36.8  /usr/bin/run-http...  2 hours ago     Up 2 hours ago                    admiring_yalow
+ca7d6f42db1c  registry.access.redhat.com/ubi7/ubi:7.7                   echo Hello!           2 hours ago     Exited (0) 2 hours ago            nifty_torvalds
+[root@workstation manage-lifecycle]# podman exec mysql /bin/bash -c 'mysql -uuser1 -pmypa55 -e "select * from items.Projects;"'
+mysql: [Warning] Using a password on the command line interface can be insecure.
+id	name	code
+1	DevOps	DO180
+[root@workstation manage-lifecycle]# lab manage-lifecycle finish
+
+Completing the Guided Excercise: Managing a MySQL Container
+
+ · Stopping 'mysql' container..................................  SUCCESS
+ · Stopping 'mysql-2' container................................  SUCCESS
+ · Removing 'mysql' container..................................  SUCCESS
+ · Removing 'mysql-2' container................................  SUCCESS
+ · Removing 'mysql-db' container...............................  SUCCESS
+ · Removing 'rhscl/mysql-57-rhel7' image.......................  SUCCESS
+[root@workstation manage-lifecycle]# 
+
+Persisting a MySQL Database GE
+---------------------------------------------
+
+[root@workstation manage-lifecycle]# lab manage-storage start
+
+Setting up workstation for the Guided Exercise: Persisting a MySQL Database
+
+ · Checking podman configuration...............................  SUCCESS
+ · Check if the directory used by lab is not created...........  SUCCESS
+[root@workstation manage-lifecycle]# mkdir -pv /var/local/mysql
+mkdir: created directory '/var/local/mysql'
+[root@workstation manage-lifecycle]# semanage fcontext -a -t container_file_t '/var/local/mysql(/.*)?'
+[root@workstation manage-lifecycle]# restorecon -R /var/local/mysql
+[root@workstation manage-lifecycle]# ls -ldZ /var/local/mysql
+drwxr-xr-x. 2 root root unconfined_u:object_r:container_file_t:s0 6 Apr 26 08:08 /var/local/mysql
+[root@workstation manage-lifecycle]# chown -Rv 27:27 /var/local/mysql
+changed ownership of '/var/local/mysql' from root:root to 27:27
+[root@workstation manage-lifecycle]# grep -27 /etc/passwd
+^C
+[root@workstation manage-lifecycle]# grep 27 /etc/passwd
+[root@workstation manage-lifecycle]# chown -Rv 27:27 /var/local/mysql
+ownership of '/var/local/mysql' retained as 27:27
+[root@workstation manage-lifecycle]# podman pull rhscl/mysql-57-rhel7
+Trying to pull registry.access.redhat.com/rhscl/mysql-57-rhel7...
+Getting image source signatures
+Copying blob 9f1840c3b3bd done
+Copying blob 1c9f515fc6ab done
+Copying blob 1d2c4ce43b78 done
+Copying blob f1e961fe4c51 done
+Copying config 60726b33a0 done
+Writing manifest to image destination
+Storing signatures
+60726b33a00a2c3be60e25c3270a34a9b147db86602f05a71988a1c92a70cebc
+[root@workstation manage-lifecycle]# podman run --name persist-db -d -v /var/local/mysql:/var/lib/mysql/data -e MYSQL_USER=ser1 -e MYSQL_PASSWORD=mypa55 -e MYSQL_DATABASE=items -e MYSQL_ROOT_PASSWORD=r00tpa55 rhscl/mysql-57-rhel7
+dca569a92d2090d536129c5f1c10d32d50dfeac88a79bc35abfc153e06670983
+[root@workstation manage-lifecycle]# podman ps
+CONTAINER ID  IMAGE                                                     COMMAND               CREATED         STATUS             PORTS  NAMES
+dca569a92d20  registry.access.redhat.com/rhscl/mysql-57-rhel7:latest    run-mysqld            17 seconds ago  Up 16 seconds ago         persist-db
+e616daba9b17  registry.access.redhat.com/rhscl/httpd-24-rhel7:2.4-36.8  /usr/bin/run-http...  3 hours ago     Up 3 hours ago            admiring_yalow
+[root@workstation manage-lifecycle]# ls -ld /var/local/mysql/items
+drwxr-x---. 2 27 27 20 Apr 26 08:11 /var/local/mysql/items
+[root@workstation manage-lifecycle]# lab manage-storage finish
+
+Completing the Guided Exercise: Persisting a MySQL Database
+
+ · Stopping the 'persist-db' container.........................  SUCCESS
+ · Removing the 'persist-db' container.........................  SUCCESS
+ · Removing the 'rhscl/mysql-57-rhel7' image...................  SUCCESS
+ · Removing the /var/local/mysql directory.....................  SUCCESS
+ · Removing the fcontext for /var/local/mysql..................  SUCCESS
+[root@workstation manage-lifecycle]# 
+------------------------------------------------------------------------------------------------------------------------------------------------------------
+                                                                          Day2
+---------------------------------------------------------------------------------------------------------------------------------------------------------------
+GE
+--
+[root@workstation ~]# lab manage-networking start
+
+Setting up workstation for the Guided Exercise: Loading the Database
+
+ · Checking podman configuration...............................  SUCCESS
+ · Creating a host directory for the database container:
+   · Adding fcontext policy for /var/local/mysql...............  SUCCESS
+   · Creating the /var/local/mysql directory...................  SUCCESS
+   · Apply fcontext policy to /var/local/mysql.................  SUCCESS
+ · Downloading starter project.................................  SUCCESS
+ · Downloading solution project................................  SUCCESS
+
+Setup successful. Please proceed with the exercise.
+
+
+[root@workstation ~]# podman run --name mysqldb-port -d -v /var/local/mysql:/var/lib/mysql/data -p 13306:3306 -e MYSQL_USER=user1 -e MYSQL_PASSWORD=mypa55 -e MYSQL_DATABASE=items -e MYSQL_ROOT_PASSWORD=r00tpa55  rhscl/mysql-57-rhel7
+Trying to pull registry.access.redhat.com/rhscl/mysql-57-rhel7...
+Getting image source signatures
+Copying blob 1c9f515fc6ab done
+Copying blob 9f1840c3b3bd done
+Copying blob 1d2c4ce43b78 done
+Copying blob f1e961fe4c51 done
+Copying config 60726b33a0 done
+Writing manifest to image destination
+Storing signatures
+b5e9fa7167a7dabf0a6fd25b393f7573dfeccd1bd28976b3097b2e7f76aa568b
+[root@workstation ~]# podman ps
+CONTAINER ID  IMAGE                                                   COMMAND               CREATED        STATUS            PORTS                    NAMES
+b5e9fa7167a7  registry.access.redhat.com/rhscl/mysql-57-rhel7:latest  run-mysqld            6 seconds ago  Up 6 seconds ago  0.0.0.0:13306->3306/tcp  mysqldb-port
+84cbde5855cf  registry.access.redhat.com/rhscl/httpd-24-rhel7:2.4     /usr/bin/run-http...  4 minutes ago  Up 4 minutes ago  0.0.0.0:39021->80/tcp    apache4
+ebaef6662f91  registry.access.redhat.com/rhscl/httpd-24-rhel7:2.4     /usr/bin/run-http...  6 minutes ago  Up 6 minutes ago  127.0.0.1:46057->80/tcp  apache3
+052aa7f00ae2  registry.access.redhat.com/rhscl/httpd-24-rhel7:2.4     /usr/bin/run-http...  8 minutes ago  Up 8 minutes ago  127.0.0.1:8081->80/tcp   apache2
+[root@workstation ~]# cat /home/student/DO180/labs/manage-networking/db.sql
+CREATE TABLE `Item` (`id` BIGINT not null auto_increment primary key, `description` VARCHAR(100), `done` INT);
+INSERT INTO `Item` (`id`,`description`,`done`) VALUES (1,'Pick up newspaper', 0);
+INSERT INTO `Item` (`id`,`description`,`done`) VALUES (2,'Buy groceries', 1);
+[root@workstation ~]# mysql -uuser1 -h 127.0.0.1 -pmypa55 -P13306 items < /home/student/DO180/labs/manage-networking/db.sql
+[root@workstation ~]# podman exec -it mysqldb-port /opt/rh/rh-mysql57/root/usr/bin/mysql -uroot items -e "SELECT * FROM Item"
++----+-------------------+------+
+| id | description       | done |
++----+-------------------+------+
+|  1 | Pick up newspaper |    0 |
+|  2 | Buy groceries     |    1 |
++----+-------------------+------+
+[root@workstation ~]# mysql -uuser1 -h 127.0.0.1 -pmypa55  -P13306 items -e "SELECT * FROM Item"
++----+-------------------+------+
+| id | description       | done |
++----+-------------------+------+
+|  1 | Pick up newspaper |    0 |
+|  2 | Buy groceries     |    1 |
++----+-------------------+------+
+[root@workstation ~]# podman exec -it mysqldb-port /bin/bash
+bash-4.2$ mysql -uroot items -e "SELECT * FROM Item"
++----+-------------------+------+
+| id | description       | done |
++----+-------------------+------+
+|  1 | Pick up newspaper |    0 |
+|  2 | Buy groceries     |    1 |
++----+-------------------+------+
+bash-4.2$ exit
+exit
+[root@workstation ~]# podman ps
+CONTAINER ID  IMAGE                                                   COMMAND               CREATED         STATUS             PORTS                    NAMES
+b5e9fa7167a7  registry.access.redhat.com/rhscl/mysql-57-rhel7:latest  run-mysqld            3 minutes ago   Up 3 minutes ago   0.0.0.0:13306->3306/tcp  mysqldb-port
+84cbde5855cf  registry.access.redhat.com/rhscl/httpd-24-rhel7:2.4     /usr/bin/run-http...  8 minutes ago   Up 8 minutes ago   0.0.0.0:39021->80/tcp    apache4
+ebaef6662f91  registry.access.redhat.com/rhscl/httpd-24-rhel7:2.4     /usr/bin/run-http...  9 minutes ago   Up 9 minutes ago   127.0.0.1:46057->80/tcp  apache3
+052aa7f00ae2  registry.access.redhat.com/rhscl/httpd-24-rhel7:2.4     /usr/bin/run-http...  12 minutes ago  Up 12 minutes ago  127.0.0.1:8081->80/tcp   apache2
+[root@workstation ~]# lab manage-networking finish
+
+Completing the Guided Exercise: Loading the Database
+
+ · Stopping the 'mysqldb-port' container.......................  SUCCESS
+ · Removing the 'mysqldb-port' container.......................  SUCCESS
+ · Removing the 'rhscl/mysql-57-rhel7' image...................  SUCCESS
+ · Removing the /var/local/mysql directory.....................  SUCCESS
+ · Removing the fcontext for /var/local/mysql..................  SUCCESS
+[root@workstation ~]# 
+
+LAB Managing Containers
+----------------------------
+[root@workstation ~]# lab manage-review start
+
+Setting up workstation for the Lab: Managing Containers
+
+ · Checking podman configuration...............................  SUCCESS
+ · Check that /var/local/mysql does not exist..................  SUCCESS
+ · Downloading starter project.................................  SUCCESS
+ · Downloading solution project................................  SUCCESS
+
+Setup successful. Please proceed with the exercise.
+
+[root@workstation ~]# mkdir -pv /var/local/mysql
+mkdir: created directory '/var/local/mysql'
+[root@workstation ~]# ls -ld /var/local/mysql
+drwxr-xr-x. 2 root root 6 Apr 26 22:00 /var/local/mysql
+[root@workstation ~]# ls -lZd /var/local/mysql
+drwxr-xr-x. 2 root root unconfined_u:object_r:var_t:s0 6 Apr 26 22:00 /var/local/mysql
+[root@workstation ~]# semanage fcontext -a  -t container_file_t '/var/local/mysql(/.*)?'
+[root@workstation ~]# ls -lZd /var/local/mysql
+drwxr-xr-x. 2 root root unconfined_u:object_r:var_t:s0 6 Apr 26 22:00 /var/local/mysql
+[root@workstation ~]# restorecon -R /var/local/mysql
+[root@workstation ~]# ls -lZd /var/local/mysql
+drwxr-xr-x. 2 root root unconfined_u:object_r:container_file_t:s0 6 Apr 26 22:00 /var/local/mysql
+[root@workstation ~]# chown -Rv 27:27 /var/local/mysql
+changed ownership of '/var/local/mysql' from root:root to 27:27
+[root@workstation ~]# podman run --name mysql-1 -d -v /var/local/mysql:/var/lib/mysql/data  -e MYSQL_USER=user1 -e MYSQL_PASSWORD=mypa55 -e MYSQL_DATABASE=items -e MYSQL_ROOT_PASSWORD=r00tpa55 rhscl/mysql-57-rhel7
+Trying to pull registry.access.redhat.com/rhscl/mysql-57-rhel7...
+Getting image source signatures
+Copying blob 1c9f515fc6ab done
+Copying blob 9f1840c3b3bd done
+Copying blob f1e961fe4c51 done
+Copying blob 1d2c4ce43b78 done
+Copying config 60726b33a0 done
+Writing manifest to image destination
+Storing signatures
+9caca5d1ac777ea8dea764fbd3507fcadad22a32e39b59e298b6ef8682083f16
+[root@workstation ~]# podman ps
+CONTAINER ID  IMAGE                                                   COMMAND               CREATED         STATUS             PORTS                    NAMES
+9caca5d1ac77  registry.access.redhat.com/rhscl/mysql-57-rhel7:latest  run-mysqld            10 seconds ago  Up 9 seconds ago                            mysql-1
+84cbde5855cf  registry.access.redhat.com/rhscl/httpd-24-rhel7:2.4     /usr/bin/run-http...  16 minutes ago  Up 16 minutes ago  0.0.0.0:39021->80/tcp    apache4
+ebaef6662f91  registry.access.redhat.com/rhscl/httpd-24-rhel7:2.4     /usr/bin/run-http...  18 minutes ago  Up 18 minutes ago  127.0.0.1:46057->80/tcp  apache3
+052aa7f00ae2  registry.access.redhat.com/rhscl/httpd-24-rhel7:2.4     /usr/bin/run-http...  20 minutes ago  Up 20 minutes ago  127.0.0.1:8081->80/tcp   apache2
+[root@workstation ~]# podman inspect mysql-1 | grep -i ipaddress
+            "SecondaryIPAddresses": null,
+            "IPAddress": "10.88.0.16",
+[root@workstation ~]# cat /home/student/DO180/labs/manage-review/db.sql
+CREATE TABLE `Item` (`id` BIGINT not null auto_increment primary key, `description` VARCHAR(100), `done` INT);
+INSERT INTO `Item` (`id`,`description`,`done`) VALUES (1,'Pick up newspaper', 0);
+INSERT INTO `Item` (`id`,`description`,`done`) VALUES (2,'Buy groceries', 1);
+[root@workstation ~]# ls -ld /var/local/mysql/items
+drwxr-x---. 2 27 27 20 Apr 26 22:05 /var/local/mysql/items
+[root@workstation ~]# mysql -uuser1 -h 10.88.0.16 -pmypa55 items < /home/student/DO180/labs/manage-review/db.sql
+[root@workstation ~]# mysql -uuser1 -h 10.88.0.16 -pmypa55 items -e "SELECT * FROM Item"
++----+-------------------+------+
+| id | description       | done |
++----+-------------------+------+
+|  1 | Pick up newspaper |    0 |
+|  2 | Buy groceries     |    1 |
++----+-------------------+------+
+[root@workstation ~]# podman stop mysql-1
+9caca5d1ac777ea8dea764fbd3507fcadad22a32e39b59e298b6ef8682083f16
+[root@workstation ~]# podman ps
+CONTAINER ID  IMAGE                                                COMMAND               CREATED         STATUS             PORTS                    NAMES
+84cbde5855cf  registry.access.redhat.com/rhscl/httpd-24-rhel7:2.4  /usr/bin/run-http...  20 minutes ago  Up 20 minutes ago  0.0.0.0:39021->80/tcp    apache4
+ebaef6662f91  registry.access.redhat.com/rhscl/httpd-24-rhel7:2.4  /usr/bin/run-http...  21 minutes ago  Up 21 minutes ago  127.0.0.1:46057->80/tcp  apache3
+052aa7f00ae2  registry.access.redhat.com/rhscl/httpd-24-rhel7:2.4  /usr/bin/run-http...  24 minutes ago  Up 24 minutes ago  127.0.0.1:8081->80/tcp   apache2
+[root@workstation ~]# podman run --name mysql-2 -d -v /var/local/mysql:/var/lib/mysql/data  -p 13306:3306 -e MYSQL_USER=user1 -e MYSQL_PASSWORD=mypa55 -e MYSQL_DATABASE=items -e MYSQL_ROOT_PASSWORD=r00tpa55 rhscl/mysql-57-rhel7
+9cba105407c4a301f972a334b69562523e0d26d2ab915a7efc44c51944e377a9
+[root@workstation ~]# podman ps
+CONTAINER ID  IMAGE                                                   COMMAND               CREATED         STATUS             PORTS                    NAMES
+9cba105407c4  registry.access.redhat.com/rhscl/mysql-57-rhel7:latest  run-mysqld            4 seconds ago   Up 3 seconds ago   0.0.0.0:13306->3306/tcp  mysql-2
+84cbde5855cf  registry.access.redhat.com/rhscl/httpd-24-rhel7:2.4     /usr/bin/run-http...  21 minutes ago  Up 21 minutes ago  0.0.0.0:39021->80/tcp    apache4
+ebaef6662f91  registry.access.redhat.com/rhscl/httpd-24-rhel7:2.4     /usr/bin/run-http...  22 minutes ago  Up 22 minutes ago  127.0.0.1:46057->80/tcp  apache3
+052aa7f00ae2  registry.access.redhat.com/rhscl/httpd-24-rhel7:2.4     /usr/bin/run-http...  25 minutes ago  Up 25 minutes ago  127.0.0.1:8081->80/tcp   apache2
+[root@workstation ~]# podman exec -it mysql-2 /bin/bash
+bash-4.2$ 
+bash-4.2$ mysql -uroot
+Welcome to the MySQL monitor.  Commands end with ; or \g.
+Your MySQL connection id is 2
+Server version: 5.7.24 MySQL Community Server (GPL)
+
+Copyright (c) 2000, 2018, Oracle and/or its affiliates. All rights reserved.
+
+Oracle is a registered trademark of Oracle Corporation and/or its
+affiliates. Other names may be trademarks of their respective
+owners.
+
+Type 'help;' or '\h' for help. Type '\c' to clear the current input statement.
+
+mysql> show databases;
++--------------------+
+| Database           |
++--------------------+
+| information_schema |
+| items              |
+| mysql              |
+| performance_schema |
+| sys                |
++--------------------+
+5 rows in set (0.00 sec)
+
+mysql> use items;
+Database changed
+mysql> show tables;
++-----------------+
+| Tables_in_items |
++-----------------+
+| Item            |
++-----------------+
+1 row in set (0.00 sec)
+
+mysql> SELECT * FROM Item;
++----+-------------------+------+
+| id | description       | done |
++----+-------------------+------+
+|  1 | Pick up newspaper |    0 |
+|  2 | Buy groceries     |    1 |
++----+-------------------+------+
+2 rows in set (0.00 sec)
+
+mysql> exit
+Bye
+bash-4.2$ exit
+exit
+[root@workstation ~]# mysql -uuser1 -h workstation.lab.example.com -pmypa55 -P13306 items
+Reading table information for completion of table and column names
+You can turn off this feature to get a quicker startup with -A
+
+Welcome to the MariaDB monitor.  Commands end with ; or \g.
+Your MySQL connection id is 3
+Server version: 5.7.24 MySQL Community Server (GPL)
+
+Copyright (c) 2000, 2018, Oracle, MariaDB Corporation Ab and others.
+
+Type 'help;' or '\h' for help. Type '\c' to clear the current input statement.
+
+MySQL [items]> insert into Item (description, done) values ('Finished lab', 1);
+Query OK, 1 row affected (0.016 sec)
+
+MySQL [items]> SELECT * FROM Item;
++----+-------------------+------+
+| id | description       | done |
++----+-------------------+------+
+|  1 | Pick up newspaper |    0 |
+|  2 | Buy groceries     |    1 |
+|  3 | Finished lab      |    1 |
++----+-------------------+------+
+3 rows in set (0.002 sec)
+
+MySQL [items]> exit
+Bye
+[root@workstation ~]# podman ps 
+CONTAINER ID  IMAGE                                                   COMMAND               CREATED         STATUS             PORTS                    NAMES
+9cba105407c4  registry.access.redhat.com/rhscl/mysql-57-rhel7:latest  run-mysqld            4 minutes ago   Up 4 minutes ago   0.0.0.0:13306->3306/tcp  mysql-2
+84cbde5855cf  registry.access.redhat.com/rhscl/httpd-24-rhel7:2.4     /usr/bin/run-http...  25 minutes ago  Up 25 minutes ago  0.0.0.0:39021->80/tcp    apache4
+ebaef6662f91  registry.access.redhat.com/rhscl/httpd-24-rhel7:2.4     /usr/bin/run-http...  26 minutes ago  Up 26 minutes ago  127.0.0.1:46057->80/tcp  apache3
+052aa7f00ae2  registry.access.redhat.com/rhscl/httpd-24-rhel7:2.4     /usr/bin/run-http...  29 minutes ago  Up 29 minutes ago  127.0.0.1:8081->80/tcp   apache2
+[root@workstation ~]# podman stop apache4 apache2 apache3 
+84cbde5855cfb07aca5b4af1d7084f10bebe890c7bed56c20ed30c4942b71e9b
+052aa7f00ae2726f47f6bbf9cf12c43e864053df64947f35e25e5b55f729ae35
+ebaef6662f91d688e9eaf62662271003095c2ac560a32f086c9ac6a954aad519
+[root@workstation ~]# podman rm apache4 apache2  apache3 
+84cbde5855cfb07aca5b4af1d7084f10bebe890c7bed56c20ed30c4942b71e9b
+052aa7f00ae2726f47f6bbf9cf12c43e864053df64947f35e25e5b55f729ae35
+ebaef6662f91d688e9eaf62662271003095c2ac560a32f086c9ac6a954aad519
+[root@workstation ~]# podman ps 
+CONTAINER ID  IMAGE                                                   COMMAND     CREATED        STATUS            PORTS                    NAMES
+9cba105407c4  registry.access.redhat.com/rhscl/mysql-57-rhel7:latest  run-mysqld  5 minutes ago  Up 5 minutes ago  0.0.0.0:13306->3306/tcp  mysql-2
+[root@workstation ~]# podman ps -a
+CONTAINER ID  IMAGE                                                     COMMAND               CREATED         STATUS                    PORTS                    NAMES
+9cba105407c4  registry.access.redhat.com/rhscl/mysql-57-rhel7:latest    run-mysqld            5 minutes ago   Up 5 minutes ago          0.0.0.0:13306->3306/tcp  mysql-2
+9caca5d1ac77  registry.access.redhat.com/rhscl/mysql-57-rhel7:latest    run-mysqld            10 minutes ago  Exited (0) 6 minutes ago                           mysql-1
+96b6a5462d16  registry.access.redhat.com/rhel7:7.5                      printenv GREET NA...  17 hours ago    Exited (0) 17 hours ago                            thirsty_feynman
+6ea278959c61  registry.access.redhat.com/ubi7/ubi:7.7                   /bin/bash             17 hours ago    Exited (0) 17 hours ago                            dreamy_brattain
+de89ca6ca57e  registry.access.redhat.com/ubi7/ubi:7.7                   /bin/bash             17 hours ago    Exited (0) 17 hours ago                            sad_yalow
+e616daba9b17  registry.access.redhat.com/rhscl/httpd-24-rhel7:2.4-36.8  /usr/bin/run-http...  17 hours ago    Exited (0) 11 hours ago                            admiring_yalow
+ca7d6f42db1c  registry.access.redhat.com/ubi7/ubi:7.7                   echo Hello!           17 hours ago    Exited (0) 17 hours ago                            nifty_torvalds
+[root@workstation ~]# podman ps -a > /tmp/my-containers
+[root@workstation ~]# lab manage-review finish
+
+Completing the Lab: Managing Containers
+
+ · Removing the /var/local/mysql folder........................  SUCCESS
+ · Removing the fcontext for /var/local/mysql..................  SUCCESS
+ · Stopping mysql-1 container..................................  SUCCESS
+ · Removing mysql-1 container..................................  SUCCESS
+ · Stopping mysql-2 container..................................  SUCCESS
+ · Removing mysql-2 container..................................  SUCCESS
+ · Removing MySQL container image..............................  SUCCESS
+ · Removing temporary file.....................................  SUCCESS
+[root@workstation ~]# 
+
+
+Summary
+In this chapter, you learned:
+ Podman has subcommands to: create a new container (run), delete a container (rm), list
+ containers (ps), stop a container (stop), and start a process in a container (exec).
+  Default container storage is ephemeral, meaning its contents are not present after the container
+  restarts or is removed.
+   Containers can use a folder from the host file system to work with persistent data.
+    Podman mounts volumes in a container with the -v option in the podman run command.
+     The podman exec command starts an additional process inside a running container.
+      Podman maps local ports to container ports by using the -p option in the run subcommand
+
+----------------------------------
+
+Managing Container Images
+-------------------
+[root@workstation ~]# cat /etc/containers/registries.conf  | egrep -iv "^$|^#"
+[registries.search]
+registries = ["registry.access.redhat.com", "quay.io"]
+[registries.insecure]
+registries = []
+[registries.block]
+registries = []
+[root@workstation ~]# 
+
+
+
+
+
+
+[root@workstation ~]# podman pull quay.io/bitnami/nginx
+Trying to pull quay.io/bitnami/nginx...
+Getting image source signatures
+Copying blob 3cc1ae8ac7e0 done
+Copying blob 680ac188de57 done
+Copying blob 7c407192d104 done
+Copying blob d028c431b42f done
+Copying blob c8b0cda80cdd done
+Copying blob e469d990edd2 done
+Copying blob 3415682eecce done
+Copying blob 0e5f59de31e1 done
+Copying blob 751f8fc66768 done
+Copying blob 98ad34d09185 done
+Copying blob 1d26c215894a done
+Copying config b954db480d done
+Writing manifest to image destination
+Storing signatures
+b954db480d0984e2ed9c2bc3b470b5c973189b9b8e97e01d51c656920dd82062
+[root@workstation ~]# podman images
+REPOSITORY                                        TAG        IMAGE ID       CREATED         SIZE
+quay.io/bitnami/nginx                             latest     b954db480d09   2 days ago      93.4 MB
+registry.access.redhat.com/rhscl/httpd-24-rhel7   2.4        7f619078de75   6 weeks ago     329 MB
+registry.access.redhat.com/rhel                   latest     c61e4f9e8ada   6 weeks ago     216 MB
+registry.access.redhat.com/ubi7/ubi               7.7        0355cd652bd1   13 months ago   215 MB
+registry.access.redhat.com/rhel7                  7.5        7b875638cfd8   2 years ago     211 MB
+registry.access.redhat.com/rhscl/httpd-24-rhel7   2.4-36.8   5f9f898a3093   3 years ago     309 MB
+[root@workstation ~]# 
+[root@workstation ~]# podman pull rhscl/mysql-57-rhel7:5.7
+Trying to pull registry.access.redhat.com/rhscl/mysql-57-rhel7:5.7...
+Getting image source signatures
+Copying blob 1d2c4ce43b78 done
+Copying blob 1c9f515fc6ab done
+Copying blob 9f1840c3b3bd done
+Copying blob f1e961fe4c51 done
+Copying config 60726b33a0 done
+Writing manifest to image destination
+Storing signatures
+60726b33a00a2c3be60e25c3270a34a9b147db86602f05a71988a1c92a70cebc
+[root@workstation ~]# podman run rhscl/mysql-57-rhel7:5.7
+=> sourcing 20-validate-variables.sh ...
+You must either specify the following environment variables:
+  MYSQL_USER (regex: '^[a-zA-Z0-9_]+$')
+  MYSQL_PASSWORD (regex: '^[a-zA-Z0-9_~!@#$%^&*()-=<>,.?;:|]+$')
+  MYSQL_DATABASE (regex: '^[a-zA-Z0-9_]+$')
+Or the following environment variable:
+  MYSQL_ROOT_PASSWORD (regex: '^[a-zA-Z0-9_~!@#$%^&*()-=<>,.?;:|]+$')
+Or both.
+Optional Settings:
+  MYSQL_LOWER_CASE_TABLE_NAMES (default: 0)
+  MYSQL_LOG_QUERIES_ENABLED (default: 0)
+  MYSQL_MAX_CONNECTIONS (default: 151)
+  MYSQL_FT_MIN_WORD_LEN (default: 4)
+  MYSQL_FT_MAX_WORD_LEN (default: 20)
+  MYSQL_AIO (default: 1)
+  MYSQL_KEY_BUFFER_SIZE (default: 32M or 10% of available memory)
+  MYSQL_MAX_ALLOWED_PACKET (default: 200M)
+  MYSQL_TABLE_OPEN_CACHE (default: 400)
+  MYSQL_SORT_BUFFER_SIZE (default: 256K)
+  MYSQL_READ_BUFFER_SIZE (default: 8M or 5% of available memory)
+  MYSQL_INNODB_BUFFER_POOL_SIZE (default: 32M or 50% of available memory)
+  MYSQL_INNODB_LOG_FILE_SIZE (default: 8M or 15% of available memory)
+  MYSQL_INNODB_LOG_BUFFER_SIZE (default: 8M or 15% of available memory)
+
+For more information, see https://github.com/sclorg/mysql-container
+[root@workstation ~]# podman save -o mysql.tar registry.access.redhat.com/rhscl/mysql-57-rhel7:5.7
+[root@workstation ~]# podman load -i mysql.tar
+Getting image source signatures
+Copying blob 21eb863ed592 skipped: already exists
+Copying blob 2cab4440f907 skipped: already exists
+Copying blob 64f2bd9f473b skipped: already exists
+Copying blob 682be05d59b2 skipped: already exists
+Copying config 60726b33a0 done
+Writing manifest to image destination
+Storing signatures
+Loaded image(s): registry.access.redhat.com/rhscl/mysql-57-rhel7:5.7
+[root@workstation ~]# podman images
+REPOSITORY                                        TAG        IMAGE ID       CREATED         SIZE
+quay.io/bitnami/nginx                             latest     b954db480d09   2 days ago      93.4 MB
+registry.access.redhat.com/rhscl/httpd-24-rhel7   2.4        7f619078de75   6 weeks ago     329 MB
+registry.access.redhat.com/rhel                   latest     c61e4f9e8ada   6 weeks ago     216 MB
+registry.access.redhat.com/ubi7/ubi               7.7        0355cd652bd1   13 months ago   215 MB
+registry.access.redhat.com/rhscl/mysql-57-rhel7   5.7        60726b33a00a   18 months ago   448 MB
+registry.access.redhat.com/rhel7                  7.5        7b875638cfd8   2 years ago     211 MB
+registry.access.redhat.com/rhscl/httpd-24-rhel7   2.4-36.8   5f9f898a3093   3 years ago     309 MB
+[root@workstation ~]# 
+
+CHP 4 - Guided Exercise - Creating a Custom Apache Container Image
+----------------------------------
+
+[root@workstation ~]# 
+[root@workstation ~]# 
+[root@workstation ~]# lab image-operations start
+
+Setting up workstation for the GE: Creating a Custom Apache Container Image
+
+ · Checking podman configuration...............................  SUCCESS
+[root@workstation ~]# podman login quay.io
+Username: veeraabose     
+Password: 
+Login Succeeded!
+[root@workstation ~]# podman run -d --name official-httpd -p 8180:80 redhattraining/httpd-parent
+Trying to pull registry.access.redhat.com/redhattraining/httpd-parent...
+  name unknown: Repo not found
+Trying to pull quay.io/redhattraining/httpd-parent...
+Getting image source signatures
+Copying blob 08b8c9fdec44 done
+Copying blob a3ed95caeb02 done
+Copying blob a3ed95caeb02 done
+Copying blob 787f47dbeaac done
+Copying blob a3ed95caeb02 skipped: already exists
+Copying blob 6a5240d60dc4 done
+Copying blob a3ed95caeb02 skipped: already exists
+Copying blob a3ed95caeb02 done
+Copying blob a3ed95caeb02 skipped: already exists
+Copying blob 408208567b9a done
+Writing manifest to image destination
+Storing signatures
+2a96dbd606bcc0abe8fba723cc3bbb3db8e9236dbcdc158c693aad6615bbafd7
+[root@workstation ~]# podman exec -it official-httpd /bin/bash
+bash-4.4# echo "DO180 Page" > /var/www/html/do180.html
+bash-4.4# exit
+exit
+[root@workstation ~]# curl 127.0.0.1:8180/do180.html
+DO180 Page
+[root@workstation ~]# sudo podman diff official-httpd
+C /root
+A /root/.bash_history
+C /run/httpd
+A /run/httpd/cgisock.1
+A /run/httpd/httpd.pid
+C /tmp
+C /var
+C /var/log
+C /var/log/httpd
+A /var/log/httpd/access_log
+A /var/log/httpd/error_log
+C /var/www
+C /var/www/html
+A /var/www/html/do180.html
+[root@workstation ~]# sudo podman stop official-httpd
+2a96dbd606bcc0abe8fba723cc3bbb3db8e9236dbcdc158c693aad6615bbafd7
+[root@workstation ~]# podman commit  -a veeraabose official-httpd do180-custom-httpd
+Getting image source signatures
+Copying blob 24d85c895b6b skipped: already exists
+Copying blob c613b100be16 skipped: already exists
+Copying blob 574bcc187eda skipped: already exists
+Copying blob 7f9108fde4a1 skipped: already exists
+Copying blob fc7f834d7735 done
+Copying config c5612e867f done
+Writing manifest to image destination
+Storing signatures
+c5612e867fd58ab9c7c52a6aa9d106c0c7b07b94ac37a0612612bb2e982589fe
+[root@workstation ~]# podman images
+REPOSITORY                            TAG      IMAGE ID       CREATED          SIZE
+localhost/do180-custom-httpd          latest   c5612e867fd5   11 seconds ago   236 MB
+quay.io/redhattraining/httpd-parent   latest   4346d3cace25   22 months ago    236 MB
+[root@workstation ~]# source /usr/local/etc/ocp4.config
+[root@workstation ~]# podman images
+REPOSITORY                            TAG      IMAGE ID       CREATED          SIZE
+localhost/do180-custom-httpd          latest   c5612e867fd5   41 seconds ago   236 MB
+quay.io/redhattraining/httpd-parent   latest   4346d3cace25   22 months ago    236 MB
+[root@workstation ~]# podman tag do180-custom-httpd quay.io/${RHT_OCP4_QUAY_USER}/do180-custom-httpd:v1.0
+Error: error adding 'quay.io//do180-custom-httpd:v1.0' to image "do180-custom-httpd": invalid reference format
+[root@workstation ~]# podman tag localhost/do180-custom-httpd quay.io/${RHT_OCP4_QUAY_USER}/do180-custom-httpd:v1.0
+Error: error adding 'quay.io//do180-custom-httpd:v1.0' to image "localhost/do180-custom-httpd": invalid reference format
+[root@workstation ~]# exit
+logout
+[student@workstation ~]$ sudo su -
+Last login: Mon Apr 26 21:43:41 EDT 2021 on pts/0
+[root@workstation ~]# cat /usr/local/etc/ocp4.config 
+RHT_OCP4_MASTER_API=https://api.ocp4.example.com:6443
+RHT_OCP4_WILDCARD_DOMAIN=apps.ocp4.example.com
+RHT_OCP4_NEXUS_SERVER=nexus-common.apps.ocp4.example.com
+RHT_OCP4_DEV_USER=developer
+RHT_OCP4_DEV_PASSWORD=developer
+RHT_OCP4_USER_PASSWD=redhat
+[root@workstation ~]# lab-configure
+
+ . Enter the GitHub account name: veerabose
+   Verifying GitHub account name: veerabose
+
+ . Enter the Quay.io account name: veeraabose
+   Verifying Quay.io account name: veeraabose
+
+ . Configuring RHT_OCP4_GITHUB_USER variable: SUCCESS
+ . Configuring RHT_OCP4_QUAY_USER variable:   SUCCESS
+
+ . To reconfigure, run: lab-configure -d
+
+ . Ensuring user 'developer' can log in to the OpenShift cluster.
+Warning: Permanently added 'utility,172.25.250.253' (ECDSA) to the list of known hosts.
+
+[root@workstation ~]# source /usr/local/etc/ocp4.config
+[root@workstation ~]# podman tag do180-custom-httpd quay.io/${RHT_OCP4_QUAY_USER}/do180-custom-httpd:v1.0
+[root@workstation ~]# podman images
+REPOSITORY                              TAG      IMAGE ID       CREATED          SIZE
+localhost/do180-custom-httpd            latest   c5612e867fd5   11 minutes ago   236 MB
+quay.io/veeraabose/do180-custom-httpd   v1.0     c5612e867fd5   11 minutes ago   236 MB
+quay.io/redhattraining/httpd-parent     latest   4346d3cace25   22 months ago    236 MB
+[root@workstation ~]# podman push quay.io/${RHT_OCP4_QUAY_USER}/do180-custom-httpd:v1.0
+Getting image source signatures
+Copying blob fc7f834d7735 done
+Copying blob 24d85c895b6b skipped: already exists
+Copying blob 7f9108fde4a1 skipped: already exists
+Copying blob 574bcc187eda skipped: already exists
+Copying blob c613b100be16 skipped: already exists
+Error: Error copying image to the remote destination: Error writing blob: Error initiating layer upload to /v2/veeraabose/do180-custom-httpd/blobs/uploads/ in quay.io: unauthorized: access to the requested resource is not authorized
+[root@workstation ~]# podman login quay.io
+Authenticating with existing credentials...
+Existing credentials are valid. Already logged in to quay.io
+[root@workstation ~]# podman push quay.io/${RHT_OCP4_QUAY_USER}/do180-custom-httpd:v1.0
+Getting image source signatures
+Copying blob fc7f834d7735 done
+Copying blob 7f9108fde4a1 skipped: already exists
+Copying blob 574bcc187eda skipped: already exists
+Copying blob c613b100be16 skipped: already exists
+Copying blob 24d85c895b6b skipped: already exists
+Copying config c5612e867f done
+Writing manifest to image destination
+Copying config c5612e867f done
+Writing manifest to image destination
+Writing manifest to image destination
+Storing signatures
+[root@workstation ~]# podman pull -q quay.io/${RHT_OCP4_QUAY_USER}/do180-custom-httpd:v1.0
+7b65e939cd5449dff4055c805151630f9da593a49e71f740a4971cfc6f367636
+[root@workstation ~]# podman images
+REPOSITORY                              TAG      IMAGE ID       CREATED          SIZE
+localhost/do180-custom-httpd            latest   c5612e867fd5   13 minutes ago   236 MB
+quay.io/veeraabose/do180-custom-httpd   v1.0     7b65e939cd54   13 minutes ago   236 MB
+quay.io/redhattraining/httpd-parent     latest   4346d3cace25   22 months ago    236 MB
+[root@workstation ~]# podman run -d --name test-httpd -p 8280:80 ${RHT_OCP4_QUAY_USER}/do180-custom-httpd:v1.0
+6e7f01217946e488011a3d12b588b55897de7da6025f4a534822056ab2a06039
+[root@workstation ~]# podman ps
+CONTAINER ID  IMAGE                                       COMMAND               CREATED         STATUS             PORTS                 NAMES
+6e7f01217946  quay.io/veeraabose/do180-custom-httpd:v1.0  /bin/sh -c /usr/s...  11 seconds ago  Up 11 seconds ago  0.0.0.0:8280->80/tcp  test-httpd
+[root@workstation ~]# curl http://localhost:8280/do180.html
+DO180 Page
+[root@workstation ~]# lab image-operations finish
+
+Completing the GE: Creating a Custom Apache Container Image
+
+ · Stopping official-httpd container...........................  SUCCESS
+ · Removing official-httpd container...........................  SUCCESS
+ · Stopping test-httpd container...............................  SUCCESS
+ · Removing test-httpd container...............................  SUCCESS
+ · Removing redhattraining/httpd-parent image..................  SUCCESS
+ · Removing quay.io/veeraabose/do180-custom-httpd image........  SUCCESS
+ · Removing localhost/do180-custom-httpd image.................  SUCCESS
+[root@workstation ~]# 
+
+LAB - Managing Images
+---------------------------------------------------------------------------------------------------
+[root@workstation ~]# 
+[root@workstation ~]# lab image-review start
+
+Setting up workstation for the Lab: Managing Images
+
+ · Checking podman configuration...............................  SUCCESS
+[root@workstation ~]# podman pull quay.io/redhattraining/nginx:1.17
+Trying to pull quay.io/redhattraining/nginx:1.17...
+Getting image source signatures
+Copying blob c78335199707 done
+Copying blob d1a81ca518e2 done
+Copying blob b00ee4473ca6 done
+Copying config 9beeba249f done
+Writing manifest to image destination
+Storing signatures
+9beeba249f3ee158d3e495a6ac25c5667ae2de8a43ac2a8bfd2bf687a58c06c9
+[root@workstation ~]# podman images
+REPOSITORY                     TAG    IMAGE ID       CREATED         SIZE
+quay.io/redhattraining/nginx   1.17   9beeba249f3e   11 months ago   131 MB
+[root@workstation ~]# podman run --name official-nginx -d -p 8080:80 quay.io/redhattraining/nginx:1.17
+05a7492cf0fb7af35b4c06df8e7d2b6df407d60d1400fa7b6e0198363f7bce50
+[root@workstation ~]# pdman ps
+bash: pdman: command not found...
+[root@workstation ~]# podman ps
+CONTAINER ID  IMAGE                              COMMAND               CREATED         STATUS             PORTS                 NAMES
+05a7492cf0fb  quay.io/redhattraining/nginx:1.17  nginx -g daemon o...  18 seconds ago  Up 17 seconds ago  0.0.0.0:8080->80/tcp  official-nginx
+[root@workstation ~]# podman exec -it official-nginx /bin/bash
+root@05a7492cf0fb:/# echo 'DO180' > /usr/share/nginx/html/index.html
+root@05a7492cf0fb:/# exit
+exit
+[root@workstation ~]# curl 127.0.0.1:8080
+DO180
+[root@workstation ~]# podman stop official-nginx
+05a7492cf0fb7af35b4c06df8e7d2b6df407d60d1400fa7b6e0198363f7bce50
+[root@workstation ~]# podman commit -a veeraabose official-nginx do180/mynginx:v1.0-SNAPSHOT
+Getting image source signatures
+Copying blob ffc9b21953f4 skipped: already exists
+Copying blob 2f4accd375d9 skipped: already exists
+Copying blob 6c7de695ede3 skipped: already exists
+Copying blob 3d0dde1df62f done
+Copying config 4caacd1d58 done
+Writing manifest to image destination
+Storing signatures
+4caacd1d586751dee12ca48dec80037b58aa1090ab48c8e9e58674a5437dbc81
+[root@workstation ~]# podman images
+REPOSITORY                     TAG             IMAGE ID       CREATED         SIZE
+localhost/do180/mynginx        v1.0-SNAPSHOT   4caacd1d5867   9 seconds ago   131 MB
+quay.io/redhattraining/nginx   1.17            9beeba249f3e   11 months ago   131 MB
+[root@workstation ~]# podman run --name official-nginx-dev -d -p 8080:80 do180/mynginx:v1.0-SNAPSHOT
+d178a3539fea919d0e6cd78e0816c35ada8be2309f5469cfca1e5b441385a19e
+[root@workstation ~]# podman ps
+CONTAINER ID  IMAGE                                  COMMAND               CREATED         STATUS             PORTS                 NAMES
+d178a3539fea  localhost/do180/mynginx:v1.0-SNAPSHOT  nginx -g daemon o...  25 seconds ago  Up 24 seconds ago  0.0.0.0:8080->80/tcp  official-nginx-dev
+[root@workstation ~]# podman exec -it official-nginx-dev /bin/bash
+root@d178a3539fea:/# echo 'DO180 Page' > /usr/share/nginx/html/index.html
+root@d178a3539fea:/# exit
+exit
+[root@workstation ~]# curl 127.0.0.1:8080
+DO180 Page
+[root@workstation ~]# sudo podman stop official-nginx-dev
+d178a3539fea919d0e6cd78e0816c35ada8be2309f5469cfca1e5b441385a19e
+[root@workstation ~]# podman commit -a veeraabose official-nginx-dev do180/mynginx:v1.0
+Getting image source signatures
+Copying blob ffc9b21953f4 skipped: already exists
+Copying blob 2f4accd375d9 skipped: already exists
+Copying blob 6c7de695ede3 skipped: already exists
+Copying blob 3d0dde1df62f skipped: already exists
+Copying blob d554f35425ae done
+Copying config fef11c8294 done
+Writing manifest to image destination
+Storing signatures
+fef11c82945c5806657651d7c97eaac75fe37a7d6fdfcfd177e88d6e73c69e22
+[root@workstation ~]# podman images
+REPOSITORY                     TAG             IMAGE ID       CREATED          SIZE
+localhost/do180/mynginx        v1.0            fef11c82945c   17 seconds ago   131 MB
+localhost/do180/mynginx        v1.0-SNAPSHOT   4caacd1d5867   3 minutes ago    131 MB
+quay.io/redhattraining/nginx   1.17            9beeba249f3e   11 months ago    131 MB
+[root@workstation ~]# podman ps -a
+CONTAINER ID  IMAGE                                  COMMAND               CREATED        STATUS                         PORTS                 NAMES
+d178a3539fea  localhost/do180/mynginx:v1.0-SNAPSHOT  nginx -g daemon o...  2 minutes ago  Exited (0) About a minute ago  0.0.0.0:8080->80/tcp  official-nginx-dev
+05a7492cf0fb  quay.io/redhattraining/nginx:1.17      nginx -g daemon o...  6 minutes ago  Exited (0) 4 minutes ago       0.0.0.0:8080->80/tcp  official-nginx
+[root@workstation ~]# podman rm official-nginx-dev
+d178a3539fea919d0e6cd78e0816c35ada8be2309f5469cfca1e5b441385a19e
+[root@workstation ~]# podman ps -a
+CONTAINER ID  IMAGE                              COMMAND               CREATED        STATUS                    PORTS                 NAMES
+05a7492cf0fb  quay.io/redhattraining/nginx:1.17  nginx -g daemon o...  6 minutes ago  Exited (0) 5 minutes ago  0.0.0.0:8080->80/tcp  official-nginx
+[root@workstation ~]# podman rmi do180/mynginx:v1.0-SNAPSHOT
+Untagged: localhost/do180/mynginx:v1.0-SNAPSHOT
+[root@workstation ~]# podman images
+REPOSITORY                     TAG    IMAGE ID       CREATED              SIZE
+localhost/do180/mynginx        v1.0   fef11c82945c   About a minute ago   131 MB
+quay.io/redhattraining/nginx   1.17   9beeba249f3e   11 months ago        131 MB
+[root@workstation ~]# podman run -d --name my-nginx -p 8280:80 do180/mynginx:v1.0
+599ebdf4eaa60bbf155bbc7f46190aa34828b4dac2621280d2a021e22e1c1638
+[root@workstation ~]# curl 127.0.0.1:8280
+DO180 Page
+[root@workstation ~]# lab image-review grade
+
+Grading the student's work for the Lab: Managing Images
+
+ · Nginx container image is pulled.............................  PASS
+ · Container official-nginx is created.........................  PASS
+ · Container official-nginx is stopped.........................  PASS
+ · Tag do180/mynginx:v1.0-SNAPSHOT is removed..................  PASS
+ · Tag do180/mynginx:v1.0 is created...........................  PASS
+ · Container my-nginx is created and running...................  PASS
+ · index.html is available with the custom content.............  PASS
+[root@workstation ~]# 
+
+
+Summary
+------------
+In this chapter, you learned:
+ The Red Hat Container Catalog provides tested and certified images at
+ registry.redhat.io.
+  Podman can interact with remote container registries to search, pull, and push container images.
+   Imae tags are a mechanism to support multiple releases of a container image.
+    Podman provides commands to manage container images both in local storage and as
+    compressed files.
+     Use the podman commit to create an image from a container.
+     
+-------------------------------------------------------------------
+GE - Creating a Basic Apache Container Image
+---------------------------------------------------------------------------
+
+[root@workstation ~]# lab dockerfile-create start
+
+Setting up workstation for the Guided Exercise: Building a basic Apache Container Image
+
+ · Checking podman configuration...............................  SUCCESS
+Exercise is already setup.
+[root@workstation ~]# vim /home/student/DO180/labs/dockerfile-create/Dockerfile
+[root@workstation ~]# cat !$
+cat /home/student/DO180/labs/dockerfile-create/Dockerfile
+FROM ubi7/ubi:7.7
+MAINTAINER veera 
+LABEL description="A custom Apache container based on UBI 7"
+RUN yum install -y httpd && \
+yum clean all
+RUN echo "Hello from Veera Dockerfile" > /var/www/html/index.html
+EXPOSE 80
+CMD ["httpd", "-D", "FOREGROUND"]
+[root@workstation ~]# cd /home/student/DO180/labs/dockerfile-create/
+[root@workstation dockerfile-create]# podman build --layers=false -t do180/apache .
+STEP 1: FROM ubi7/ubi:7.7
+Getting image source signatures
+Copying blob 09dbbf8834d2 done
+Copying blob fcd63ccfdd0c done
+Copying config 0355cd652b done
+Writing manifest to image destination
+Storing signatures
+STEP 2: MAINTAINER veera 
+STEP 3: LABEL description="A custom Apache container based on UBI 7"
+STEP 4: RUN yum install -y httpd && yum clean all
+Loaded plugins: ovl, product-id, search-disabled-repos, subscription-manager
+This system is not receiving updates. You can use subscription-manager on the host to register and assign subscriptions.
+ubi-7                                                    | 3.8 kB     00:00     
+ubi-7-rhah                                               | 3.7 kB     00:00     
+ubi-7-server-devtools-rpms                               | 3.8 kB     00:00     
+ubi-7-server-extras-rpms                                 | 3.7 kB     00:00     
+ubi-7-server-optional-rpms                               | 3.8 kB     00:00     
+ubi-server-rhscl-7-rpms                                  | 3.8 kB     00:00     
+(1/18): ubi-7/x86_64/group                                 |  124 B   00:00     
+(2/18): ubi-7/x86_64/primary_db                            | 799 kB   00:00     
+(3/18): ubi-7/x86_64/updateinfo                            |   92 B   00:00     
+(4/18): ubi-7-rhah/x86_64/group                            |  124 B   00:00     
+(5/18): ubi-7-rhah/x86_64/primary_db                       | 2.5 kB   00:00     
+(6/18): ubi-7-rhah/x86_64/updateinfo                       |   92 B   00:00     
+(7/18): ubi-7-server-devtools-rpms/x86_64/updateinfo       |   92 B   00:00     
+(8/18): ubi-7-server-devtools-rpms/x86_64/primary_db       | 8.6 kB   00:00     
+(9/18): ubi-7-server-devtools-rpms/x86_64/group            |  124 B   00:00     
+(10/18): ubi-7-server-extras-rpms/x86_64/group             |  124 B   00:00     
+(11/18): ubi-7-server-extras-rpms/x86_64/primary_db        | 6.8 kB   00:00     
+(12/18): ubi-7-server-extras-rpms/x86_64/updateinfo        |   92 B   00:00     
+(13/18): ubi-7-server-optional-rpms/x86_64/group           |  124 B   00:00     
+(14/18): ubi-7-server-optional-rpms/x86_64/primary_db      |  14 kB   00:00     
+(15/18): ubi-7-server-optional-rpms/x86_64/updateinfo      |   92 B   00:00     
+(16/18): ubi-server-rhscl-7-rpms/x86_64/group              |  124 B   00:00     
+(17/18): ubi-server-rhscl-7-rpms/x86_64/primary_db         | 383 kB   00:00     
+(18/18): ubi-server-rhscl-7-rpms/x86_64/updateinfo         |   92 B   00:00     
+Resolving Dependencies
+--> Running transaction check
+---> Package httpd.x86_64 0:2.4.6-97.el7_9 will be installed
+--> Processing Dependency: httpd-tools = 2.4.6-97.el7_9 for package: httpd-2.4.6-97.el7_9.x86_64
+--> Processing Dependency: system-logos >= 7.92.1-1 for package: httpd-2.4.6-97.el7_9.x86_64
+--> Processing Dependency: /etc/mime.types for package: httpd-2.4.6-97.el7_9.x86_64
+--> Processing Dependency: libapr-1.so.0()(64bit) for package: httpd-2.4.6-97.el7_9.x86_64
+--> Processing Dependency: libaprutil-1.so.0()(64bit) for package: httpd-2.4.6-97.el7_9.x86_64
+--> Running transaction check
+---> Package apr.x86_64 0:1.4.8-7.el7 will be installed
+---> Package apr-util.x86_64 0:1.5.2-6.el7 will be installed
+---> Package httpd-tools.x86_64 0:2.4.6-97.el7_9 will be installed
+---> Package mailcap.noarch 0:2.1.41-2.el7 will be installed
+---> Package redhat-logos.noarch 0:70.7.0-1.el7 will be installed
+--> Finished Dependency Resolution
+
+Dependencies Resolved
+
+================================================================================
+ Package              Arch           Version                Repository     Size
+================================================================================
+Installing:
+ httpd                x86_64         2.4.6-97.el7_9         ubi-7         1.2 M
+Installing for dependencies:
+ apr                  x86_64         1.4.8-7.el7            ubi-7         104 k
+ apr-util             x86_64         1.5.2-6.el7            ubi-7          92 k
+ httpd-tools          x86_64         2.4.6-97.el7_9         ubi-7          93 k
+ mailcap              noarch         2.1.41-2.el7           ubi-7          31 k
+ redhat-logos         noarch         70.7.0-1.el7           ubi-7          13 M
+
+Transaction Summary
+================================================================================
+Install  1 Package (+5 Dependent packages)
+
+Total download size: 15 M
+Installed size: 18 M
+Downloading packages:
+warning: /var/cache/yum/x86_64/7Server/ubi-7/packages/apr-1.4.8-7.el7.x86_64.rpm: Header V3 RSA/SHA256 Signature, key ID fd431d51: NOKEY
+Public key for apr-1.4.8-7.el7.x86_64.rpm is not installed
+(1/6): apr-1.4.8-7.el7.x86_64.rpm                          | 104 kB   00:00     
+(2/6): apr-util-1.5.2-6.el7.x86_64.rpm                     |  92 kB   00:00     
+(3/6): httpd-tools-2.4.6-97.el7_9.x86_64.rpm               |  93 kB   00:00     
+(4/6): httpd-2.4.6-97.el7_9.x86_64.rpm                     | 1.2 MB   00:00     
+(5/6): mailcap-2.1.41-2.el7.noarch.rpm                     |  31 kB   00:00     
+(6/6): redhat-logos-70.7.0-1.el7.noarch.rpm                |  13 MB   00:00     
+--------------------------------------------------------------------------------
+Total                                               24 MB/s |  15 MB  00:00     
+Retrieving key from file:///etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release
+Importing GPG key 0xFD431D51:
+ Userid     : "Red Hat, Inc. (release key 2) <security@redhat.com>"
+ Fingerprint: 567e 347a d004 4ade 55ba 8a5f 199e 2f91 fd43 1d51
+ Package    : redhat-release-server-7.7-10.el7.x86_64 (@anaconda/7.7)
+ From       : /etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release
+Importing GPG key 0x2FA658E0:
+ Userid     : "Red Hat, Inc. (auxiliary key) <security@redhat.com>"
+ Fingerprint: 43a6 e49c 4a38 f4be 9abf 2a53 4568 9c88 2fa6 58e0
+ Package    : redhat-release-server-7.7-10.el7.x86_64 (@anaconda/7.7)
+ From       : /etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release
+Running transaction check
+Running transaction test
+Transaction test succeeded
+Running transaction
+  Installing : apr-1.4.8-7.el7.x86_64                                       1/6 
+  Installing : apr-util-1.5.2-6.el7.x86_64                                  2/6 
+  Installing : httpd-tools-2.4.6-97.el7_9.x86_64                            3/6 
+  Installing : redhat-logos-70.7.0-1.el7.noarch                             4/6 
+  Installing : mailcap-2.1.41-2.el7.noarch                                  5/6 
+  Installing : httpd-2.4.6-97.el7_9.x86_64                                  6/6 
+  Verifying  : httpd-tools-2.4.6-97.el7_9.x86_64                            1/6 
+  Verifying  : mailcap-2.1.41-2.el7.noarch                                  2/6 
+  Verifying  : apr-1.4.8-7.el7.x86_64                                       3/6 
+  Verifying  : apr-util-1.5.2-6.el7.x86_64                                  4/6 
+  Verifying  : httpd-2.4.6-97.el7_9.x86_64                                  5/6 
+  Verifying  : redhat-logos-70.7.0-1.el7.noarch                             6/6 
+
+Installed:
+  httpd.x86_64 0:2.4.6-97.el7_9                                                 
+
+Dependency Installed:
+  apr.x86_64 0:1.4.8-7.el7                  apr-util.x86_64 0:1.5.2-6.el7      
+  httpd-tools.x86_64 0:2.4.6-97.el7_9       mailcap.noarch 0:2.1.41-2.el7      
+  redhat-logos.noarch 0:70.7.0-1.el7       
+
+Complete!
+Loaded plugins: ovl, product-id, search-disabled-repos, subscription-manager
+This system is not receiving updates. You can use subscription-manager on the host to register and assign subscriptions.
+Cleaning repos: ubi-7 ubi-7-rhah ubi-7-server-devtools-rpms
+              : ubi-7-server-extras-rpms ubi-7-server-optional-rpms
+              : ubi-server-rhscl-7-rpms
+STEP 5: RUN echo "Hello from Veera Dockerfile" > /var/www/html/index.html
+STEP 6: EXPOSE 80
+STEP 7: CMD ["httpd", "-D", "FOREGROUND"]
+STEP 8: COMMIT do180/apache
+Getting image source signatures
+Copying blob 5601485f0109 skipped: already exists
+Copying blob ac7577b8c383 skipped: already exists
+Copying blob a7db5fcb5fe2 done
+Copying config 89ba5d5af9 done
+Writing manifest to image destination
+Storing signatures
+89ba5d5af90e83ce64c17847f33f242dd0bcd7bca3ab5e1149445e8a72879245
+[root@workstation dockerfile-create]# podman images
+REPOSITORY                              TAG      IMAGE ID       CREATED          SIZE
+localhost/do180/apache                  latest   89ba5d5af90e   19 seconds ago   247 MB
+localhost/do180/mynginx                 v1.0     fef11c82945c   2 hours ago      131 MB
+quay.io/veeraabose/do180-custom-httpd   v1.0     7b65e939cd54   3 hours ago      236 MB
+quay.io/redhattraining/nginx            1.17     9beeba249f3e   11 months ago    131 MB
+registry.access.redhat.com/ubi7/ubi     7.7      0355cd652bd1   13 months ago    215 MB
+[root@workstation dockerfile-create]# podman run --name lab-apache -d -p 10080:80 do180/apache
+dee4064f56ff852077a1bad1792888712135bf9f7dbbfd604326330f2f35eac5
+[root@workstation dockerfile-create]# curl 127.0.0.1:10080
+Hello from Veera Dockerfile
+[root@workstation dockerfile-create]# lab dockerfile-create finish
+
+Completing the Guided Exercise: Building a basic Apache Container Image
+
+ · Stopping lab-apache container that is running...............  SUCCESS
+ · Removing lab-apache container that is in the cache..........  SUCCESS
+ · Removing do180/apache custom container image................  SUCCESS
+ · Removing UBI7 container image...............................  SUCCESS
+[root@workstation dockerfile-create]#
+
+----------------------
+LAB - Creating Custom Container Images
+-----------------------------------------
+[root@workstation dockerfile-review]# lab dockerfile-review start
+
+Setting up workstation for the Lab: Creating Custom Container Images
+
+ · Checking podman configuration...............................  SUCCESS
+ · Checking if the container exists or is running..............  SUCCESS
+Exercise is already setup.
+[root@workstation dockerfile-review]# cd /home/student/DO180/labs/dockerfile-review/
+[root@workstation dockerfile-review]# vim Dockerfile
+[root@workstation dockerfile-review]# cat Dockerfile 
+FROM ubi7/ubi:7.7
+MAINTAINER Your Name <youremail>
+ENV PORT 8080
+RUN yum install -y httpd && \
+yum clean all
+RUN sed -ri -e "/^Listen 80/c\Listen ${PORT}" /etc/httpd/conf/httpd.conf && \
+chown -R apache:apache /etc/httpd/logs/ && \
+chown -R apache:apache /run/httpd/
+USER apache
+# Expose the custom port that you provided in the ENV var
+EXPOSE ${PORT}
+# Copy all files under src/ folder to Apahe DocumentRoot (/var/www/html)
+COPY ./src/ /var/www/html/
+# Start Apache in the foreground
+CMD ["httpd", "-D", "FOREGROUND"]
+[root@workstation dockerfile-review]# podman build --layers=false -t do180/custom-apache .
+STEP 1: FROM ubi7/ubi:7.7
+Getting image source signatures
+Copying blob fcd63ccfdd0c done
+Copying blob 09dbbf8834d2 done
+Copying config 0355cd652b done
+Writing manifest to image destination
+Storing signatures
+STEP 2: MAINTAINER Your Name <youremail>
+STEP 3: ENV PORT 8080
+STEP 4: RUN yum install -y httpd && yum clean all
+Loaded plugins: ovl, product-id, search-disabled-repos, subscription-manager
+This system is not receiving updates. You can use subscription-manager on the host to register and assign subscriptions.
+ubi-7                                                    | 3.8 kB     00:00     
+ubi-7-rhah                                               | 3.7 kB     00:00     
+ubi-7-server-devtools-rpms                               | 3.8 kB     00:00     
+ubi-7-server-extras-rpms                                 | 3.7 kB     00:00     
+ubi-7-server-optional-rpms                               | 3.8 kB     00:00     
+ubi-server-rhscl-7-rpms                                  | 3.8 kB     00:00     
+(1/18): ubi-7/x86_64/group                                 |  124 B   00:00     
+(2/18): ubi-7/x86_64/updateinfo                            |   92 B   00:00     
+(3/18): ubi-7/x86_64/primary_db                            | 799 kB   00:00     
+(4/18): ubi-7-rhah/x86_64/group                            |  124 B   00:00     
+(5/18): ubi-7-rhah/x86_64/updateinfo                       |   92 B   00:00     
+(6/18): ubi-7-rhah/x86_64/primary_db                       | 2.5 kB   00:00     
+(7/18): ubi-7-server-devtools-rpms/x86_64/updateinfo       |   92 B   00:00     
+(8/18): ubi-7-server-devtools-rpms/x86_64/primary_db       | 8.6 kB   00:00     
+(9/18): ubi-7-server-devtools-rpms/x86_64/group            |  124 B   00:00     
+(10/18): ubi-7-server-extras-rpms/x86_64/group             |  124 B   00:00     
+(11/18): ubi-7-server-extras-rpms/x86_64/updateinfo        |   92 B   00:00     
+(12/18): ubi-7-server-extras-rpms/x86_64/primary_db        | 6.8 kB   00:00     
+(13/18): ubi-7-server-optional-rpms/x86_64/group           |  124 B   00:00     
+(14/18): ubi-7-server-optional-rpms/x86_64/primary_db      |  14 kB   00:00     
+(15/18): ubi-7-server-optional-rpms/x86_64/updateinfo      |   92 B   00:00     
+(16/18): ubi-server-rhscl-7-rpms/x86_64/group              |  124 B   00:00     
+(17/18): ubi-server-rhscl-7-rpms/x86_64/primary_db         | 383 kB   00:00     
+(18/18): ubi-server-rhscl-7-rpms/x86_64/updateinfo         |   92 B   00:00     
+Resolving Dependencies
+--> Running transaction check
+---> Package httpd.x86_64 0:2.4.6-97.el7_9 will be installed
+--> Processing Dependency: httpd-tools = 2.4.6-97.el7_9 for package: httpd-2.4.6-97.el7_9.x86_64
+--> Processing Dependency: system-logos >= 7.92.1-1 for package: httpd-2.4.6-97.el7_9.x86_64
+--> Processing Dependency: /etc/mime.types for package: httpd-2.4.6-97.el7_9.x86_64
+--> Processing Dependency: libapr-1.so.0()(64bit) for package: httpd-2.4.6-97.el7_9.x86_64
+--> Processing Dependency: libaprutil-1.so.0()(64bit) for package: httpd-2.4.6-97.el7_9.x86_64
+--> Running transaction check
+---> Package apr.x86_64 0:1.4.8-7.el7 will be installed
+---> Package apr-util.x86_64 0:1.5.2-6.el7 will be installed
+---> Package httpd-tools.x86_64 0:2.4.6-97.el7_9 will be installed
+---> Package mailcap.noarch 0:2.1.41-2.el7 will be installed
+---> Package redhat-logos.noarch 0:70.7.0-1.el7 will be installed
+--> Finished Dependency Resolution
+
+Dependencies Resolved
+
+================================================================================
+ Package              Arch           Version                Repository     Size
+================================================================================
+Installing:
+ httpd                x86_64         2.4.6-97.el7_9         ubi-7         1.2 M
+Installing for dependencies:
+ apr                  x86_64         1.4.8-7.el7            ubi-7         104 k
+ apr-util             x86_64         1.5.2-6.el7            ubi-7          92 k
+ httpd-tools          x86_64         2.4.6-97.el7_9         ubi-7          93 k
+ mailcap              noarch         2.1.41-2.el7           ubi-7          31 k
+ redhat-logos         noarch         70.7.0-1.el7           ubi-7          13 M
+
+Transaction Summary
+================================================================================
+Install  1 Package (+5 Dependent packages)
+
+Total download size: 15 M
+Installed size: 18 M
+Downloading packages:
+warning: /var/cache/yum/x86_64/7Server/ubi-7/packages/apr-1.4.8-7.el7.x86_64.rpm: Header V3 RSA/SHA256 Signature, key ID fd431d51: NOKEY
+Public key for apr-1.4.8-7.el7.x86_64.rpm is not installed
+(1/6): apr-1.4.8-7.el7.x86_64.rpm                          | 104 kB   00:00     
+(2/6): apr-util-1.5.2-6.el7.x86_64.rpm                     |  92 kB   00:00     
+(3/6): httpd-2.4.6-97.el7_9.x86_64.rpm                     | 1.2 MB   00:00     
+(4/6): httpd-tools-2.4.6-97.el7_9.x86_64.rpm               |  93 kB   00:00     
+(5/6): redhat-logos-70.7.0-1.el7.noarch.rpm                |  13 MB   00:00     
+(6/6): mailcap-2.1.41-2.el7.noarch.rpm                     |  31 kB   00:00     
+--------------------------------------------------------------------------------
+Total                                               16 MB/s |  15 MB  00:00     
+Retrieving key from file:///etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release
+Importing GPG key 0xFD431D51:
+ Userid     : "Red Hat, Inc. (release key 2) <security@redhat.com>"
+ Fingerprint: 567e 347a d004 4ade 55ba 8a5f 199e 2f91 fd43 1d51
+ Package    : redhat-release-server-7.7-10.el7.x86_64 (@anaconda/7.7)
+ From       : /etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release
+Importing GPG key 0x2FA658E0:
+ Userid     : "Red Hat, Inc. (auxiliary key) <security@redhat.com>"
+ Fingerprint: 43a6 e49c 4a38 f4be 9abf 2a53 4568 9c88 2fa6 58e0
+ Package    : redhat-release-server-7.7-10.el7.x86_64 (@anaconda/7.7)
+ From       : /etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release
+Running transaction check
+Running transaction test
+Transaction test succeeded
+Running transaction
+  Installing : apr-1.4.8-7.el7.x86_64                                       1/6 
+  Installing : apr-util-1.5.2-6.el7.x86_64                                  2/6 
+  Installing : httpd-tools-2.4.6-97.el7_9.x86_64                            3/6 
+  Installing : redhat-logos-70.7.0-1.el7.noarch                             4/6 
+  Installing : mailcap-2.1.41-2.el7.noarch                                  5/6 
+  Installing : httpd-2.4.6-97.el7_9.x86_64                                  6/6 
+  Verifying  : httpd-tools-2.4.6-97.el7_9.x86_64                            1/6 
+  Verifying  : mailcap-2.1.41-2.el7.noarch                                  2/6 
+  Verifying  : apr-1.4.8-7.el7.x86_64                                       3/6 
+  Verifying  : apr-util-1.5.2-6.el7.x86_64                                  4/6 
+  Verifying  : httpd-2.4.6-97.el7_9.x86_64                                  5/6 
+  Verifying  : redhat-logos-70.7.0-1.el7.noarch                             6/6 
+
+Installed:
+  httpd.x86_64 0:2.4.6-97.el7_9                                                 
+
+Dependency Installed:
+  apr.x86_64 0:1.4.8-7.el7                  apr-util.x86_64 0:1.5.2-6.el7      
+  httpd-tools.x86_64 0:2.4.6-97.el7_9       mailcap.noarch 0:2.1.41-2.el7      
+  redhat-logos.noarch 0:70.7.0-1.el7       
+
+Complete!
+Loaded plugins: ovl, product-id, search-disabled-repos, subscription-manager
+This system is not receiving updates. You can use subscription-manager on the host to register and assign subscriptions.
+Cleaning repos: ubi-7 ubi-7-rhah ubi-7-server-devtools-rpms
+              : ubi-7-server-extras-rpms ubi-7-server-optional-rpms
+              : ubi-server-rhscl-7-rpms
+STEP 5: RUN sed -ri -e "/^Listen 80/c\Listen ${PORT}" /etc/httpd/conf/httpd.conf && chown -R apache:apache /etc/httpd/logs/ && chown -R apache:apache /run/httpd/
+STEP 6: USER apache
+STEP 7: EXPOSE ${PORT}
+STEP 8: COPY ./src/ /var/www/html/
+STEP 9: CMD ["httpd", "-D", "FOREGROUND"]
+STEP 10: COMMIT do180/custom-apache
+Getting image source signatures
+Copying blob 5601485f0109 skipped: already exists
+Copying blob ac7577b8c383 skipped: already exists
+Copying blob 7eaa80f6c3bd done
+Copying config 17f7e9653e done
+Writing manifest to image destination
+Storing signatures
+17f7e9653eea1546f047967a907250b650fa0bbf4e2f4e85030bec28e28b4c15
+[root@workstation dockerfile-review]# podman images
+REPOSITORY                              TAG      IMAGE ID       CREATED          SIZE
+localhost/do180/custom-apache           latest   17f7e9653eea   14 seconds ago   247 MB
+localhost/do180/mynginx                 v1.0     fef11c82945c   3 hours ago      131 MB
+quay.io/veeraabose/do180-custom-httpd   v1.0     7b65e939cd54   3 hours ago      236 MB
+quay.io/redhattraining/nginx            1.17     9beeba249f3e   11 months ago    131 MB
+registry.access.redhat.com/ubi7/ubi     7.7      0355cd652bd1   13 months ago    215 MB
+[root@workstation dockerfile-review]# podman run -d --name dockerfile -p 20080:8080 do180/custom-apache
+193c6356521bd4dd8a242432b692716a27d84c1153af169d93502786939b6b60
+[root@workstation dockerfile-review]# curl 127.0.0.1:20080
+<html>
+ <header><title>DO180 Hello!</title></header>
+ <body>
+   Hello World! The dockerfile-review lab works!
+ </body>
+</html>
+[root@workstation dockerfile-review]# e script until successful.
+bash: e: command not found...
+[root@workstation dockerfile-review]# lab dockerfile-review grade
+
+Grading the student's work for Lab: Creating Custom Container Images
+
+ · Check for apache container image............................  PASS
+ · Check if the container is running...........................  PASS
+ · Verifying if httpd was installed correctly in apache image..  PASS
+ · Verifying if hello world is running on server...............  PASS
+ · Stopping grade container....................................  SUCCESS
+ · Removing grade container....................................  SUCCESS
+
+[root@workstation dockerfile-review]# 
+
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------
+                                                          Day3
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------							  
+ ---------------------------------------------------CH-6-GE-Deploying a Database Server on OpenShift---------------------------------------
+ [student@workstation ~]$ lab openshift-resources start
+
+Setting up workstation for the Guided Exercise: Deploying a Database Server on OpenShift
+
+ Verifying the OpenShift cluster is running:
+ · Log in on OpenShift.........................................  SUCCESS
+ · Check master node master01 is ready.........................  SUCCESS
+ · Check master node master02 is ready.........................  SUCCESS
+ · Check master node master03 is ready.........................  SUCCESS
+ · Check the internal registry is up and running...............  SUCCESS
+ · Ensuring the 'developer-mysql-openshift' project is absent..  SUCCESS
+[student@workstation ~]$ source /usr/local/etc/ocp4.config
+[student@workstation ~]$ cat !$
+cat /usr/local/etc/ocp4.config
+RHT_OCP4_MASTER_API=https://api.ocp4.example.com:6443
+RHT_OCP4_WILDCARD_DOMAIN=apps.ocp4.example.com
+RHT_OCP4_NEXUS_SERVER=nexus-common.apps.ocp4.example.com
+RHT_OCP4_DEV_USER=developer
+RHT_OCP4_DEV_PASSWORD=developer
+RHT_OCP4_GITHUB_USER=veerabose
+RHT_OCP4_QUAY_USER=veeraabose
+RHT_OCP4_USER_PASSWD=redhat
+[student@workstation ~]$ oc login -u ${RHT_OCP4_DEV_USER} -p ${RHT_OCP4_DEV_PASSWORD} ${RHT_OCP4_MASTER_API}
+Login successful.
+
+You don't have any projects. You can try to create a new project, by running
+
+    oc new-project <projectname>
+
+[student@workstation ~]$ oc new-project ${RHT_OCP4_DEV_USER}-ysql-openshift
+Now using project "developer-ysql-openshift" on server "https://api.ocp4.example.com:6443".
+
+You can add applications to this project with the 'new-app' command. For example, try:
+
+    oc new-app ruby~https://github.com/sclorg/ruby-ex.git
+
+to build a new example application in Ruby. Or use kubectl to deploy a simple Kubernetes application:
+
+    kubectl create deployment hello-node --image=gcr.io/hello-minikube-zero-install/hello-node
+
+[student@workstation ~]$ oc new-project ${RHT_OCP4_DEV_USER}-mysql-openshift
+Now using project "developer-mysql-openshift" on server "https://api.ocp4.example.com:6443".
+
+You can add applications to this project with the 'new-app' command. For example, try:
+
+    oc new-app ruby~https://github.com/sclorg/ruby-ex.git
+
+to build a new example application in Ruby. Or use kubectl to deploy a simple Kubernetes application:
+
+    kubectl create deployment hello-node --image=gcr.io/hello-minikube-zero-install/hello-node
+
+[student@workstation ~]$ oc new-app --as-deployment-config --docker-image=registry.access.redhat.com/rhscl/mysql-57-rhel7:latest --name=mysql-openshift -e MYSQL_USER=user1 -e MYSQL_PASSWORD=mypa55 -e MYSQL_DATABASE=testdb  -e MYSQL_ROOT_PASSWORD=r00tpa55
+--> Found container image 60726b3 (18 months old) from registry.access.redhat.com for "registry.access.redhat.com/rhscl/mysql-57-rhel7:latest"
+
+    MySQL 5.7 
+    --------- 
+    MySQL is a multi-user, multi-threaded SQL database server. The container image provides a containerized packaging of the MySQL mysqld daemon and client application. The mysqld server daemon accepts connections from clients and provides access to content from MySQL databases on behalf of the clients.
+
+    Tags: database, mysql, mysql57, rh-mysql57
+
+    * An image stream tag will be created as "mysql-openshift:latest" that will track this image
+    * This image will be deployed in deployment config "mysql-openshift"
+    * Port 3306/tcp will be load balanced by service "mysql-openshift"
+      * Other containers can access this service through the hostname "mysql-openshift"
+
+--> Creating resources ...
+    imagestream.image.openshift.io "mysql-openshift" created
+    deploymentconfig.apps.openshift.io "mysql-openshift" created
+    service "mysql-openshift" created
+--> Success
+    Application is not exposed. You can expose services to the outside world by executing one or more of the commands below:
+     'oc expose svc/mysql-openshift' 
+    Run 'oc status' to view your app.
+[student@workstation ~]$ oc status
+In project developer-mysql-openshift on server https://api.ocp4.example.com:6443
+
+svc/mysql-openshift - 172.30.40.2:3306
+  dc/mysql-openshift deploys istag/mysql-openshift:latest 
+    deployment #1 deployed 33 seconds ago - 1 pod
+
+
+2 infos identified, use 'oc status --suggest' to see details.
+[student@workstation ~]$ oc status --suggest
+In project developer-mysql-openshift on server https://api.ocp4.example.com:6443
+
+svc/mysql-openshift - 172.30.40.2:3306
+  dc/mysql-openshift deploys istag/mysql-openshift:latest 
+    deployment #1 deployed about a minute ago - 1 pod
+
+Info:
+  * dc/mysql-openshift has no readiness probe to verify pods are ready to accept traffic or ensure deployment is successful.
+    try: oc set probe dc/mysql-openshift --readiness ...
+  * dc/mysql-openshift has no liveness probe to verify pods are still running.
+    try: oc set probe dc/mysql-openshift --liveness ...
+
+View details with 'oc describe <resource>/<name>' or list everything with 'oc get all'.
+[student@workstation ~]$ oc get pods
+NAME                       READY   STATUS      RESTARTS   AGE
+mysql-openshift-1-7skrj    1/1     Running     0          94s
+mysql-openshift-1-deploy   0/1     Completed   0          97s
+[student@workstation ~]$ oc describe pod mysql-openshift-1-7skrj
+Name:         mysql-openshift-1-7skrj
+Namespace:    developer-mysql-openshift
+Priority:     0
+Node:         master01/192.168.50.10
+Start Time:   Tue, 27 Apr 2021 21:35:22 -0400
+Labels:       deployment=mysql-openshift-1
+              deploymentconfig=mysql-openshift
+Annotations:  k8s.v1.cni.cncf.io/network-status:
+                [{
+                    "name": "openshift-sdn",
+                    "interface": "eth0",
+                    "ips": [
+                        "10.10.0.35"
+                    ],
+                    "default": true,
+                    "dns": {}
+                }]
+              k8s.v1.cni.cncf.io/networks-status:
+                [{
+                    "name": "openshift-sdn",
+                    "interface": "eth0",
+                    "ips": [
+                        "10.10.0.35"
+                    ],
+                    "default": true,
+                    "dns": {}
+                }]
+              openshift.io/deployment-config.latest-version: 1
+              openshift.io/deployment-config.name: mysql-openshift
+              openshift.io/deployment.name: mysql-openshift-1
+              openshift.io/generated-by: OpenShiftNewApp
+              openshift.io/scc: restricted
+Status:       Running
+IP:           10.10.0.35
+IPs:
+  IP:           10.10.0.35
+Controlled By:  ReplicationController/mysql-openshift-1
+Containers:
+  mysql-openshift:
+    Container ID:   cri-o://e142126b4f21eaa36587be4de46a69ed71341015328879d456afc1e432eccbc4
+    Image:          registry.access.redhat.com/rhscl/mysql-57-rhel7@sha256:9a781abe7581cc141e14a7e404ec34125b3e89c008b14f4e7b41e094fd3049fe
+    Image ID:       registry.access.redhat.com/rhscl/mysql-57-rhel7@sha256:9a781abe7581cc141e14a7e404ec34125b3e89c008b14f4e7b41e094fd3049fe
+    Port:           3306/TCP
+    Host Port:      0/TCP
+    State:          Running
+      Started:      Tue, 27 Apr 2021 21:35:35 -0400
+    Ready:          True
+    Restart Count:  0
+    Environment:
+      MYSQL_DATABASE:       testdb
+      MYSQL_PASSWORD:       mypa55
+      MYSQL_ROOT_PASSWORD:  r00tpa55
+      MYSQL_USER:           user1
+    Mounts:
+      /var/run/secrets/kubernetes.io/serviceaccount from default-token-f4x2f (ro)
+Conditions:
+  Type              Status
+  Initialized       True 
+  Ready             True 
+  ContainersReady   True 
+  PodScheduled      True 
+Volumes:
+  default-token-f4x2f:
+    Type:        Secret (a volume populated by a Secret)
+    SecretName:  default-token-f4x2f
+    Optional:    false
+QoS Class:       BestEffort
+Node-Selectors:  <none>
+Tolerations:     node.kubernetes.io/not-ready:NoExecute for 300s
+                 node.kubernetes.io/unreachable:NoExecute for 300s
+Events:
+  Type    Reason          Age    From               Message
+  ----    ------          ----   ----               -------
+  Normal  Scheduled       3m13s  default-scheduler  Successfully assigned developer-mysql-openshift/mysql-openshift-1-7skrj to master01
+  Normal  AddedInterface  3m11s  multus             Add eth0 [10.10.0.35/23]
+  Normal  Pulling         3m11s  kubelet, master01  Pulling image "registry.access.redhat.com/rhscl/mysql-57-rhel7@sha256:9a781abe7581cc141e14a7e404ec34125b3e89c008b14f4e7b41e094fd3049fe"
+  Normal  Pulled          3m     kubelet, master01  Successfully pulled image "registry.access.redhat.com/rhscl/mysql-57-rhel7@sha256:9a781abe7581cc141e14a7e404ec34125b3e89c008b14f4e7b41e094fd3049fe"
+  Normal  Created         3m     kubelet, master01  Created container mysql-openshift
+  Normal  Started         3m     kubelet, master01  Started container mysql-openshift
+[student@workstation ~]$ oc get svc
+NAME              TYPE        CLUSTER-IP    EXTERNAL-IP   PORT(S)    AGE
+mysql-openshift   ClusterIP   172.30.40.2   <none>        3306/TCP   3m36s
+[student@workstation ~]$ oc describe svc mysql-openshift
+Name:              mysql-openshift
+Namespace:         developer-mysql-openshift
+Labels:            app=mysql-openshift
+                   app.kubernetes.io/component=mysql-openshift
+                   app.kubernetes.io/instance=mysql-openshift
+Annotations:       openshift.io/generated-by: OpenShiftNewApp
+Selector:          deploymentconfig=mysql-openshift
+Type:              ClusterIP
+IP:                172.30.40.2
+Port:              3306-tcp  3306/TCP
+TargetPort:        3306/TCP
+Endpoints:         10.10.0.35:3306
+Session Affinity:  None
+Events:            <none>
+[student@workstation ~]$ oc get dc
+NAME              REVISION   DESIRED   CURRENT   TRIGGERED BY
+mysql-openshift   1          1         1         config,image(mysql-openshift:latest)
+[student@workstation ~]$ oc describe dc mysql-openshift
+Name:		mysql-openshift
+Namespace:	developer-mysql-openshift
+Created:	4 minutes ago
+Labels:		app=mysql-openshift
+		app.kubernetes.io/component=mysql-openshift
+		app.kubernetes.io/instance=mysql-openshift
+Annotations:	openshift.io/generated-by=OpenShiftNewApp
+Latest Version:	1
+Selector:	deploymentconfig=mysql-openshift
+Replicas:	1
+Triggers:	Config, Image(mysql-openshift@latest, auto=true)
+Strategy:	Rolling
+Template:
+Pod Template:
+  Labels:	deploymentconfig=mysql-openshift
+  Annotations:	openshift.io/generated-by: OpenShiftNewApp
+  Containers:
+   mysql-openshift:
+    Image:	registry.access.redhat.com/rhscl/mysql-57-rhel7@sha256:9a781abe7581cc141e14a7e404ec34125b3e89c008b14f4e7b41e094fd3049fe
+    Port:	3306/TCP
+    Host Port:	0/TCP
+    Environment:
+      MYSQL_DATABASE:		testdb
+      MYSQL_PASSWORD:		mypa55
+      MYSQL_ROOT_PASSWORD:	r00tpa55
+      MYSQL_USER:		user1
+    Mounts:			<none>
+  Volumes:			<none>
+
+Deployment #1 (latest):
+	Name:		mysql-openshift-1
+	Created:	4 minutes ago
+	Status:		Complete
+	Replicas:	1 current / 1 desired
+	Selector:	deployment=mysql-openshift-1,deploymentconfig=mysql-openshift
+	Labels:		app.kubernetes.io/component=mysql-openshift,app.kubernetes.io/instance=mysql-openshift,app=mysql-openshift,openshift.io/deployment-config.name=mysql-openshift
+	Pods Status:	1 Running / 0 Waiting / 0 Succeeded / 0 Failed
+
+Events:
+  Type		Reason			Age	From				Message
+  ----		------			----	----				-------
+  Normal	DeploymentCreated	4m43s	deploymentconfig-controller	Created new replication controller "mysql-openshift-1" for version 1
+[student@workstation ~]$ oc expose service mysql-openshift
+route.route.openshift.io/mysql-openshift exposed
+[student@workstation ~]$ oc get routes
+NAME              HOST/PORT                                                         PATH   SERVICES          PORT       TERMINATION   WILDCARD
+mysql-openshift   mysql-openshift-developer-mysql-openshift.apps.ocp4.example.com          mysql-openshift   3306-tcp                 None
+
+From the workstation machine, configure port forwarding between workstation
+and the database pod running on OpenShift using port 3306. The terminal will hang after executing the command.
+
+[student@workstation ~]$ oc port-forward mysql-openshift-1-7skrj 3306:3306
+Forwarding from 127.0.0.1:3306 -> 3306
+Forwarding from [::1]:3306 -> 3306
+
+From the workstation machine open another terminal and connect to the MySQL
+server using the MySQL client.
+
+[student@workstation ~]$ mysql -uuser1 -pmypa55 --protocol tcp -h localhost
+Welcome to the MariaDB monitor.  Commands end with ; or \g.
+Your MySQL connection id is 2
+Server version: 5.7.24 MySQL Community Server (GPL)
+
+Copyright (c) 2000, 2018, Oracle, MariaDB Corporation Ab and others.
+
+Type 'help;' or '\h' for help. Type '\c' to clear the current input statement.
+
+MySQL [(none)]> show databases;
++--------------------+
+| Database           |
++--------------------+
+| information_schema |
+| testdb             |
++--------------------+
+2 rows in set (0.003 sec)
+
+MySQL [(none)]> exit
+Bye
+[student@workstation ~]$ [student@workstation ~]$ oc delete project developer-mysql-openshift
+project.project.openshift.io "developer-mysql-openshift" deleted
+[student@workstation ~]$ oc delete project developer-ysql-openshift
+project.project.openshift.io "developer-ysql-openshift" deleted
+[student@workstation ~]$ lab openshift-resources finish
+
+Completing the Guided Exercise: Deploying a Database Server on OpenShift
+
+ · Deleting the 'developer-mysql-openshift' project............  SUCCESS
+[student@workstation ~]$ 
+
+---------------------------------------CH6-GE-Exposing a Service as a Route-------------------------------------------
+
+[student@workstation ~]$ lab openshift-routes start
+
+Setting up workstation for the Guided Exercise: Exposing a Service as a Route
+
+ Verifying the OpenShift cluster is running:
+ · Log in on OpenShift.........................................  SUCCESS
+ · Check master node master01 is ready.........................  SUCCESS
+ · Check master node master02 is ready.........................  SUCCESS
+ · Check master node master03 is ready.........................  SUCCESS
+ · Check the internal registry is up and running...............  SUCCESS
+ · Ensuring the 'developer-route' project does not exist.......  SUCCESS
+[student@workstation ~]$ source /usr/local/etc/ocp4.config
+[student@workstation ~]$ oc login -u ${RHT_OCP4_DEV_USER} -p ${RHT_OCP4_DEV_PASSWORD} ${RHT_OCP4_MASTER_API}
+Login successful.
+
+You don't have any projects. You can try to create a new project, by running
+
+    oc new-project <projectname>
+
+[student@workstation ~]$ oc new-project ${RHT_OCP4_DEV_USER}-route
+Now using project "developer-route" on server "https://api.ocp4.example.com:6443".
+
+You can add applications to this project with the 'new-app' command. For example, try:
+
+    oc new-app ruby~https://github.com/sclorg/ruby-ex.git
+
+to build a new example application in Ruby. Or use kubectl to deploy a simple Kubernetes application:
+
+    kubectl create deployment hello-node --image=gcr.io/hello-minikube-zero-install/hello-node
+
+[student@workstation ~]$ oc new-app --as-deployment-config php:7.3~https://github.com/${RHT_OCP4_GITHUB_USER}/DO180-apps --context-dir php-helloworld --name php-helloworld
+--> Found image 988e5d4 (9 months old) in image stream "openshift/php" under tag "7.3" for "php:7.3"
+
+    Apache 2.4 with PHP 7.3 
+    ----------------------- 
+    PHP 7.3 available as container is a base platform for building and running various PHP 7.3 applications and frameworks. PHP is an HTML-embedded scripting language. PHP attempts to make it easy for developers to write dynamically generated web pages. PHP also offers built-in database integration for several commercial and non-commercial database management systems, so writing a database-enabled webpage with PHP is fairly simple. The most common use of PHP coding is probably as a replacement for CGI scripts.
+
+    Tags: builder, php, php73, rh-php73
+
+    * A source build using source code from https://github.com/veerabose/DO180-apps will be created
+      * The resulting image will be pushed to image stream tag "php-helloworld:latest"
+      * Use 'oc start-build' to trigger a new build
+    * This image will be deployed in deployment config "php-helloworld"
+    * Ports 8080/tcp, 8443/tcp will be load balanced by service "php-helloworld"
+      * Other containers can access this service through the hostname "php-helloworld"
+
+--> Creating resources ...
+    imagestream.image.openshift.io "php-helloworld" created
+    buildconfig.build.openshift.io "php-helloworld" created
+    deploymentconfig.apps.openshift.io "php-helloworld" created
+    service "php-helloworld" created
+--> Success
+    Build scheduled, use 'oc logs -f bc/php-helloworld' to track its progress.
+    Application is not exposed. You can expose services to the outside world by executing one or more of the commands below:
+     'oc expose svc/php-helloworld' 
+    Run 'oc status' to view your app.
+[student@workstation ~]$ oc get pods -w
+NAME                     READY   STATUS    RESTARTS   AGE
+php-helloworld-1-build   1/1     Running   0          32s
+php-helloworld-1-build   0/1     Completed   0          32s
+php-helloworld-1-deploy   0/1     Pending     0          0s
+php-helloworld-1-deploy   0/1     Pending     0          0s
+php-helloworld-1-deploy   0/1     ContainerCreating   0          0s
+php-helloworld-1-deploy   0/1     ContainerCreating   0          3s
+php-helloworld-1-wz84l    0/1     Pending             0          0s
+php-helloworld-1-wz84l    0/1     Pending             0          0s
+php-helloworld-1-wz84l    0/1     ContainerCreating   0          0s
+php-helloworld-1-deploy   1/1     Running             0          4s
+php-helloworld-1-wz84l    0/1     ContainerCreating   0          2s
+php-helloworld-1-wz84l    0/1     ContainerCreating   0          8s
+php-helloworld-1-wz84l    1/1     Running             0          14s
+php-helloworld-1-deploy   0/1     Completed           0          18s
+^C[student@workstation ~]$ oc logs -f
+bcerror: expected 'logs [-f] [-p] (POD | TYPE/NAME) [-c CONTAINER]'.
+POD or TYPE/NAME is a required argument for the logs command
+See 'oc logs -h' for help and examples
+/[student@workstation ~]$ oc logs -f bc/php-helloworld
+Cloning "https://github.com/veerabose/DO180-apps" ...
+	Commit:	116144243ce0f42f483a330d78fce16419fa62fa (Update labs)
+	Author:	veerabose <34031941+veerabose@users.noreply.github.com>
+	Date:	Tue Apr 27 21:51:34 2021 -0400
+Caching blobs under "/var/cache/blobs".
+Getting image source signatures
+Copying blob sha256:e7021e0589e97471d99c4265b7c8e64da328e48f116b5f260353b2e0a2adb373
+Copying blob sha256:f659c5c779ac4373302bfe3dc7d713c59cf9ec9f179a71e9b26336a51043fad2
+Copying blob sha256:fc5b206e9329a1674dd9e8efbee45c9be28d0d0dcbabba3c6bb67a2f22cfcf2a
+Copying blob sha256:14e4b218199e7985dbeca760da0fa9b969ca5fdaae5095a273cd924afa6898e9
+Copying blob sha256:9e7a6dc796f0a75c560158a9f9e30fb8b5a90cb53edce9ffbdf5778406e4de39
+Copying config sha256:988e5d4c035d1585f006d0c57a0cfe4bc9f8aae412585f4a6b8fed87da45105f
+Writing manifest to image destination
+Storing signatures
+Generating dockerfile with builder image image-registry.openshift-image-registry.svc:5000/openshift/php@sha256:962d936b00f4953d977be9b85268a289bf2f9d49df4d51b408a7c7835a551103
+STEP 1: FROM image-registry.openshift-image-registry.svc:5000/openshift/php@sha256:962d936b00f4953d977be9b85268a289bf2f9d49df4d51b408a7c7835a551103
+STEP 2: LABEL "io.openshift.build.commit.ref"="master"       "io.openshift.build.commit.message"="Update labs"       "io.openshift.build.source-location"="https://github.com/veerabose/DO180-apps"       "io.openshift.build.source-context-dir"="php-helloworld"       "io.openshift.build.image"="image-registry.openshift-image-registry.svc:5000/openshift/php@sha256:962d936b00f4953d977be9b85268a289bf2f9d49df4d51b408a7c7835a551103"       "io.openshift.build.commit.author"="veerabose <34031941+veerabose@users.noreply.github.com>"       "io.openshift.build.commit.date"="Tue Apr 27 21:51:34 2021 -0400"       "io.openshift.build.commit.id"="116144243ce0f42f483a330d78fce16419fa62fa"
+STEP 3: ENV OPENSHIFT_BUILD_NAME="php-helloworld-1"     OPENSHIFT_BUILD_NAMESPACE="developer-route"     OPENSHIFT_BUILD_SOURCE="https://github.com/veerabose/DO180-apps"     OPENSHIFT_BUILD_COMMIT="116144243ce0f42f483a330d78fce16419fa62fa"
+STEP 4: USER root
+STEP 5: COPY upload/src /tmp/src
+STEP 6: RUN chown -R 1001:0 /tmp/src
+STEP 7: USER 1001
+STEP 8: RUN /usr/libexec/s2i/assemble
+---> Installing application source...
+=> sourcing 20-copy-config.sh ...
+---> 04:22:27     Processing additional arbitrary httpd configuration provided by s2i ...
+=> sourcing 00-documentroot.conf ...
+=> sourcing 50-mpm-tuning.conf ...
+=> sourcing 40-ssl-certs.sh ...
+STEP 9: CMD /usr/libexec/s2i/run
+STEP 10: COMMIT temp.builder.openshift.io/developer-route/php-helloworld-1:fc65d59e
+time="2021-04-28T04:22:27Z" level=info msg="Image operating system mismatch: image uses \"\", expecting \"linux\""
+time="2021-04-28T04:22:27Z" level=info msg="Image architecture mismatch: image uses \"\", expecting \"amd64\""
+Getting image source signatures
+Copying blob sha256:abc8c32bad762f509f729872b552e8366b9c71a863dc5e9e648dda04a7896e50
+Copying blob sha256:b9e30d7689db4040323cb65632888c37d96cbd60d0f05c4dd37e78b9b8a0566a
+Copying blob sha256:8b0dba9179a6a0d5de65c6b001c8c9c83eaa169ce526b22a33845ede8f74568c
+Copying blob sha256:bda7ec697f579121100fed608753105e2150894241b011af8b12fea98296f8f7
+Copying blob sha256:5daa741fd16f3d131c8667e9e7bcbcb0ce95243275070d34686eb6df2c6200fd
+Copying blob sha256:75371e1891b322952b80fdbd7c82a753dbf985c73e7f66aaba23da320db440ee
+Copying config sha256:90dd5a874082cb3f3b72dcd6efea1f0109b27508c4c1dc0cdaaa2282bc45b57d
+Writing manifest to image destination
+Storing signatures
+--> 90dd5a87408
+90dd5a874082cb3f3b72dcd6efea1f0109b27508c4c1dc0cdaaa2282bc45b57d
+
+Pushing image image-registry.openshift-image-registry.svc:5000/developer-route/php-helloworld:latest ...
+Getting image source signatures
+Copying blob sha256:75371e1891b322952b80fdbd7c82a753dbf985c73e7f66aaba23da320db440ee
+Copying blob sha256:fc5b206e9329a1674dd9e8efbee45c9be28d0d0dcbabba3c6bb67a2f22cfcf2a
+Copying blob sha256:f659c5c779ac4373302bfe3dc7d713c59cf9ec9f179a71e9b26336a51043fad2
+Copying blob sha256:9e7a6dc796f0a75c560158a9f9e30fb8b5a90cb53edce9ffbdf5778406e4de39
+Copying blob sha256:e7021e0589e97471d99c4265b7c8e64da328e48f116b5f260353b2e0a2adb373
+Copying blob sha256:14e4b218199e7985dbeca760da0fa9b969ca5fdaae5095a273cd924afa6898e9
+Copying config sha256:90dd5a874082cb3f3b72dcd6efea1f0109b27508c4c1dc0cdaaa2282bc45b57d
+Writing manifest to image destination
+Storing signatures
+Successfully pushed image-registry.openshift-image-registry.svc:5000/developer-route/php-helloworld@sha256:a4730462bd2a0caa907bd3db3a936e4560388030d61359f4638bc0f14470bc2c
+Push successful
+[student@workstation ~]$ logs -f dc/php-helloworld
+bash: logs: command not found...
+[student@workstation ~]$ oc logs -f dc/php-helloworld
+=> sourcing 20-copy-config.sh ...
+---> 04:22:45     Processing additional arbitrary httpd configuration provided by s2i ...
+=> sourcing 00-documentroot.conf ...
+=> sourcing 50-mpm-tuning.conf ...
+=> sourcing 40-ssl-certs.sh ...
+AH00558: httpd: Could not reliably determine the server's fully qualified domain name, using 10.10.0.36. Set the 'ServerName' directive globally to suppress this message
+[Wed Apr 28 04:22:46.072193 2021] [ssl:warn] [pid 1] AH01909: 10.10.0.36:8443:0 server certificate does NOT include an ID which matches the server name
+AH00558: httpd: Could not reliably determine the server's fully qualified domain name, using 10.10.0.36. Set the 'ServerName' directive globally to suppress this message
+[Wed Apr 28 04:22:46.150057 2021] [ssl:warn] [pid 1] AH01909: 10.10.0.36:8443:0 server certificate does NOT include an ID which matches the server name
+[Wed Apr 28 04:22:46.150263 2021] [http2:warn] [pid 1] AH10034: The mpm module (prefork.c) is not supported by mod_http2. The mpm determines how things are processed in your server. HTTP/2 has more demands in this regard and the currently selected mpm will just not do. This is an advisory warning. Your server will continue to work, but the HTTP/2 protocol will be inactive.
+[Wed Apr 28 04:22:46.150947 2021] [lbmethod_heartbeat:notice] [pid 1] AH02282: No slotmem from mod_heartmonitor
+[Wed Apr 28 04:22:46.221411 2021] [mpm_prefork:notice] [pid 1] AH00163: Apache/2.4.34 (Red Hat) OpenSSL/1.0.2k-fips configured -- resuming normal operations
+[Wed Apr 28 04:22:46.221471 2021] [core:notice] [pid 1] AH00094: Command line: 'httpd -D FOREGROUND'
+^C
+[student@workstation ~]$ oc describe svc/php-helloworld
+Name:              php-helloworld
+Namespace:         developer-route
+Labels:            app=php-helloworld
+                   app.kubernetes.io/component=php-helloworld
+                   app.kubernetes.io/instance=php-helloworld
+Annotations:       openshift.io/generated-by: OpenShiftNewApp
+Selector:          deploymentconfig=php-helloworld
+Type:              ClusterIP
+IP:                172.30.227.2
+Port:              8080-tcp  8080/TCP
+TargetPort:        8080/TCP
+Endpoints:         10.10.0.36:8080
+Port:              8443-tcp  8443/TCP
+TargetPort:        8443/TCP
+Endpoints:         10.10.0.36:8443
+Session Affinity:  None
+Events:            <none>
+[student@workstation ~]$ oc expose svc/php-helloworld
+route.route.openshift.io/php-helloworld exposed
+[student@workstation ~]$ oc describe route
+Name:			php-helloworld
+Namespace:		developer-route
+Created:		13 seconds ago
+Labels:			app=php-helloworld
+			app.kubernetes.io/component=php-helloworld
+			app.kubernetes.io/instance=php-helloworld
+Annotations:		openshift.io/host.generated=true
+Requested Host:		php-helloworld-developer-route.apps.ocp4.example.com
+			  exposed on router default (host apps.ocp4.example.com) 13 seconds ago
+Path:			<none>
+TLS Termination:	<none>
+Insecure Policy:	<none>
+Endpoint Port:		8080-tcp
+
+Service:	php-helloworld
+Weight:		100 (100%)
+Endpoints:	10.10.0.36:8443, 10.10.0.36:8080
+[student@workstation ~]$ curl php-helloworld-${RHT_OCP4_DEV_USER}-route.${RHT_OCP4_WILDCARD_DOMAIN}
+Hello, World! php version is 7.3.11
+[student@workstation ~]$ oc delete route/php-helloworld
+route.route.openshift.io "php-helloworld" deleted
+[student@workstation ~]$ oc expose svc/php-helloworld --name=${RHT_OCP4_DEV_USER}-xyz
+route.route.openshift.io/developer-xyz exposed
+[student@workstation ~]$ oc describe route
+Name:			developer-xyz
+Namespace:		developer-route
+Created:		21 seconds ago
+Labels:			app=php-helloworld
+			app.kubernetes.io/component=php-helloworld
+			app.kubernetes.io/instance=php-helloworld
+Annotations:		openshift.io/host.generated=true
+Requested Host:		developer-xyz-developer-route.apps.ocp4.example.com
+			  exposed on router default (host apps.ocp4.example.com) 20 seconds ago
+Path:			<none>
+TLS Termination:	<none>
+Insecure Policy:	<none>
+Endpoint Port:		8080-tcp
+
+Service:	php-helloworld
+Weight:		100 (100%)
+Endpoints:	10.10.0.36:8443, 10.10.0.36:8080
+[student@workstation ~]$ curl ${RHT_OCP4_DEV_USER}-xyz-${RHT_OCP4_DEV_USER}-route.${RHT_OCP4_WILDCARD_DOMAIN}
+Hello, World! php version is 7.3.11
+[student@workstation ~]$ lab openshift-routes finish
+
+Completing the Guided Exercise: Exposing a Service as a Route
+
+ · Removing OpenShift project 'developer-route'................  SUCCESS
+[student@workstation ~]$ 
+
+--------------------------------------------The Source-to-Image (S2I) Process------------------------------------------------------
+
+Source-to-Image (S2I) is a tool that makes it easy to build container images from application
+source code. This tool takes an application's source code from a Git repository, injects the source
+code into a base container based on the language and framework desired, and produces a new
+container image that runs the assembled application.
+
+Describing Image Streams
+-----------------------------
+OpenShift deploys new versions of user applications into pods quickly. To create a new application,
+in addition to the application source code, a base image (the S2I builder image) is required. If
+either of these two components gets updated, OpenShift creates a new container image. Pods
+created using the older container image are replaced by pods using the new image.
+[student@workstation php-helloworld]$ oc get is -n openshift
+NAME                                     IMAGE REPOSITORY                                                                                    TAGS                                                  UPDATED
+apicast-gateway                          image-registry.openshift-image-registry.svc:5000/openshift/apicast-gateway                          2.1.0.GA,2.2.0.GA,2.3.0.GA,2.4.0.GA + 5 more...       8 months ago
+apicurito-ui                             image-registry.openshift-image-registry.svc:5000/openshift/apicurito-ui                             1.2,1.3,1.4,1.5                                       8 months ago
+cli                                      image-registry.openshift-image-registry.svc:5000/openshift/cli                                      latest                                                8 months ago
+cli-artifacts                            image-registry.openshift-image-registry.svc:5000/openshift/cli-artifacts                            latest                                                8 months ago
+dotnet                                   image-registry.openshift-image-registry.svc:5000/openshift/dotnet                                   2.1,3.1,latest                                        8 months ago
+dotnet-runtime                           image-registry.openshift-image-registry.svc:5000/openshift/dotnet-runtime                           2.1,3.1,latest                                        8 months ago
+eap-cd-openshift                         image-registry.openshift-image-registry.svc:5000/openshift/eap-cd-openshift                         12,12.0,13,13.0,14,14.0,15,15.0,16,16.0 + 5 more...   8 months ago
+eap-cd-runtime-openshift                 image-registry.openshift-image-registry.svc:5000/openshift/eap-cd-runtime-openshift                 18,18.0,latest                                        8 months ago
+fis-java-openshift                       image-registry.openshift-image-registry.svc:5000/openshift/fis-java-openshift                       1.0,2.0                                               8 months ago
+fis-karaf-openshift                      image-registry.openshift-image-registry.svc:5000/openshift/fis-karaf-openshift                      1.0,2.0                                               8 months ago
+fuse-apicurito-generator                 image-registry.openshift-image-registry.svc:5000/openshift/fuse-apicurito-generator                 1.2,1.3,1.4,1.5                                       8 months ago
+fuse7-console                            image-registry.openshift-image-registry.svc:5000/openshift/fuse7-console                            1.0,1.1,1.2,1.3,1.4,1.5                               8 months ago
+fuse7-eap-openshift                      image-registry.openshift-image-registry.svc:5000/openshift/fuse7-eap-openshift                      1.0,1.1,1.2,1.3,1.4,1.5                               8 months ago
+fuse7-java-openshift                     image-registry.openshift-image-registry.svc:5000/openshift/fuse7-java-openshift                     1.0,1.1,1.2,1.3,1.4,1.5                               8 months ago
+fuse7-karaf-openshift                    image-registry.openshift-image-registry.svc:5000/openshift/fuse7-karaf-openshift                    1.0,1.1,1.2,1.3,1.4,1.5                               8 months ago
+golang                                   image-registry.openshift-image-registry.svc:5000/openshift/golang                                   1.11.5,latest                                         8 months ago
+httpd                                    image-registry.openshift-image-registry.svc:5000/openshift/httpd                                    2.4,latest                                            8 months ago
+installer                                image-registry.openshift-image-registry.svc:5000/openshift/installer                                latest                                                8 months ago
+installer-artifacts                      image-registry.openshift-image-registry.svc:5000/openshift/installer-artifacts                      latest                                                8 months ago
+java                                     image-registry.openshift-image-registry.svc:5000/openshift/java                                     11,8,latest                                           8 months ago
+jboss-amq-62                             image-registry.openshift-image-registry.svc:5000/openshift/jboss-amq-62                             1.1,1.2,1.3,1.4,1.5,1.6,1.7                           8 months ago
+jboss-amq-63                             image-registry.openshift-image-registry.svc:5000/openshift/jboss-amq-63                             1.0,1.1,1.2,1.3,1.4                                   8 months ago
+jboss-datagrid65-client-openshift        image-registry.openshift-image-registry.svc:5000/openshift/jboss-datagrid65-client-openshift        1.0,1.1                                               8 months ago
+jboss-datagrid65-openshift               image-registry.openshift-image-registry.svc:5000/openshift/jboss-datagrid65-openshift               1.2,1.3,1.4,1.5,1.6                                   8 months ago
+jboss-datagrid71-client-openshift        image-registry.openshift-image-registry.svc:5000/openshift/jboss-datagrid71-client-openshift        1.0                                                   8 months ago
+jboss-datagrid71-openshift               image-registry.openshift-image-registry.svc:5000/openshift/jboss-datagrid71-openshift               1.0,1.1,1.2,1.3                                       8 months ago
+jboss-datagrid72-openshift               image-registry.openshift-image-registry.svc:5000/openshift/jboss-datagrid72-openshift               1.0,1.1,1.2                                           8 months ago
+jboss-datagrid73-openshift               image-registry.openshift-image-registry.svc:5000/openshift/jboss-datagrid73-openshift               1.0,1.1,1.2,1.3,1.4                                   8 months ago
+jboss-datavirt64-driver-openshift        image-registry.openshift-image-registry.svc:5000/openshift/jboss-datavirt64-driver-openshift        1.0,1.1,1.2,1.3,1.4,1.5,1.6,1.7                       8 months ago
+jboss-datavirt64-openshift               image-registry.openshift-image-registry.svc:5000/openshift/jboss-datavirt64-openshift               1.0,1.1,1.2,1.3,1.4,1.5,1.6,1.7                       8 months ago
+jboss-decisionserver64-openshift         image-registry.openshift-image-registry.svc:5000/openshift/jboss-decisionserver64-openshift         1.0,1.1,1.2,1.3,1.4,1.5,1.6                           8 months ago
+jboss-eap64-openshift                    image-registry.openshift-image-registry.svc:5000/openshift/jboss-eap64-openshift                    1.1,1.2,1.3,1.4,1.5,1.6,1.7,1.8,1.9 + 1 more...       8 months ago
+jboss-eap70-openshift                    image-registry.openshift-image-registry.svc:5000/openshift/jboss-eap70-openshift                    1.3,1.4,1.5,1.6,1.7                                   8 months ago
+jboss-eap71-openshift                    image-registry.openshift-image-registry.svc:5000/openshift/jboss-eap71-openshift                    1.1,1.2,1.3,1.4,latest                                8 months ago
+jboss-eap72-openshift                    image-registry.openshift-image-registry.svc:5000/openshift/jboss-eap72-openshift                    1.0,1.1,1.2,latest                                    8 months ago
+jboss-fuse70-console                     image-registry.openshift-image-registry.svc:5000/openshift/jboss-fuse70-console                     1.0                                                   8 months ago
+jboss-fuse70-eap-openshift               image-registry.openshift-image-registry.svc:5000/openshift/jboss-fuse70-eap-openshift               1.0                                                   8 months ago
+jboss-fuse70-java-openshift              image-registry.openshift-image-registry.svc:5000/openshift/jboss-fuse70-java-openshift              1.0                                                   8 months ago
+jboss-fuse70-karaf-openshift             image-registry.openshift-image-registry.svc:5000/openshift/jboss-fuse70-karaf-openshift             1.0                                                   8 months ago
+jboss-processserver64-openshift          image-registry.openshift-image-registry.svc:5000/openshift/jboss-processserver64-openshift          1.0,1.1,1.2,1.3,1.4,1.5,1.6                           8 months ago
+jboss-webserver30-tomcat7-openshift      image-registry.openshift-image-registry.svc:5000/openshift/jboss-webserver30-tomcat7-openshift      1.1,1.2,1.3                                           8 months ago
+jboss-webserver30-tomcat8-openshift      image-registry.openshift-image-registry.svc:5000/openshift/jboss-webserver30-tomcat8-openshift      1.1,1.2,1.3                                           8 months ago
+jboss-webserver31-tomcat7-openshift      image-registry.openshift-image-registry.svc:5000/openshift/jboss-webserver31-tomcat7-openshift      1.0,1.1,1.2,1.3,1.4                                   8 months ago
+jboss-webserver31-tomcat8-openshift      image-registry.openshift-image-registry.svc:5000/openshift/jboss-webserver31-tomcat8-openshift      1.0,1.1,1.2,1.3,1.4                                   8 months ago
+jboss-webserver50-tomcat9-openshift      image-registry.openshift-image-registry.svc:5000/openshift/jboss-webserver50-tomcat9-openshift      1.0,1.1,1.2,latest                                    8 months ago
+jenkins                                  image-registry.openshift-image-registry.svc:5000/openshift/jenkins                                  2,latest                                              8 months ago
+jenkins-agent-maven                      image-registry.openshift-image-registry.svc:5000/openshift/jenkins-agent-maven                      latest,v4.0                                           8 months ago
+jenkins-agent-nodejs                     image-registry.openshift-image-registry.svc:5000/openshift/jenkins-agent-nodejs                     latest,v4.0                                           8 months ago
+mariadb                                  image-registry.openshift-image-registry.svc:5000/openshift/mariadb                                  10.2,10.3,latest                                      8 months ago
+mongodb                                  image-registry.openshift-image-registry.svc:5000/openshift/mongodb                                  3.4,3.6,latest                                        8 months ago
+must-gather                              image-registry.openshift-image-registry.svc:5000/openshift/must-gather                              latest                                                8 months ago
+mysql                                    image-registry.openshift-image-registry.svc:5000/openshift/mysql                                    5.7,8.0,latest                                        8 months ago
+nginx                                    image-registry.openshift-image-registry.svc:5000/openshift/nginx                                    1.10,1.14,1.16,latest                                 8 months ago
+nodejs                                   image-registry.openshift-image-registry.svc:5000/openshift/nodejs                                   10,12,latest                                          8 months ago
+oauth-proxy                              image-registry.openshift-image-registry.svc:5000/openshift/oauth-proxy                              v4.4                                                  8 months ago
+openjdk-11-rhel7                         image-registry.openshift-image-registry.svc:5000/openshift/openjdk-11-rhel7                         1.0,1.1                                               8 months ago
+openjdk-11-rhel8                         image-registry.openshift-image-registry.svc:5000/openshift/openjdk-11-rhel8                         1.0                                                   8 months ago
+openjdk-8-rhel8                          image-registry.openshift-image-registry.svc:5000/openshift/openjdk-8-rhel8                          1.0,1.1,1.2                                           8 months ago
+perl                                     image-registry.openshift-image-registry.svc:5000/openshift/perl                                     5.26,latest                                           8 months ago
+php                                      image-registry.openshift-image-registry.svc:5000/openshift/php                                      7.2,7.3,latest                                        8 months ago
+postgresql                               image-registry.openshift-image-registry.svc:5000/openshift/postgresql                               10,12,9.6,latest                                      8 months ago
+python                                   image-registry.openshift-image-registry.svc:5000/openshift/python                                   2.7,3.6,latest                                        8 months ago
+redhat-openjdk18-openshift               image-registry.openshift-image-registry.svc:5000/openshift/redhat-openjdk18-openshift               1.0,1.1,1.2,1.3,1.4,1.5,1.6,1.7,1.8                   8 months ago
+redhat-sso70-openshift                   image-registry.openshift-image-registry.svc:5000/openshift/redhat-sso70-openshift                   1.3,1.4                                               8 months ago
+redhat-sso71-openshift                   image-registry.openshift-image-registry.svc:5000/openshift/redhat-sso71-openshift                   1.0,1.1,1.2,1.3                                       8 months ago
+redhat-sso72-openshift                   image-registry.openshift-image-registry.svc:5000/openshift/redhat-sso72-openshift                   1.0,1.1,1.2,1.3,1.4                                  
+redhat-sso73-openshift                   image-registry.openshift-image-registry.svc:5000/openshift/redhat-sso73-openshift                   1.0,latest                                            8 months ago
+redis                                    image-registry.openshift-image-registry.svc:5000/openshift/redis                                    5,latest                                              8 months ago
+rhdm-decisioncentral-rhel8               image-registry.openshift-image-registry.svc:5000/openshift/rhdm-decisioncentral-rhel8               7.7.0                                                 8 months ago
+rhdm-kieserver-rhel8                     image-registry.openshift-image-registry.svc:5000/openshift/rhdm-kieserver-rhel8                     7.7.0                                                 8 months ago
+rhpam-businesscentral-monitoring-rhel8   image-registry.openshift-image-registry.svc:5000/openshift/rhpam-businesscentral-monitoring-rhel8   7.7.0                                                 8 months ago
+rhpam-businesscentral-rhel8              image-registry.openshift-image-registry.svc:5000/openshift/rhpam-businesscentral-rhel8              7.7.0                                                 8 months ago
+rhpam-kieserver-rhel8                    image-registry.openshift-image-registry.svc:5000/openshift/rhpam-kieserver-rhel8                    7.7.0                                                 8 months ago
+rhpam-smartrouter-rhel8                  image-registry.openshift-image-registry.svc:5000/openshift/rhpam-smartrouter-rhel8                  7.7.0                                                 8 months ago
+ruby                                     image-registry.openshift-image-registry.svc:5000/openshift/ruby                                     2.4,2.5,2.6,latest                                    8 months ago
+sso74-openshift-rhel8                    image-registry.openshift-image-registry.svc:5000/openshift/sso74-openshift-rhel8                    7.4,latest                                            8 months ago
+tests                                    image-registry.openshift-image-registry.svc:5000/openshift/tests                                    latest                                                8 months ago
+tools                                    image-registry.openshift-image-registry.svc:5000/openshift/tools                                    latest                                                8 months ago
+[student@workstation php-helloworld]$ 
+
+
+If an image stream is not specified in the command, new-app attempts to determine which
+language builder to use based on the presence of certain files in the root of the repository:
+Language Files
+Ruby Rakefile Gemfile, config.ru
+Java EE pom.xml
+Node.js app.json package.json
+PHP index.php composer.json
+Python requirements.txt config.py
+Perl index.pl cpanfile
+
+Note
+By default, the oc new-app command does not create a route. You can create a
+route after creating the application. However, a route is automatically created when
+using the web console because it uses a template.
+
+
+--------------------CH-6-GE-Creting a Containerized Application with Source-to-Image -------------------------------------------------------------
+
+
+
+[student@workstation DO180-apps]$ lab openshift-s2i start
+
+Setting up workstation for the Guided Excercise: Creating a Containerized Application with Source-to-Image
+
+ · Installing the tree command.................................  SUCCESS
+ Checking local clone of the applications repository:
+ · Folder '/home/student/DO180-apps' is a git repo.............  SUCCESS
+ · Git repo '/home/student/DO180-apps' has no pending changes..  SUCCESS
+ Verifying the OpenShift cluster is running:
+ · Log in on OpenShift.........................................  SUCCESS
+ · Check the internal registry is up and running...............  SUCCESS
+ · Ensuring the 'developer-s2i' project does not exist.........  SUCCESS
+[student@workstation DO180-apps]$ git checkout master
+Already on 'master'
+Your branch is up to date with 'origin/master'.
+[student@workstation DO180-apps]$ git checkout -b s2i
+Switched to a new branch 's2i'
+[student@workstation DO180-apps]$ git push -u origin s2i
+Username for 'https://github.com': veerabose
+Password for 'https://veerabose@github.com': 
+Total 0 (delta 0), reused 0 (delta 0)
+To https://github.com/veerabose/DO180-apps
+   f7cd896..b7266de  s2i -> s2i
+Branch 's2i' set up to track remote branch 's2i' from 'origin'.
+[student@workstation DO180-apps]$ cd php-helloworld/
+[student@workstation php-helloworld]$ cat index.php 
+<?php
+print "Hello, World! php version is " . PHP_VERSION . "\n";
+?>
+[student@workstation php-helloworld]$ source /usr/local/etc/ocp4.config
+[student@workstation php-helloworld]$ oc login -u ${RHT_OCP4_DEV_USER} -p ${RHT_OCP4_DEV_PASSWORD} ${RHT_OCP4_MASTER_API}
+Login successful.
+
+You don't have any projects. You can try to create a new project, by running
+
+    oc new-project <projectname>
+
+[student@workstation php-helloworld]$ oc new-project ${RHT_OCP4_DEV_USER}-s2i
+Now using project "developer-s2i" on server "https://api.ocp4.example.com:6443".
+
+You can add applications to this project with the 'new-app' command. For example, try:
+
+    oc new-app ruby~https://github.com/sclorg/ruby-ex.git
+
+to build a new example application in Ruby. Or use kubectl to deploy a simple Kubernetes application:
+
+    kubectl create deployment hello-node --image=gcr.io/hello-minikube-zero-install/hello-node
+
+[student@workstation php-helloworld]$ oc new-app --as-deployment-config php:7.3 --name=php-helloworld https://github.com/${RHT_OCP4_GITHUB_USER}/DO180-apps#s2i --context-dir php-helloworld
+--> Found image 988e5d4 (9 months old) in image stream "openshift/php" under tag "7.3" for "php:7.3"
+
+    Apache 2.4 with PHP 7.3 
+    ----------------------- 
+    PHP 7.3 available as container is a base platform for building and running various PHP 7.3 applications and frameworks. PHP is an HTML-embedded scripting language. PHP attempts to make it easy for developers to write dynamically generated web pages. PHP also offers built-in database integration for several commercial and non-commercial database management systems, so writing a database-enabled webpage with PHP is fairly simple. The most common use of PHP coding is probably as a replacement for CGI scripts.
+
+    Tags: builder, php, php73, rh-php73
+
+    * The source repository appears to match: php
+    * A source build using source code from https://github.com/veerabose/DO180-apps#s2i will be created
+      * The resulting image will be pushed to image stream tag "php-helloworld:latest"
+      * Use 'oc start-build' to trigger a new build
+    * This image will be deployed in deployment config "php-helloworld"
+    * Ports 8080/tcp, 8443/tcp will be load balanced by service "php-helloworld"
+      * Other containers can access this service through the hostname "php-helloworld"
+
+--> Creating resources ...
+    imagestream.image.openshift.io "php-helloworld" created
+    buildconfig.build.openshift.io "php-helloworld" created
+    deploymentconfig.apps.openshift.io "php-helloworld" created
+    service "php-helloworld" created
+--> Success
+    Build scheduled, use 'oc logs -f bc/php-helloworld' to track its progress.
+    Application is not exposed. You can expose services to the outside world by executing one or more of the commands below:
+     'oc expose svc/php-helloworld' 
+    Run 'oc status' to view your app.
+[student@workstation php-helloworld]$ oc get pod
+NAME                     READY   STATUS    RESTARTS   AGE
+php-helloworld-1-build   1/1     Running   0          25s
+[student@workstation php-helloworld]$ oc get pods -w
+NAME                      READY   STATUS              RESTARTS   AGE
+php-helloworld-1-build    0/1     Completed           0          39s
+php-helloworld-1-deploy   0/1     ContainerCreating   0          1s
+php-helloworld-1-deploy   0/1     ContainerCreating   0          2s
+php-helloworld-1-deploy   1/1     Running             0          3s
+php-helloworld-1-tzmfc    0/1     Pending             0          0s
+php-helloworld-1-tzmfc    0/1     Pending             0          0s
+php-helloworld-1-tzmfc    0/1     ContainerCreating   0          0s
+php-helloworld-1-tzmfc    0/1     ContainerCreating   0          2s
+php-helloworld-1-tzmfc    1/1     Running             0          3s
+php-helloworld-1-deploy   0/1     Completed           0          7s
+^C[student@workstation php-helloworld]$ oc logs --all-containers -f php-helloworld-1-build
+Caching blobs under "/var/cache/blobs".
+Getting image source signatures
+Copying blob sha256:fc5b206e9329a1674dd9e8efbee45c9be28d0d0dcbabba3c6bb67a2f22cfcf2a
+Copying blob sha256:f659c5c779ac4373302bfe3dc7d713c59cf9ec9f179a71e9b26336a51043fad2
+Copying blob sha256:e7021e0589e97471d99c4265b7c8e64da328e48f116b5f260353b2e0a2adb373
+Copying blob sha256:9e7a6dc796f0a75c560158a9f9e30fb8b5a90cb53edce9ffbdf5778406e4de39
+Copying blob sha256:14e4b218199e7985dbeca760da0fa9b969ca5fdaae5095a273cd924afa6898e9
+Copying config sha256:988e5d4c035d1585f006d0c57a0cfe4bc9f8aae412585f4a6b8fed87da45105f
+Writing manifest to image destination
+Storing signatures
+Generating dockerfile with builder image image-registry.openshift-image-registry.svc:5000/openshift/php@sha256:962d936b00f4953d977be9b85268a289bf2f9d49df4d51b408a7c7835a551103
+STEP 1: FROM image-registry.openshift-image-registry.svc:5000/openshift/php@sha256:962d936b00f4953d977be9b85268a289bf2f9d49df4d51b408a7c7835a551103
+STEP 2: LABEL "io.openshift.build.source-location"="https://github.com/veerabose/DO180-apps"       "io.openshift.build.source-context-dir"="php-helloworld"       "io.openshift.build.image"="image-registry.openshift-image-registry.svc:5000/openshift/php@sha256:962d936b00f4953d977be9b85268a289bf2f9d49df4d51b408a7c7835a551103"       "io.openshift.build.commit.author"="veerabose <34031941+veerabose@users.noreply.github.com>"       "io.openshift.build.commit.date"="Wed Apr 28 03:09:47 2021 -0400"       "io.openshift.build.commit.id"="b7266ded27ce8a29af3276162bd5df1d02670b89"       "io.openshift.build.commit.ref"="s2i"       "io.openshift.build.commit.message"="Update labs"
+STEP 3: ENV OPENSHIFT_BUILD_NAME="php-helloworld-1"     OPENSHIFT_BUILD_NAMESPACE="developer-s2i"     OPENSHIFT_BUILD_SOURCE="https://github.com/veerabose/DO180-apps"     OPENSHIFT_BUILD_REFERENCE="s2i"     OPENSHIFT_BUILD_COMMIT="b7266ded27ce8a29af3276162bd5df1d02670b89"
+STEP 4: USER root
+STEP 5: COPY upload/src /tmp/src
+STEP 6: RUN chown -R 1001:0 /tmp/src
+STEP 7: USER 1001
+STEP 8: RUN /usr/libexec/s2i/assemble
+---> Installing application source...
+=> sourcing 20-copy-config.sh ...
+---> 07:20:30     Processing additional arbitrary httpd configuration provided by s2i ...
+=> sourcing 00-documentroot.conf ...
+=> sourcing 50-mpm-tuning.conf ...
+=> sourcing 40-ssl-certs.sh ...
+STEP 9: CMD /usr/libexec/s2i/run
+STEP 10: COMMIT temp.builder.openshift.io/developer-s2i/php-helloworld-1:92cd1632
+time="2021-04-28T07:20:30Z" level=info msg="Image operating system mismatch: image uses \"\", expecting \"linux\""
+time="2021-04-28T07:20:30Z" level=info msg="Image architecture mismatch: image uses \"\", expecting \"amd64\""
+Getting image source signatures
+Copying blob sha256:abc8c32bad762f509f729872b552e8366b9c71a863dc5e9e648dda04a7896e50
+Copying blob sha256:b9e30d7689db4040323cb65632888c37d96cbd60d0f05c4dd37e78b9b8a0566a
+Copying blob sha256:8b0dba9179a6a0d5de65c6b001c8c9c83eaa169ce526b22a33845ede8f74568c
+Copying blob sha256:bda7ec697f579121100fed608753105e2150894241b011af8b12fea98296f8f7
+Copying blob sha256:5daa741fd16f3d131c8667e9e7bcbcb0ce95243275070d34686eb6df2c6200fd
+Copying blob sha256:4736a6fd099d07a3de2de9a2196be40b90cb4f968229043136fdf93d09c115f3
+Copying config sha256:5ef6fecd20355fb05246c450bffc6fa41b4fc555be555a3f3c60c74ef4d3321f
+Writing manifest to image destination
+Storing signatures
+--> 5ef6fecd203
+5ef6fecd20355fb05246c450bffc6fa41b4fc555be555a3f3c60c74ef4d3321f
+
+Pushing image image-registry.openshift-image-registry.svc:5000/developer-s2i/php-helloworld:latest ...
+Getting image source signatures
+Copying blob sha256:4736a6fd099d07a3de2de9a2196be40b90cb4f968229043136fdf93d09c115f3
+Copying blob sha256:fc5b206e9329a1674dd9e8efbee45c9be28d0d0dcbabba3c6bb67a2f22cfcf2a
+Cloning "https://github.com/veerabose/DO180-apps" ...
+Copying blob sha256:f659c5c779ac4373302bfe3dc7d713c59cf9ec9f179a71e9b26336a51043fad2
+	Commit:	b7266ded27ce8a29af3276162bd5df1d02670b89 (Update labs)
+	Author:	veerabose <34031941+veerabose@users.noreply.github.com>
+Copying blob sha256:14e4b218199e7985dbeca760da0fa9b969ca5fdaae5095a273cd924afa6898e9
+Copying blob sha256:9e7a6dc796f0a75c560158a9f9e30fb8b5a90cb53edce9ffbdf5778406e4de39
+Copying blob sha256:e7021e0589e97471d99c4265b7c8e64da328e48f116b5f260353b2e0a2adb373
+Copying config sha256:5ef6fecd20355fb05246c450bffc6fa41b4fc555be555a3f3c60c74ef4d3321f
+Writing manifest to image destination
+	Date:	Wed Apr 28 03:09:47 2021 -0400
+Storing signatures
+Successfully pushed image-registry.openshift-image-registry.svc:5000/developer-s2i/php-helloworld@sha256:0493654e74ea82eecf3d69704e4d07cd6268caf0112bd4eb13a49c63d6087da9
+Push successful
+[student@workstation php-helloworld]$ oc describe dc/php-helloworld
+Name:		php-helloworld
+Namespace:	developer-s2i
+Created:	About a minute ago
+Labels:		app=php-helloworld
+		app.kubernetes.io/component=php-helloworld
+		app.kubernetes.io/instance=php-helloworld
+Annotations:	openshift.io/generated-by=OpenShiftNewApp
+Latest Version:	1
+Selector:	deploymentconfig=php-helloworld
+Replicas:	1
+Triggers:	Config, Image(php-helloworld@latest, auto=true)
+Strategy:	Rolling
+Template:
+Pod Template:
+  Labels:	deploymentconfig=php-helloworld
+  Annotations:	openshift.io/generated-by: OpenShiftNewApp
+  Containers:
+   php-helloworld:
+    Image:		image-registry.openshift-image-registry.svc:5000/developer-s2i/php-helloworld@sha256:0493654e74ea82eecf3d69704e4d07cd6268caf0112bd4eb13a49c63d6087da9
+    Ports:		8080/TCP, 8443/TCP
+    Host Ports:		0/TCP, 0/TCP
+    Environment:	<none>
+    Mounts:		<none>
+  Volumes:		<none>
+
+Deployment #1 (latest):
+	Name:		php-helloworld-1
+	Created:	about a minute ago
+	Status:		Complete
+	Replicas:	1 current / 1 desired
+	Selector:	deployment=php-helloworld-1,deploymentconfig=php-helloworld
+	Labels:		app.kubernetes.io/component=php-helloworld,app.kubernetes.io/instance=php-helloworld,app=php-helloworld,openshift.io/deployment-config.name=php-helloworld
+	Pods Status:	1 Running / 0 Waiting / 0 Succeeded / 0 Failed
+
+Events:
+  Type		Reason			Age	From				Message
+  ----		------			----	----				-------
+  Normal	DeploymentCreated	60s	deploymentconfig-controller	Created new replication controller "php-helloworld-1" for version 1
+[student@workstation php-helloworld]$ oc expose service php-helloworld --name ${RHT_OCP4_DEV_USER}-helloworld
+route.route.openshift.io/developer-helloworld exposed
+[student@workstation php-helloworld]$ curl -s  ${RHT_OCP4_DEV_USER}-helloworld-${RHT_OCP4_DEV_USER}-s2i ${RHT_OCP4_WILDCARD_DOMAIN}
+[student@workstation php-helloworld]$ curl -s  ${RHT_OCP4_DEV_USER}-helloworld-${RHT_OCP4_DEV_USER}-s2i.${RHT_OCP4_WILDCARD_DOMAIN}
+Hello, World! php version is 7.3.11
+[student@workstation php-helloworld]$ vim index.php 
+[student@workstation php-helloworld]$ cat index.php 
+<?php
+print "Hello, World! php version is " . PHP_VERSION . "\n";
+print "A change is a coming!\n";
+?>
+[student@workstation php-helloworld]$ git add .
+[student@workstation php-helloworld]$ git commit -m 'Changed index page contents.'
+On branch s2i
+Your branch is ahead of 'origin/s2i' by 1 commit.
+  (use "git push" to publish your local commits)
+
+nothing to commit, working tree clean
+[student@workstation php-helloworld]$ git push origin s2i
+Enumerating objects: 7, done.
+Counting objects: 100% (7/7), done.
+Delta compression using up to 2 threads.
+Compressing objects: 100% (3/3), done.
+Writing objects: 100% (4/4), 420 bytes | 420.00 KiB/s, done.
+Total 4 (delta 1), reused 0 (delta 0)
+remote: Resolving deltas: 100% (1/1), completed with 1 local object.
+To https://github.com/veerabose/DO180-apps
+   b7266de..571ca5c  s2i -> s2i
+[student@workstation php-helloworld]$ oc start-build php-helloworld
+build.build.openshift.io/php-helloworld-3 started
+[student@workstation php-helloworld]$ oc logs php-helloworld-2-build -f
+Caching blobs under "/var/cache/blobs".
+Getting image source signatures
+Copying blob sha256:14e4b218199e7985dbeca760da0fa9b969ca5fdaae5095a273cd924afa6898e9
+Copying blob sha256:f659c5c779ac4373302bfe3dc7d713c59cf9ec9f179a71e9b26336a51043fad2
+Copying blob sha256:e7021e0589e97471d99c4265b7c8e64da328e48f116b5f260353b2e0a2adb373
+Copying blob sha256:fc5b206e9329a1674dd9e8efbee45c9be28d0d0dcbabba3c6bb67a2f22cfcf2a
+Copying blob sha256:9e7a6dc796f0a75c560158a9f9e30fb8b5a90cb53edce9ffbdf5778406e4de39
+Copying config sha256:988e5d4c035d1585f006d0c57a0cfe4bc9f8aae412585f4a6b8fed87da45105f
+Writing manifest to image destination
+Storing signatures
+Generating dockerfile with builder image image-registry.openshift-image-registry.svc:5000/openshift/php@sha256:962d936b00f4953d977be9b85268a289bf2f9d49df4d51b408a7c7835a551103
+STEP 1: FROM image-registry.openshift-image-registry.svc:5000/openshift/php@sha256:962d936b00f4953d977be9b85268a289bf2f9d49df4d51b408a7c7835a551103
+STEP 2: LABEL "io.openshift.build.commit.date"="Wed Apr 28 03:09:47 2021 -0400"       "io.openshift.build.commit.id"="b7266ded27ce8a29af3276162bd5df1d02670b89"       "io.openshift.build.commit.ref"="s2i"       "io.openshift.build.commit.message"="Update labs"       "io.openshift.build.source-location"="https://github.com/veerabose/DO180-apps"       "io.openshift.build.source-context-dir"="php-helloworld"       "io.openshift.build.image"="image-registry.openshift-image-registry.svc:5000/openshift/php@sha256:962d936b00f4953d977be9b85268a289bf2f9d49df4d51b408a7c7835a551103"       "io.openshift.build.commit.author"="veerabose <34031941+veerabose@users.noreply.github.com>"
+STEP 3: ENV OPENSHIFT_BUILD_NAME="php-helloworld-2"     OPENSHIFT_BUILD_NAMESPACE="developer-s2i"     OPENSHIFT_BUILD_SOURCE="https://github.com/veerabose/DO180-apps"     OPENSHIFT_BUILD_REFERENCE="s2i"     OPENSHIFT_BUILD_COMMIT="b7266ded27ce8a29af3276162bd5df1d02670b89"
+STEP 4: USER root
+STEP 5: COPY upload/src /tmp/src
+STEP 6: RUN chown -R 1001:0 /tmp/src
+STEP 7: USER 1001
+STEP 8: RUN /usr/libexec/s2i/assemble
+---> Installing application source...
+=> sourcing 20-copy-config.sh ...
+---> 07:25:47     Processing additional arbitrary httpd configuration provided by s2i ...
+=> sourcing 00-documentroot.conf ...
+=> sourcing 50-mpm-tuning.conf ...
+=> sourcing 40-ssl-certs.sh ...
+STEP 9: CMD /usr/libexec/s2i/run
+STEP 10: COMMIT temp.builder.openshift.io/developer-s2i/php-helloworld-2:45cb8328
+time="2021-04-28T07:25:47Z" level=info msg="Image operating system mismatch: image uses \"\", expecting \"linux\""
+time="2021-04-28T07:25:47Z" level=info msg="Image architecture mismatch: image uses \"\", expecting \"amd64\""
+Getting image source signatures
+Copying blob sha256:abc8c32bad762f509f729872b552e8366b9c71a863dc5e9e648dda04a7896e50
+Copying blob sha256:b9e30d7689db4040323cb65632888c37d96cbd60d0f05c4dd37e78b9b8a0566a
+Copying blob sha256:8b0dba9179a6a0d5de65c6b001c8c9c83eaa169ce526b22a33845ede8f74568c
+Copying blob sha256:bda7ec697f579121100fed608753105e2150894241b011af8b12fea98296f8f7
+Copying blob sha256:5daa741fd16f3d131c8667e9e7bcbcb0ce95243275070d34686eb6df2c6200fd
+Copying blob sha256:c8eeeb4902744abb42ed3836669982574eb068f9201ea9f2730c8f5511f82548
+Copying config sha256:da159d2129f7d950af43fb971b614641ae6bb2f244c8d6412cc0f36379d06127
+Writing manifest to image destination
+Storing signatures
+--> da159d2129f
+da159d2129f7d950af43fb971b614641ae6bb2f244c8d6412cc0f36379d06127
+
+Pushing image image-registry.openshift-image-registry.svc:5000/developer-s2i/php-helloworld:latest ...
+Getting image source signatures
+Copying blob sha256:14e4b218199e7985dbeca760da0fa9b969ca5fdaae5095a273cd924afa6898e9
+Copying blob sha256:9e7a6dc796f0a75c560158a9f9e30fb8b5a90cb53edce9ffbdf5778406e4de39
+Copying blob sha256:e7021e0589e97471d99c4265b7c8e64da328e48f116b5f260353b2e0a2adb373
+Copying blob sha256:fc5b206e9329a1674dd9e8efbee45c9be28d0d0dcbabba3c6bb67a2f22cfcf2a
+Copying blob sha256:f659c5c779ac4373302bfe3dc7d713c59cf9ec9f179a71e9b26336a51043fad2
+Copying blob sha256:c8eeeb4902744abb42ed3836669982574eb068f9201ea9f2730c8f5511f82548
+Copying config sha256:da159d2129f7d950af43fb971b614641ae6bb2f244c8d6412cc0f36379d06127
+Writing manifest to image destination
+Storing signatures
+Successfully pushed image-registry.openshift-image-registry.svc:5000/developer-s2i/php-helloworld@sha256:fd2e449b55a989f3cce172e2cdcea438cf7fd37114f7e8db9dd371e935f0133f
+Push successful
+[student@workstation php-helloworld]$ oc get pods
+NAME                      READY   STATUS      RESTARTS   AGE
+php-helloworld-1-build    0/1     Completed   0          16m
+php-helloworld-1-deploy   0/1     Completed   0          15m
+php-helloworld-2-6mhtt    1/1     Running     0          10m
+php-helloworld-2-build    0/1     Completed   0          10m
+php-helloworld-2-deploy   0/1     Completed   0          10m
+php-helloworld-3-build    1/1     Running     0          30s
+[student@workstation php-helloworld]$ curl -s  ${RHT_OCP4_DEV_USER}-helloworld-${RHT_OCP4_DEV_USER}-s2i.${RHT_OCP4_WILDCARD_DOMAIN}
+Hello, World! php version is 7.3.11
+A change is a coming!
+[student@workstation php-helloworld]$ 
+[student@workstation php-helloworld]$ lab openshift-s2i finish
+
+Completing the Guided Excercise: Creating a Containerized Application with Source-to-Image
+
+ · Log in on OpenShift.........................................  SUCCESS
+ · Deleting the 'developer-s2i' project........................  SUCCESS
+[student@workstation php-helloworld]$ 
+
+------------------------------------------CH-6-LAB-Deploying Containerized Applications on OpenShift------------------------------------------------------------
+[student@workstation php-helloworld]$ lab openshift-review start
+
+Setting up workstation for the Lab: Deploying Containerized Applications on OpenShift
+
+ Verifying the OpenShift cluster is running:
+ · Log in on OpenShift.........................................  SUCCESS
+ · Check the internal registry is up and running...............  SUCCESS
+ · Ensuring the 'developer-ocp' project does not exist.........  SUCCESS
+
+[student@workstation php-helloworld]$ source /usr/local/etc/ocp4.config
+[student@workstation php-helloworld]$ oc login -u ${RHT_OCP4_DEV_USER} -p ${RHT_OCP4_DEV_PASSWORD} ${RHT_OCP4_MASTER_API}
+Login successful.
+
+You don't have any projects. You can try to create a new project, by running
+
+    oc new-project <projectname>
+
+[student@workstation php-helloworld]$ oc new-project ${RHT_OCP4_DEV_USER}-ocp
+Now using project "developer-ocp" on server "https://api.ocp4.example.com:6443".
+
+You can add applications to this project with the 'new-app' command. For example, try:
+
+    oc new-app ruby~https://github.com/sclorg/ruby-ex.git
+
+to build a new example application in Ruby. Or use kubectl to deploy a simple Kubernetes application:
+
+    kubectl create deployment hello-node --image=gcr.io/hello-minikube-zero-install/hello-node
+
+[student@workstation php-helloworld]$ oc new-app --as-deployment-config php:7.3~https://github.com/RedHatTraining/DO180-apps --context-dir temps --name temps
+--> Found image 988e5d4 (9 months old) in image stream "openshift/php" under tag "7.3" for "php:7.3"
+
+    Apache 2.4 with PHP 7.3 
+    ----------------------- 
+    PHP 7.3 available as container is a base platform for building and running various PHP 7.3 applications and frameworks. PHP is an HTML-embedded scripting language. PHP attempts to make it easy for developers to write dynamically generated web pages. PHP also offers built-in database integration for several commercial and non-commercial database management systems, so writing a database-enabled webpage with PHP is fairly simple. The most common use of PHP coding is probably as a replacement for CGI scripts.
+
+    Tags: builder, php, php73, rh-php73
+
+    * A source build using source code from https://github.com/RedHatTraining/DO180-apps will be created
+      * The resulting image will be pushed to image stream tag "temps:latest"
+      * Use 'oc start-build' to trigger a new build
+    * This image will be deployed in deployment config "temps"
+    * Ports 8080/tcp, 8443/tcp will be load balanced by service "temps"
+      * Other containers can access this service through the hostname "temps"
+
+--> Creating resources ...
+    imagestream.image.openshift.io "temps" created
+    buildconfig.build.openshift.io "temps" created
+    deploymentconfig.apps.openshift.io "temps" created
+    service "temps" created
+--> Success
+    Build scheduled, use 'oc logs -f bc/temps' to track its progress.
+    Application is not exposed. You can expose services to the outside world by executing one or more of the commands below:
+     'oc expose svc/temps' 
+    Run 'oc status' to view your app.
+[student@workstation php-helloworld]$ oc logs -f bc/temps
+Cloning "https://github.com/RedHatTraining/DO180-apps" ...
+	Commit:	f7cd8963ef353d9173c3a21dcccf402f3616840b (Initial commit, including all apps previously in course)
+	Author:	Jordi Sola <someth2say@gmail.com>
+	Date:	Fri Oct 4 13:04:03 2019 +0200
+Caching blobs under "/var/cache/blobs".
+Getting image source signatures
+Copying blob sha256:e7021e0589e97471d99c4265b7c8e64da328e48f116b5f260353b2e0a2adb373
+Copying blob sha256:f659c5c779ac4373302bfe3dc7d713c59cf9ec9f179a71e9b26336a51043fad2
+Copying blob sha256:14e4b218199e7985dbeca760da0fa9b969ca5fdaae5095a273cd924afa6898e9
+Copying blob sha256:fc5b206e9329a1674dd9e8efbee45c9be28d0d0dcbabba3c6bb67a2f22cfcf2a
+Copying blob sha256:9e7a6dc796f0a75c560158a9f9e30fb8b5a90cb53edce9ffbdf5778406e4de39
+Copying config sha256:988e5d4c035d1585f006d0c57a0cfe4bc9f8aae412585f4a6b8fed87da45105f
+Writing manifest to image destination
+Storing signatures
+Generating dockerfile with builder image image-registry.openshift-image-registry.svc:5000/openshift/php@sha256:962d936b00f4953d977be9b85268a289bf2f9d49df4d51b408a7c7835a551103
+STEP 1: FROM image-registry.openshift-image-registry.svc:5000/openshift/php@sha256:962d936b00f4953d977be9b85268a289bf2f9d49df4d51b408a7c7835a551103
+STEP 2: LABEL "io.openshift.build.commit.id"="f7cd8963ef353d9173c3a21dcccf402f3616840b"       "io.openshift.build.commit.ref"="master"       "io.openshift.build.commit.message"="Initial commit, including all apps previously in course"       "io.openshift.build.source-location"="https://github.com/RedHatTraining/DO180-apps"       "io.openshift.build.source-context-dir"="temps"       "io.openshift.build.image"="image-registry.openshift-image-registry.svc:5000/openshift/php@sha256:962d936b00f4953d977be9b85268a289bf2f9d49df4d51b408a7c7835a551103"       "io.openshift.build.commit.author"="Jordi Sola <someth2say@gmail.com>"       "io.openshift.build.commit.date"="Fri Oct 4 13:04:03 2019 +0200"
+STEP 3: ENV OPENSHIFT_BUILD_NAME="temps-1"     OPENSHIFT_BUILD_NAMESPACE="developer-ocp"     OPENSHIFT_BUILD_SOURCE="https://github.com/RedHatTraining/DO180-apps"     OPENSHIFT_BUILD_COMMIT="f7cd8963ef353d9173c3a21dcccf402f3616840b"
+STEP 4: USER root
+STEP 5: COPY upload/src /tmp/src
+STEP 6: RUN chown -R 1001:0 /tmp/src
+STEP 7: USER 1001
+STEP 8: RUN /usr/libexec/s2i/assemble
+---> Installing application source...
+=> sourcing 20-copy-config.sh ...
+---> 07:53:05     Processing additional arbitrary httpd configuration provided by s2i ...
+=> sourcing 00-documentroot.conf ...
+=> sourcing 50-mpm-tuning.conf ...
+=> sourcing 40-ssl-certs.sh ...
+STEP 9: CMD /usr/libexec/s2i/run
+STEP 10: COMMIT temp.builder.openshift.io/developer-ocp/temps-1:5c9e94b9
+time="2021-04-28T07:53:05Z" level=info msg="Image operating system mismatch: image uses \"\", expecting \"linux\""
+time="2021-04-28T07:53:05Z" level=info msg="Image architecture mismatch: image uses \"\", expecting \"amd64\""
+Getting image source signatures
+Copying blob sha256:abc8c32bad762f509f729872b552e8366b9c71a863dc5e9e648dda04a7896e50
+Copying blob sha256:b9e30d7689db4040323cb65632888c37d96cbd60d0f05c4dd37e78b9b8a0566a
+Copying blob sha256:8b0dba9179a6a0d5de65c6b001c8c9c83eaa169ce526b22a33845ede8f74568c
+Copying blob sha256:bda7ec697f579121100fed608753105e2150894241b011af8b12fea98296f8f7
+Copying blob sha256:5daa741fd16f3d131c8667e9e7bcbcb0ce95243275070d34686eb6df2c6200fd
+Copying blob sha256:0c613a3ea3d1becd00db8d726bf705fd4083c8cfee1521a6279be666aee89b43
+Copying config sha256:899587f0ccb68f7cf3de979b61adb4f03b41fd368c9af74843f30a816807d5de
+Writing manifest to image destination
+Storing signatures
+--> 899587f0ccb
+899587f0ccb68f7cf3de979b61adb4f03b41fd368c9af74843f30a816807d5de
+
+Pushing image image-registry.openshift-image-registry.svc:5000/developer-ocp/temps:latest ...
+Getting image source signatures
+Copying blob sha256:0c613a3ea3d1becd00db8d726bf705fd4083c8cfee1521a6279be666aee89b43
+Copying blob sha256:fc5b206e9329a1674dd9e8efbee45c9be28d0d0dcbabba3c6bb67a2f22cfcf2a
+Copying blob sha256:f659c5c779ac4373302bfe3dc7d713c59cf9ec9f179a71e9b26336a51043fad2
+Copying blob sha256:9e7a6dc796f0a75c560158a9f9e30fb8b5a90cb53edce9ffbdf5778406e4de39
+Copying blob sha256:14e4b218199e7985dbeca760da0fa9b969ca5fdaae5095a273cd924afa6898e9
+Copying blob sha256:e7021e0589e97471d99c4265b7c8e64da328e48f116b5f260353b2e0a2adb373
+Copying config sha256:899587f0ccb68f7cf3de979b61adb4f03b41fd368c9af74843f30a816807d5de
+Writing manifest to image destination
+Storing signatures
+Successfully pushed image-registry.openshift-image-registry.svc:5000/developer-ocp/temps@sha256:8fa9b64166b025185d2472ba22733d286786588eb4604628439f0e4064da02cf
+Push successful
+[student@workstation php-helloworld]$ oc get pod -w
+NAME             READY   STATUS      RESTARTS   AGE
+temps-1-build    0/1     Completed   0          55s
+temps-1-deploy   0/1     Completed   0          21s
+temps-1-hrklq    1/1     Running     0          18s
+^C[student@workstation php-helloworld]$ oc get dc
+NAME    REVISION   DESIRED   CURRENT   TRIGGERED BY
+temps   1          1         1         config,image(temps:latest)
+[student@workstation php-helloworld]$ oc get svc
+NAME    TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)             AGE
+temps   ClusterIP   172.30.200.56   <none>        8080/TCP,8443/TCP   85s
+[student@workstation php-helloworld]$ oc expose svc/temps
+route.route.openshift.io/temps exposed
+[student@workstation php-helloworld]$ oc get route/temps
+NAME    HOST/PORT                                   PATH   SERVICES   PORT       TERMINATION   WILDCARD
+temps   temps-developer-ocp.apps.ocp4.example.com          temps      8080-tcp                 None
+[student@workstation php-helloworld]$ lab openshift-review grade
+
+Grading the student's work for the Lab: Deploying Containerized Applications on OpenShift
+
+ · Log in on OpenShift.........................................  SUCCESS
+Accessing the web application..................................  PASS
+[student@workstation php-helloworld]$ lab openshift-review finish
+
+Completing the Lab: Deploying Containerized Applications on OpenShift
+
+ · Log in on OpenShift.........................................  SUCCESS
+ · Deleting the developer-ocp project..........................  SUCCESS
+[student@workstation php-helloworld]$ 
+
+Summary
+------------------------
+In this chapter, you learned:
+• Use the OpenShift command-line client oc to:
+– Create, change, and delete projects.
+– Create application resources inside a project.
+– Delete, inspect, edit, and export resources inside a project.
+– Check logs from application pods, deployments, and build operations.
+• The oc new-app command can create application pods in many different ways: from an
+existing container image hosted on an image registry, from Dockerfiles, and from source code
+using the Source-to-Image (S2I) process.
+• Source-to-Image (S2I) is a tool that makes it easy to build a container image from application
+source code. This tool retrieves source code from a Git repository, injects the source code into
+a selected container image based on a desired language or technology, and produces a new
+container image that runs the assembled application.
+• A Route connects a public-facing IP address and DNS host name to an internal-facing service
+IP. While services allow for network access between pods inside an OpenShift instance, routes
+allow for network access to pods from users and applications outside the OpenShift instance.
+
+-------------------------------------------------------------CH-7-GE-Creating an Application with a Template---------------------------------------
+[student@workstation DO180-apps]$ lab multicontainer-openshift start
+
+Setting up workstation for the Guided Exercise: Creating an Application with a Template
+
+ · Checking podman configuration...............................  SUCCESS
+
+ Verifying the OpenShift cluster is running:
+ · Log in on OpenShift.........................................  SUCCESS
+ · Check the internal registry is up and running...............  SUCCESS
+ · Ensure template project does not exist......................  SUCCESS
+ · Initializing local container image storage..................  SUCCESS
+ · Setting up labs folder......................................  SUCCESS
+ · Setting up solutions folder.................................  SUCCESS
+ · Downloading starter project.................................  SUCCESS
+ · Downloading solution project................................  SUCCESS
+
+Setup successful. Please proceed with the exercise.
+
+
+[student@workstation DO180-apps]$ cd ~/DO180/labs/multicontainer-openshift/images/mysql
+[student@workstation mysql]$ cat Dockerfile 
+FROM rhscl/mysql-57-rhel7
+
+# MySQL image for DO180
+#
+# Volumes:
+#  * /var/lib/mysql/data - Datastore for MySQL
+#    /var/lib/mysql/init - Folder to load *.sql scripts
+# Environment:
+#  * $MYSQL_USER - Database user name
+#  * $MYSQL_PASSWORD - User's password
+#  * $MYSQL_DATABASE - Name of the database to create
+#  * $MYSQL_ROOT_PASSWORD (Optional) - Password for the 'root' MySQL account
+
+ADD root /
+[student@workstation mysql]$ sudo podman build -t do180-mysql-57-rhel7 .
+STEP 1: FROM rhscl/mysql-57-rhel7
+Getting image source signatures
+Copying blob 9f1840c3b3bd done
+Copying blob 1c9f515fc6ab done
+Copying blob 1d2c4ce43b78 done
+Copying blob f1e961fe4c51 done
+Copying config 60726b33a0 done
+Writing manifest to image destination
+Storing signatures
+STEP 2: ADD root /
+STEP 3: COMMIT do180-mysql-57-rhel7
+fd8443f23b0dc345d34f0e317132505434cab9dcac9ddae830faea17cc39dcd3
+[student@workstation mysql]$ source /usr/local/etc/ocp4.config
+[student@workstation mysql]$ sudo podman login quay.io -u ${RHT_OCP4_QUAY_USER}
+Password: 
+Login Succeeded!
+[student@workstation mysql]$ sudo podman tag do180-mysql-57-rhel7 quay.io/${RHT_OCP4_QUAY_USER}/do180-mysql-57-rhel7
+[student@workstation mysql]$ sudo podman push quay.io/${RHT_OCP4_QUAY_USER}/do180-mysql-57-rhel7
+Getting image source signatures
+Copying blob 64f2bd9f473b done
+Copying blob d5796cc2c59c done
+Copying blob 21eb863ed592 done
+Copying blob 682be05d59b2 done
+Copying blob 2cab4440f907 done
+Copying config fd8443f23b done
+Writing manifest to image destination
+Copying config fd8443f23b done
+Writing manifest to image destination
+Storing signatures
+[student@workstation mysql]$ cd ~/DO180/labs/multicontainer-openshift
+[student@workstation multicontainer-openshift]$ cd images/nodejs
+[student@workstation nodejs]$ cat Dockerfile 
+FROM    ubi7/ubi:7.7
+
+MAINTAINER username <username@example.com>
+
+ENV     NODEJS_VERSION=8.0 \
+        HOME=/opt/app-root/src
+
+RUN     yum install -y --setopt=tsflags=nodocs rh-nodejs8 make && \
+    	yum clean all -y && \
+		mkdir -p /opt/app-root && \
+  		groupadd -r appuser -f -g 1001 && \
+  		useradd -u 1001 -r -g appuser -m -d ${HOME} -s /sbin/nologin \
+            -c "Application User" appuser && \
+  		chown -R appuser:appuser /opt/app-root && \
+		chmod -R 755 /opt/app-root
+
+ADD	./enable-rh-nodejs8.sh /etc/profile.d/
+
+USER	appuser
+WORKDIR	${HOME}
+
+CMD	["echo", "You must create your own container from this one."]
+[student@workstation nodejs]$ sudo podman build --layers=false -t do180-nodejs .
+STEP 1: FROM ubi7/ubi:7.7
+Getting image source signatures
+Copying blob fcd63ccfdd0c done
+Copying blob 09dbbf8834d2 done
+Copying config 0355cd652b done
+Writing manifest to image destination
+Storing signatures
+STEP 2: MAINTAINER username <username@example.com>
+STEP 3: ENV     NODEJS_VERSION=8.0         HOME=/opt/app-root/src
+STEP 4: RUN     yum install -y --setopt=tsflags=nodocs rh-nodejs8 make &&     	yum clean all -y && 		mkdir -p /opt/app-root &&   		groupadd -r appuser -f -g 1001 &&   		useradd -u 1001 -r -g appuser -m -d ${HOME} -s /sbin/nologin             -c "Application User" appuser &&   		chown -R appuser:appuser /opt/app-root && 	chmod -R 755 /opt/app-root
+Loaded plugins: ovl, product-id, search-disabled-repos, subscription-manager
+This system is not receiving updates. You can use subscription-manager on the host to register and assign subscriptions.
+ubi-7                                                    | 3.8 kB     00:00     
+ubi-7-rhah                                               | 3.7 kB     00:00     
+ubi-7-server-devtools-rpms                               | 3.8 kB     00:00     
+ubi-7-server-extras-rpms                                 | 3.7 kB     00:00     
+ubi-7-server-optional-rpms                               | 3.8 kB     00:00     
+ubi-server-rhscl-7-rpms                                  | 3.8 kB     00:00     
+(1/18): ubi-7/x86_64/group                                 |  124 B   00:00     
+(2/18): ubi-7/x86_64/primary_db                            | 799 kB   00:00     
+(3/18): ubi-7/x86_64/updateinfo                            |   92 B   00:00     
+(4/18): ubi-7-rhah/x86_64/updateinfo                       |   92 B   00:00     
+(5/18): ubi-7-rhah/x86_64/primary_db                       | 2.5 kB   00:00     
+(6/18): ubi-7-rhah/x86_64/group                            |  124 B   00:00     
+(7/18): ubi-7-server-devtools-rpms/x86_64/group            |  124 B   00:00     
+(8/18): ubi-7-server-devtools-rpms/x86_64/updateinfo       |   92 B   00:00     
+(9/18): ubi-7-server-devtools-rpms/x86_64/primary_db       | 8.6 kB   00:00     
+(10/18): ubi-7-server-extras-rpms/x86_64/group             |  124 B   00:00     
+(11/18): ubi-7-server-extras-rpms/x86_64/primary_db        | 6.8 kB   00:00     
+(12/18): ubi-7-server-extras-rpms/x86_64/updateinfo        |   92 B   00:00     
+(13/18): ubi-7-server-optional-rpms/x86_64/group           |  124 B   00:00     
+(14/18): ubi-7-server-optional-rpms/x86_64/primary_db      |  14 kB   00:00     
+(15/18): ubi-7-server-optional-rpms/x86_64/updateinfo      |   92 B   00:00     
+(16/18): ubi-server-rhscl-7-rpms/x86_64/group              |  124 B   00:00     
+(17/18): ubi-server-rhscl-7-rpms/x86_64/primary_db         | 383 kB   00:00     
+(18/18): ubi-server-rhscl-7-rpms/x86_64/updateinfo         |   92 B   00:00     
+Resolving Dependencies
+--> Running transaction check
+---> Package make.x86_64 1:3.82-24.el7 will be installed
+---> Package rh-nodejs8.x86_64 0:3.0-5.el7 will be installed
+--> Processing Dependency: rh-nodejs8-nodejs for package: rh-nodejs8-3.0-5.el7.x86_64
+--> Processing Dependency: rh-nodejs8-npm for package: rh-nodejs8-3.0-5.el7.x86_64
+--> Processing Dependency: rh-nodejs8-runtime for package: rh-nodejs8-3.0-5.el7.x86_64
+--> Running transaction check
+---> Package rh-nodejs8-nodejs.x86_64 0:8.17.0-2.el7 will be installed
+---> Package rh-nodejs8-npm.x86_64 0:6.13.4-8.17.0.2.el7 will be installed
+---> Package rh-nodejs8-runtime.x86_64 0:3.0-5.el7 will be installed
+--> Processing Dependency: /usr/bin/scl_source for package: rh-nodejs8-runtime-3.0-5.el7.x86_64
+--> Running transaction check
+---> Package scl-utils.x86_64 0:20130529-19.el7 will be installed
+--> Finished Dependency Resolution
+
+Dependencies Resolved
+
+================================================================================
+ Package            Arch   Version                Repository               Size
+================================================================================
+Installing:
+ make               x86_64 1:3.82-24.el7          ubi-7                   421 k
+ rh-nodejs8         x86_64 3.0-5.el7              ubi-server-rhscl-7-rpms 7.3 k
+Installing for dependencies:
+ rh-nodejs8-nodejs  x86_64 8.17.0-2.el7           ubi-server-rhscl-7-rpms 7.3 M
+ rh-nodejs8-npm     x86_64 6.13.4-8.17.0.2.el7    ubi-server-rhscl-7-rpms 4.8 M
+ rh-nodejs8-runtime x86_64 3.0-5.el7              ubi-server-rhscl-7-rpms 1.1 M
+ scl-utils          x86_64 20130529-19.el7        ubi-7                    24 k
+
+Transaction Summary
+================================================================================
+Install  2 Packages (+4 Dependent packages)
+
+Total download size: 14 M
+Installed size: 48 M
+Downloading packages:
+warning: /var/cache/yum/x86_64/7Server/ubi-server-rhscl-7-rpms/packages/rh-nodejs8-3.0-5.el7.x86_64.rpm: Header V3 RSA/SHA256 Signature, key ID fd431d51: NOKEY
+Public key for rh-nodejs8-3.0-5.el7.x86_64.rpm is not installed
+(1/6): rh-nodejs8-3.0-5.el7.x86_64.rpm                     | 7.3 kB   00:00     
+(2/6): rh-nodejs8-npm-6.13.4-8.17.0.2.el7.x86_64.rpm       | 4.8 MB   00:00     
+(3/6): rh-nodejs8-runtime-3.0-5.el7.x86_64.rpm             | 1.1 MB   00:00     
+(4/6): rh-nodejs8-nodejs-8.17.0-2.el7.x86_64.rpm           | 7.3 MB   00:00     
+Public key for make-3.82-24.el7.x86_64.rpm is not installed
+(5/6): make-3.82-24.el7.x86_64.rpm                         | 421 kB   00:00     
+(6/6): scl-utils-20130529-19.el7.x86_64.rpm                |  24 kB   00:00     
+--------------------------------------------------------------------------------
+Total                                               16 MB/s |  14 MB  00:00     
+Retrieving key from file:///etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release
+Importing GPG key 0xFD431D51:
+ Userid     : "Red Hat, Inc. (release key 2) <security@redhat.com>"
+ Fingerprint: 567e 347a d004 4ade 55ba 8a5f 199e 2f91 fd43 1d51
+ Package    : redhat-release-server-7.7-10.el7.x86_64 (@anaconda/7.7)
+ From       : /etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release
+Importing GPG key 0x2FA658E0:
+ Userid     : "Red Hat, Inc. (auxiliary key) <security@redhat.com>"
+ Fingerprint: 43a6 e49c 4a38 f4be 9abf 2a53 4568 9c88 2fa6 58e0
+ Package    : redhat-release-server-7.7-10.el7.x86_64 (@anaconda/7.7)
+ From       : /etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release
+Running transaction check
+Running transaction test
+Transaction test succeeded
+Running transaction
+  Installing : scl-utils-20130529-19.el7.x86_64                             1/6 
+  Installing : rh-nodejs8-runtime-3.0-5.el7.x86_64                          2/6 
+  Installing : rh-nodejs8-npm-6.13.4-8.17.0.2.el7.x86_64                    3/6 
+  Installing : rh-nodejs8-nodejs-8.17.0-2.el7.x86_64                        4/6 
+  Installing : rh-nodejs8-3.0-5.el7.x86_64                                  5/6 
+  Installing : 1:make-3.82-24.el7.x86_64                                    6/6 
+  Verifying  : scl-utils-20130529-19.el7.x86_64                             1/6 
+  Verifying  : rh-nodejs8-3.0-5.el7.x86_64                                  2/6 
+  Verifying  : rh-nodejs8-npm-6.13.4-8.17.0.2.el7.x86_64                    3/6 
+  Verifying  : rh-nodejs8-nodejs-8.17.0-2.el7.x86_64                        4/6 
+  Verifying  : rh-nodejs8-runtime-3.0-5.el7.x86_64                          5/6 
+  Verifying  : 1:make-3.82-24.el7.x86_64                                    6/6 
+
+Installed:
+  make.x86_64 1:3.82-24.el7            rh-nodejs8.x86_64 0:3.0-5.el7           
+
+Dependency Installed:
+  rh-nodejs8-nodejs.x86_64 0:8.17.0-2.el7                                       
+  rh-nodejs8-npm.x86_64 0:6.13.4-8.17.0.2.el7                                   
+  rh-nodejs8-runtime.x86_64 0:3.0-5.el7                                         
+  scl-utils.x86_64 0:20130529-19.el7                                            
+
+Complete!
+Loaded plugins: ovl, product-id, search-disabled-repos, subscription-manager
+This system is not receiving updates. You can use subscription-manager on the host to register and assign subscriptions.
+Cleaning repos: ubi-7 ubi-7-rhah ubi-7-server-devtools-rpms
+              : ubi-7-server-extras-rpms ubi-7-server-optional-rpms
+              : ubi-server-rhscl-7-rpms
+STEP 5: ADD	./enable-rh-nodejs8.sh /etc/profile.d/
+STEP 6: USER	appuser
+STEP 7: WORKDIR	${HOME}
+STEP 8: CMD	["echo", "You must create your own container from this one."]
+STEP 9: COMMIT do180-nodejs
+Getting image source signatures
+Copying blob 5601485f0109 skipped: already exists
+Copying blob ac7577b8c383 skipped: already exists
+Copying blob 4e35e1f0fc90 done
+Copying config 4e969766e6 done
+Writing manifest to image destination
+Storing signatures
+4e969766e68468f73ae207f58a80fa2c2aec9c0550c42aa60d6bcf628274dcfa
+[student@workstation nodejs]$ cd ~/DO180/labs/multicontainer-openshift
+[student@workstation multicontainer-openshift]$ cd deploy/nodejs
+[student@workstation multicontainer-openshift]$ cd ~/DO180/labs/multicontainer-openshift
+[student@workstation multicontainer-openshift]$ cd deploy/nodejs
+[student@workstation nodejs]$ cat build.sh 
+#!/bin/bash
+
+echo "Preparing build folder"
+rm -fr build
+mkdir -p build
+cp -ap nodejs-source/* build
+rm build/*.sh
+cp -p db.js build/models
+chmod -R a+rwX build
+
+source /usr/local/etc/ocp4.config
+sudo podman build --layers=false -t do180/todonodejs --build-arg NEXUS_BASE_URL=${RHT_OCP4_NEXUS_SERVER} .
+[student@workstation nodejs]$ 
+[student@workstation nodejs]$ ./build.sh
+Preparing build folder
+STEP 1: FROM do180-nodejs
+STEP 2: ARG NEXUS_BASE_URL
+STEP 3: MAINTAINER username <username@example.com>
+STEP 4: COPY run.sh build ${HOME}/
+STEP 5: RUN scl enable rh-nodejs8 'npm install --registry=http://$NEXUS_BASE_URL/repository/nodejs/'
+
+> dtrace-provider@0.8.8 install /opt/app-root/src/node_modules/dtrace-provider
+> node-gyp rebuild || node suppress-error.js
+
+make: Entering directory `/opt/app-root/src/node_modules/dtrace-provider/build'
+  TOUCH Release/obj.target/DTraceProviderStub.stamp
+make: Leaving directory `/opt/app-root/src/node_modules/dtrace-provider/build'
+npm notice created a lockfile as package-lock.json. You should commit this file.
+added 144 packages from 260 contributors in 39.293s
+
+7 packages are looking for funding
+  run `npm fund` for details
+
+STEP 6: EXPOSE	30080
+STEP 7: CMD	["scl","enable","rh-nodejs8","./run.sh"]
+STEP 8: COMMIT do180/todonodejs
+Getting image source signatures
+Copying blob 5601485f0109 skipped: already exists
+Copying blob ac7577b8c383 skipped: already exists
+Copying blob ebb16e449a93 skipped: already exists
+Copying blob 7a34f3a9f0ab done
+Copying config f66551df6c done
+Writing manifest to image destination
+Storing signatures
+f66551df6cfd50b004939a7285176d9eb334a62892d31316d9d87a391d63d723
+[student@workstation nodejs]$ sudo podman tag do180/todonodejs quay.io/${RHT_OCP4_QUAY_USER}/do180-todonodejs
+[student@workstation nodejs]$ sudo podman push quay.io/${RHT_OCP4_QUAY_USER}/do180-todonodejs
+Getting image source signatures
+Copying blob ebb16e449a93 done
+Copying blob ac7577b8c383 done
+Copying blob bbbd86d71663 done
+Copying blob 5601485f0109 done
+Copying config f66551df6c done
+Writing manifest to image destination
+Copying config f66551df6c done
+Writing manifest to image destination
+Storing signatures
+[student@workstation nodejs]$ oc login -u ${RHT_OCP4_DEV_USER} -p ${RHT_OCP4_DEV_PASSWORD} ${RHT_OCP4_MASTER_API}
+Login successful.
+
+You have one project on this server: "developer-mvn"
+
+Using project "developer-mvn".
+[student@workstation nodejs]$ oc delete project developer-mvn
+project.project.openshift.io "developer-mvn" deleted
+[student@workstation nodejs]$ oc new-project ${RHT_OCP4_DEV_USER}-template
+Now using project "developer-template" on server "https://api.ocp4.example.com:6443".
+
+You can add applications to this project with the 'new-app' command. For example, try:
+
+    oc new-app ruby~https://github.com/sclorg/ruby-ex.git
+
+to build a new example application in Ruby. Or use kubectl to deploy a simple Kubernetes application:
+
+    kubectl create deployment hello-node --image=gcr.io/hello-minikube-zero-install/hello-node
+
+[student@workstation nodejs]$ vim /home/student/DO180/labs/multicontainer-openshift/todo-template.json
+[student@workstation nodejs]$ cd /home/student/DO180/labs/multicontainer-openshift
+[student@workstation multicontainer-openshift]$ oc process -f todo-template.json -p RHT_OCP4_QUAY_USER=${RHT_OCP4_QUAY_USER}  | oc create -f -
+pod/mysql created
+pod/todoapi created
+service/todoapi created
+service/mysql created
+persistentvolumeclaim/dbinit created
+persistentvolumeclaim/dbclaim created
+[student@workstation multicontainer-openshift]$ oc get pod -w
+NAME      READY   STATUS    RESTARTS   AGE
+mysql     1/1     Running   0          31s
+todoapi   1/1     Running   0          31s
+^C[student@workstation multicontainer-openshift]$ oc expose service todoapi
+route.route.openshift.io/todoapi exposed
+[student@workstation multicontainer-openshift]$ oc status | grep -o "http:.*com"
+http://todoapi-developer-template.apps.ocp4.example.com
+[student@workstation multicontainer-openshift]$ oc get pod -w
+NAME      READY   STATUS    RESTARTS   AGE
+mysql     1/1     Running   0          2m16s
+todoapi   1/1     Running   0          2m16s
+^C[student@workstation multicontainer-openshift]$ curl -w "\n" $(oc status | grep -o "http:.*com")/todo/api/items/1
+{"id":1,"description":"Pick up newspaper","done":false}
+[student@workstation multicontainer-openshift]$
+[student@workstation nodejs]$ oc get all
+NAME          READY   STATUS    RESTARTS   AGE
+pod/mysql     1/1     Running   0          21m
+pod/todoapi   1/1     Running   0          21m
+
+NAME              TYPE        CLUSTER-IP       EXTERNAL-IP   PORT(S)     AGE
+service/mysql     ClusterIP   172.30.242.123   <none>        3306/TCP    21m
+service/todoapi   ClusterIP   172.30.36.180    <none>        30080/TCP   21m
+
+NAME                               HOST/PORT                                          PATH   SERVICES   PORT    TERMINATION   WILDCARD
+route.route.openshift.io/todoapi   todoapi-developer-template.apps.ocp4.example.com          todoapi    30080                 None
+[student@workstation nodejs]$
+[student@workstation nodejs]$ lab multicontainer-openshift finish
+
+Completing the Guided Exercise: Creating an Application with a Template
+
+ · Log in on OpenShift.........................................  SUCCESS
+ · Removing developer-template project.........................  SUCCESS
+ · Removing rhscl/mysql-57-rhel7 image.........................  SUCCESS
+ · Removing do180/mysql-57-rhel7 image.........................  SUCCESS
+ · Removing quay.io/veeraabose/do180-mysql-57-rhel7 image......  SUCCESS
+ · Removing localhost/do180-nodejs image.......................  SUCCESS
+ · Removing do180/todonodejs image.............................  SUCCESS
+ · Removing quay.io/veeraabose/do180-todonodejs image..........  SUCCESS
+ · Removing registry.access.redhat.com/ubi7/ubi:7.7 image......  SUCCESS
+[student@workstation nodejs]$ 
+
+
+
