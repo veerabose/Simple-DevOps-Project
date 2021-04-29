@@ -2962,3 +2962,312 @@ image registry, storage, networking providers, and centralized logging and monit
 Manager (OLM) handles installation and management of operators.
 • OperatorHub.io is an online catalog for discovering operators.
 
+[student@workstation ~]$ oc get nodes
+NAME       STATUS   ROLES           AGE    VERSION
+master01   Ready    master,worker   266d   v1.18.3+012b3ec
+master02   Ready    master,worker   266d   v1.18.3+012b3ec
+master03   Ready    master,worker   266d   v1.18.3+012b3ec
+[student@workstation ~]$ oc describe node master01
+Name:               master01
+Roles:              master,worker
+Labels:             beta.kubernetes.io/arch=amd64
+                    beta.kubernetes.io/os=linux
+                    kubernetes.io/arch=amd64
+                    kubernetes.io/hostname=master01
+                    kubernetes.io/os=linux
+                    node-role.kubernetes.io/master=
+                    node-role.kubernetes.io/worker=
+                    node.openshift.io/os_id=rhcos
+Annotations:        machineconfiguration.openshift.io/currentConfig: rendered-master-6138b4e92dcc2266ec7bb66fb565d008
+                    machineconfiguration.openshift.io/desiredConfig: rendered-master-6138b4e92dcc2266ec7bb66fb565d008
+                    machineconfiguration.openshift.io/reason: 
+                    machineconfiguration.openshift.io/state: Done
+                    volumes.kubernetes.io/controller-managed-attach-detach: true
+CreationTimestamp:  Wed, 05 Aug 2020 14:23:06 -0400
+Taints:             <none>
+Unschedulable:      false
+Lease:
+  HolderIdentity:  master01
+  AcquireTime:     <unset>
+  RenewTime:       Thu, 29 Apr 2021 00:51:23 -0400
+Conditions:
+  Type             Status  LastHeartbeatTime                 LastTransitionTime                Reason                       Message
+  ----             ------  -----------------                 ------------------                ------                       -------
+  MemoryPressure   False   Thu, 29 Apr 2021 00:50:30 -0400   Wed, 05 Aug 2020 14:42:05 -0400   KubeletHasSufficientMemory   kubelet has sufficient memory available
+  DiskPressure     False   Thu, 29 Apr 2021 00:50:30 -0400   Wed, 05 Aug 2020 14:42:05 -0400   KubeletHasNoDiskPressure     kubelet has no disk pressure
+  PIDPressure      False   Thu, 29 Apr 2021 00:50:30 -0400   Wed, 05 Aug 2020 14:42:05 -0400   KubeletHasSufficientPID      kubelet has sufficient PID available
+  Ready            True    Thu, 29 Apr 2021 00:50:30 -0400   Wed, 05 Aug 2020 14:42:05 -0400   KubeletReady                 kubelet is posting ready status
+Addresses:
+  InternalIP:  192.168.50.10
+  Hostname:    master01
+Capacity:
+  cpu:                4
+  ephemeral-storage:  41391084Ki
+  hugepages-1Gi:      0
+  hugepages-2Mi:      0
+  memory:             16419132Ki
+  pods:               250
+Allocatable:
+  cpu:                3500m
+  ephemeral-storage:  37072281128
+  hugepages-1Gi:      0
+  hugepages-2Mi:      0
+  memory:             15268156Ki
+  pods:               250
+System Info:
+  Machine ID:                                 8647fbfd86c5432aa6c9da08d596d4cc
+  System UUID:                                3629cd35-f887-4cac-8af2-0e7c5352142b
+  Boot ID:                                    15834be3-5373-4287-a390-11079b1a4c5f
+  Kernel Version:                             4.18.0-193.13.2.el8_2.x86_64
+  OS Image:                                   Red Hat Enterprise Linux CoreOS 45.82.202007240629-0 (Ootpa)
+  Operating System:                           linux
+  Architecture:                               amd64
+  Container Runtime Version:                  cri-o://1.18.3-5.rhaos4.5.git1c13d1d.el8
+  Kubelet Version:                            v1.18.3+012b3ec
+  Kube-Proxy Version:                         v1.18.3+012b3ec
+PodCIDR:                                      10.8.1.0/24
+PodCIDRs:                                     10.8.1.0/24
+Non-terminated Pods:                          (49 in total)
+  Namespace                                   Name                                                 CPU Requests  CPU Limits  Memory Requests  Memory Limits  AGE
+  ---------                                   ----                                                 ------------  ----------  ---------------  -------------  ---
+  execute-troubleshoot                        psql-69676884f8-6qjbd                                0 (0%)        0 (0%)      512Mi (3%)       512Mi (3%)     11m
+  openshift-apiserver                         apiserver-59b6b7968c-pjlbc                           100m (2%)     0 (0%)      200Mi (1%)       0 (0%)         266d
+  openshift-authentication                    oauth-openshift-f6fcff56f-4ww9n                      10m (0%)      0 (0%)      50Mi (0%)        0 (0%)         10m
+  openshift-cloud-credential-operator         cloud-credential-operator-5bf8fb79db-2g78t           10m (0%)      0 (0%)      150Mi (1%)       0 (0%)         266d
+  openshift-cluster-node-tuning-operator      tuned-qjbhv                                          10m (0%)      0 (0%)      50Mi (0%)        0 (0%)         266d
+  openshift-cluster-storage-operator          csi-snapshot-controller-operator-6f9d5b4bfc-vwtct    10m (0%)      0 (0%)      50Mi (0%)        0 (0%)         266d
+  openshift-console                           console-5df4fcbb47-67c52                             10m (0%)      0 (0%)      100Mi (0%)       0 (0%)         266d
+  openshift-console                           downloads-5565cdb86b-2nknx                           10m (0%)      0 (0%)      50Mi (0%)        0 (0%)         266d
+  openshift-controller-manager                controller-manager-ps6c8                             100m (2%)     0 (0%)      100Mi (0%)       0 (0%)         2d23h
+  openshift-dns                               dns-default-tfhlc                                    65m (1%)      0 (0%)      110Mi (0%)       512Mi (3%)     266d
+  openshift-etcd-operator                     etcd-operator-fcd9d5cb7-qzzdm                        10m (0%)      0 (0%)      50Mi (0%)        0 (0%)         266d
+  openshift-etcd                              etcd-master01                                        460m (13%)    0 (0%)      920Mi (6%)       0 (0%)         266d
+  openshift-image-registry                    image-registry-64b69c4bf9-48xl5                      100m (2%)     0 (0%)      256Mi (1%)       0 (0%)         266d
+  openshift-image-registry                    node-ca-qrrpd                                        10m (0%)      0 (0%)      10Mi (0%)        0 (0%)         266d
+  openshift-ingress                           router-default-57575dc57c-g6jqt                      100m (2%)     0 (0%)      256Mi (1%)       0 (0%)         266d
+  openshift-kube-apiserver-operator           kube-apiserver-operator-595f668595-svk4h             10m (0%)      0 (0%)      50Mi (0%)        0 (0%)         266d
+  openshift-kube-apiserver                    kube-apiserver-master01                              330m (9%)     0 (0%)      1174Mi (7%)      0 (0%)         2d23h
+  openshift-kube-controller-manager-operator  kube-controller-manager-operator-5658d865f7-6b54k    10m (0%)      0 (0%)      50Mi (0%)        0 (0%)         266d
+  openshift-kube-controller-manager           kube-controller-manager-master01                     100m (2%)     0 (0%)      500Mi (3%)       0 (0%)         266d
+  openshift-kube-scheduler                    openshift-kube-scheduler-master01                    20m (0%)      0 (0%)      100Mi (0%)       0 (0%)         2d23h
+  openshift-kube-storage-version-migrator     migrator-84d87c7d77-g8wvq                            100m (2%)     0 (0%)      200Mi (1%)       0 (0%)         266d
+  openshift-machine-api                       cluster-autoscaler-operator-d5698d448-xcjl5          30m (0%)      0 (0%)      70Mi (0%)        0 (0%)         266d
+  openshift-machine-config-operator           etcd-quorum-guard-5fc4989788-ffw7c                   10m (0%)      0 (0%)      5Mi (0%)         0 (0%)         266d
+  openshift-machine-config-operator           machine-config-daemon-l4ftv                          40m (1%)      0 (0%)      100Mi (0%)       0 (0%)         266d
+  openshift-machine-config-operator           machine-config-operator-5b87d8f4c5-lkgjx             20m (0%)      0 (0%)      50Mi (0%)        0 (0%)         266d
+  openshift-machine-config-operator           machine-config-server-cn4cx                          20m (0%)      0 (0%)      50Mi (0%)        0 (0%)         266d
+  openshift-marketplace                       certified-operators-845f46dc57-htrkj                 10m (0%)      0 (0%)      100Mi (0%)       0 (0%)         160m
+  openshift-marketplace                       community-operators-55fdc65ddd-x9nx6                 10m (0%)      0 (0%)      100Mi (0%)       0 (0%)         160m
+  openshift-marketplace                       redhat-marketplace-578dc9d6db-9ksrn                  10m (0%)      0 (0%)      100Mi (0%)       0 (0%)         160m
+  openshift-marketplace                       redhat-operators-7fd65c6b95-86vm4                    10m (0%)      0 (0%)      100Mi (0%)       0 (0%)         160m
+  openshift-monitoring                        alertmanager-main-1                                  8m (0%)       0 (0%)      260Mi (1%)       0 (0%)         266d
+  openshift-monitoring                        alertmanager-main-2                                  8m (0%)       0 (0%)      260Mi (1%)       0 (0%)         266d
+  openshift-monitoring                        grafana-68bbfbdf97-99bb6                             5m (0%)       0 (0%)      120Mi (0%)       0 (0%)         266d
+  openshift-monitoring                        node-exporter-7z66r                                  9m (0%)       0 (0%)      210Mi (1%)       0 (0%)         266d
+  openshift-monitoring                        openshift-state-metrics-9f97df6b7-kdkxf              3m (0%)       0 (0%)      190Mi (1%)       0 (0%)         266d
+  openshift-monitoring                        prometheus-adapter-569447dc9b-gwnrm                  1m (0%)       0 (0%)      25Mi (0%)        0 (0%)         2d23h
+  openshift-monitoring                        prometheus-k8s-1                                     76m (2%)      0 (0%)      1184Mi (7%)      0 (0%)         266d
+  openshift-monitoring                        thanos-querier-6c89f5cff9-mx6gv                      8m (0%)       0 (0%)      72Mi (0%)        0 (0%)         266d
+  openshift-multus                            multus-admission-controller-plrpp                    20m (0%)      0 (0%)      20Mi (0%)        0 (0%)         266d
+  openshift-multus                            multus-xpkf5                                         10m (0%)      0 (0%)      150Mi (1%)       0 (0%)         266d
+  openshift-network-operator                  network-operator-6bd8b9b698-ggvst                    10m (0%)      0 (0%)      50Mi (0%)        0 (0%)         266d
+  openshift-operator-lifecycle-manager        catalog-operator-5d4588db56-29s5x                    10m (0%)      0 (0%)      80Mi (0%)        0 (0%)         266d
+  openshift-operator-lifecycle-manager        olm-operator-7d9844479b-txwc6                        10m (0%)      0 (0%)      160Mi (1%)       0 (0%)         266d
+  openshift-operator-lifecycle-manager        packageserver-5668b56ff-z75rd                        0 (0%)        0 (0%)      0 (0%)           0 (0%)         27h
+  openshift-sdn                               ovs-7bzt6                                            100m (2%)     0 (0%)      400Mi (2%)       0 (0%)         266d
+  openshift-sdn                               sdn-controller-czjdg                                 10m (0%)      0 (0%)      50Mi (0%)        0 (0%)         266d
+  openshift-sdn                               sdn-xgl8z                                            100m (2%)     0 (0%)      200Mi (1%)       0 (0%)         266d
+  openshift-service-ca-operator               service-ca-operator-5f596775f8-6chts                 10m (0%)      0 (0%)      80Mi (0%)        0 (0%)         266d
+  openshift-service-ca                        service-ca-8b8db557b-zlhpn                           10m (0%)      0 (0%)      120Mi (0%)       0 (0%)         266d
+Allocated resources:
+  (Total limits may be over 100 percent, i.e., overcommitted.)
+  Resource           Requests      Limits
+  --------           --------      ------
+  cpu                2143m (61%)   0 (0%)
+  memory             9244Mi (61%)  1Gi (6%)
+  ephemeral-storage  0 (0%)        0 (0%)
+  hugepages-1Gi      0 (0%)        0 (0%)
+  hugepages-2Mi      0 (0%)        0 (0%)
+Events:
+  Type    Reason                   Age                  From               Message
+  ----    ------                   ----                 ----               -------
+  Normal  Starting                 161m                 kubelet, master01  Starting kubelet.
+  Normal  NodeHasSufficientMemory  161m (x8 over 161m)  kubelet, master01  Node master01 status is now: NodeHasSufficientMemory
+  Normal  NodeHasNoDiskPressure    161m (x8 over 161m)  kubelet, master01  Node master01 status is now: NodeHasNoDiskPressure
+  Normal  NodeHasSufficientPID     161m (x7 over 161m)  kubelet, master01  Node master01 status is now: NodeHasSufficientPID
+  Normal  NodeAllocatableEnforced  161m                 kubelet, master01  Updated Node Allocatable limit across pods
+[student@workstation ~]$ oc get clusterversion
+NAME      VERSION   AVAILABLE   PROGRESSING   SINCE   STATUS
+version   4.5.4     True        False         266d    Cluster version is 4.5.4
+[student@workstation ~]$ oc describe clusterversion
+Name:         version
+Namespace:    
+Labels:       <none>
+Annotations:  <none>
+API Version:  config.openshift.io/v1
+Kind:         ClusterVersion
+Metadata:
+  Creation Timestamp:  2020-08-05T18:22:29Z
+  Generation:          1
+  Managed Fields:
+    API Version:  config.openshift.io/v1
+    Fields Type:  FieldsV1
+    fieldsV1:
+      f:spec:
+        .:
+        f:channel:
+        f:clusterID:
+        f:upstream:
+    Manager:      cluster-bootstrap
+    Operation:    Update
+    Time:         2020-08-05T18:22:29Z
+    API Version:  config.openshift.io/v1
+    Fields Type:  FieldsV1
+    fieldsV1:
+      f:status:
+        .:
+        f:availableUpdates:
+        f:conditions:
+        f:desired:
+          .:
+          f:force:
+          f:image:
+          f:version:
+        f:history:
+        f:observedGeneration:
+        f:versionHash:
+    Manager:         cluster-version-operator
+    Operation:       Update
+    Time:            2021-04-29T04:49:18Z
+  Resource Version:  817944
+  Self Link:         /apis/config.openshift.io/v1/clusterversions/version
+  UID:               3b5e6745-d428-45b6-afa4-1526ee6f89a3
+Spec:
+  Channel:     stable-4.5
+  Cluster ID:  ecd6702d-0cb8-4028-8d17-af179eff8e79
+  Upstream:    https://api.openshift.com/api/upgrades_info/v1/graph
+Status:
+  Available Updates:
+    Force:    false
+    Image:    quay.io/openshift-release-dev/ocp-release@sha256:adb5ef06c54ff75ca9033f222ac5e57f2fd82e49bdd84f737d460ae542c8af60
+    Version:  4.5.16
+    Force:    false
+    Image:    quay.io/openshift-release-dev/ocp-release@sha256:a58573e1c92f5258219022ec104ec254ded0a70370ee8ed2aceea52525639bd4
+    Version:  4.5.5
+    Force:    false
+    Image:    quay.io/openshift-release-dev/ocp-release@sha256:0147ab7622969c1cde71e8e5eb8796e8245137fdbf3a5cae63017189a9060f86
+    Version:  4.5.6
+    Force:    false
+    Image:    quay.io/openshift-release-dev/ocp-release@sha256:6dde1b3ad6bec35364b2b89172cfea0459df75c99a4031f6f7b2a94eb9b166cf
+    Version:  4.5.17
+    Force:    false
+    Image:    quay.io/openshift-release-dev/ocp-release@sha256:d65574acbf8222bacf875f4b0128142d5ed9e687153ce8df2152ba6e0c3f2be3
+    Version:  4.5.12
+    Force:    false
+    Image:    quay.io/openshift-release-dev/ocp-release@sha256:776b7e8158edf64c82f18f5ec4d6ef378ac3de81ba0dc2700b885ceb62e71279
+    Version:  4.5.7
+    Force:    false
+    Image:    quay.io/openshift-release-dev/ocp-release@sha256:95cfe9273aecb9a0070176210477491c347f8e69e41759063642edf8bb8aceb6
+    Version:  4.5.14
+    Force:    false
+    Image:    quay.io/openshift-release-dev/ocp-release@sha256:cf535bc369b14350a823490157182e00b658f1b7028e2c80a1be3a6304b20ece
+    Version:  4.5.36
+    Force:    false
+    Image:    quay.io/openshift-release-dev/ocp-release@sha256:037ed15c79bbd6bee6f0d524d91790d2b368cba945e7ae6d64c984dc0f162b82
+    Version:  4.5.37
+    Force:    false
+    Image:    quay.io/openshift-release-dev/ocp-release@sha256:1df294ebe5b84f0eeceaa85b2162862c390143f5e84cda5acc22cc4529273c4c
+    Version:  4.5.15
+    Force:    false
+    Image:    quay.io/openshift-release-dev/ocp-release@sha256:8d104847fc2371a983f7cb01c7c0a3ab35b7381d6bf7ce355d9b32a08c0031f0
+    Version:  4.5.13
+    Force:    false
+    Image:    quay.io/openshift-release-dev/ocp-release@sha256:4d048ae1274d11c49f9b7e70713a072315431598b2ddbb512aee4027c422fe3e
+    Version:  4.5.11
+    Force:    false
+    Image:    quay.io/openshift-release-dev/ocp-release@sha256:f3faaf72766d099b280b3080d47e9c5b5526654ba13297cd03b0b285a40a9c5d
+    Version:  4.5.34
+    Force:    false
+    Image:    quay.io/openshift-release-dev/ocp-release@sha256:8e6b3ffc19aa6106096936733a128095646a604b69924b5cf606260d433661f0
+    Version:  4.5.33
+    Force:    false
+    Image:    quay.io/openshift-release-dev/ocp-release@sha256:ae61753ad8c8a26ed67fa233eea578194600d6c72622edab2516879cfbf019fd
+    Version:  4.5.8
+    Force:    false
+    Image:    quay.io/openshift-release-dev/ocp-release@sha256:7ad540594e2a667300dd2584fe2ede2c1a0b814ee6a62f60809d87ab564f4425
+    Version:  4.5.9
+    Force:    false
+    Image:    quay.io/openshift-release-dev/ocp-release@sha256:f3ce0aeebb116bbc7d8982cc347ffc68151c92598dfb0cc45aaf3ce03bb09d11
+    Version:  4.5.24
+    Force:    false
+    Image:    quay.io/openshift-release-dev/ocp-release@sha256:ea89ed06f4a5c38dde36f053b250df4bab184729c1adf60afa43d0de8b1930f3
+    Version:  4.5.35
+    Force:    false
+    Image:    quay.io/openshift-release-dev/ocp-release@sha256:78b878986d2d0af6037d637aa63e7b6f80fc8f17d0f0d5b077ac6aca83f792a0
+    Version:  4.5.20
+    Force:    false
+    Image:    quay.io/openshift-release-dev/ocp-release@sha256:272a00b3dc91e1a8e45370969d4300f17bc89bc5cefb0f938f6c1b69333fe371
+    Version:  4.5.10
+  Conditions:
+    Last Transition Time:  2020-08-05T18:35:08Z
+    Message:               Done applying 4.5.4
+    Status:                True
+    Type:                  Available
+    Last Transition Time:  2020-08-05T18:48:46Z
+    Status:                False
+    Type:                  Failing
+    Last Transition Time:  2020-08-05T18:35:08Z
+    Message:               Cluster version is 4.5.4
+    Status:                False
+    Type:                  Progressing
+    Last Transition Time:  2021-04-29T02:40:56Z
+    Status:                True
+    Type:                  RetrievedUpdates
+  Desired:
+    Force:    false
+    Image:    quay.io/openshift-release-dev/ocp-release@sha256:02dfcae8f6a67e715380542654c952c981c59604b1ba7f569b13b9e5d0fbbed3
+    Version:  4.5.4
+  History:
+    Completion Time:    2020-08-05T18:35:08Z
+    Image:              quay.io/openshift-release-dev/ocp-release@sha256:02dfcae8f6a67e715380542654c952c981c59604b1ba7f569b13b9e5d0fbbed3
+    Started Time:       2020-08-05T18:22:42Z
+    State:              Completed
+    Verified:           false
+    Version:            4.5.4
+  Observed Generation:  1
+  Version Hash:         qSkCqxZtYDI=
+Events:                 <none>
+[student@workstation ~]$ oc get clusteroperators
+NAME                                       VERSION   AVAILABLE   PROGRESSING   DEGRADED   SINCE
+authentication                             4.5.4     True        False         False      266d
+cloud-credential                           4.5.4     True        False         False      266d
+cluster-autoscaler                         4.5.4     True        False         False      266d
+config-operator                            4.5.4     True        False         False      266d
+console                                    4.5.4     True        False         False      266d
+csi-snapshot-controller                    4.5.4     True        False         False      266d
+dns                                        4.5.4     True        False         False      156d
+etcd                                       4.5.4     True        False         False      266d
+image-registry                             4.5.4     True        False         False      266d
+ingress                                    4.5.4     True        False         False      160m
+insights                                   4.5.4     True        False         False      266d
+kube-apiserver                             4.5.4     True        False         False      266d
+kube-controller-manager                    4.5.4     True        False         False      266d
+kube-scheduler                             4.5.4     True        False         False      266d
+kube-storage-version-migrator              4.5.4     True        False         False      2d23h
+machine-api                                4.5.4     True        False         False      266d
+machine-approver                           4.5.4     True        False         False      266d
+machine-config                             4.5.4     True        False         False      266d
+marketplace                                4.5.4     True        False         False      160m
+monitoring                                 4.5.4     True        False         False      160m
+network                                    4.5.4     True        False         False      266d
+node-tuning                                4.5.4     True        False         False      266d
+openshift-apiserver                        4.5.4     True        False         False      2d23h
+openshift-controller-manager               4.5.4     True        False         False      2d23h
+openshift-samples                          4.5.4     True        False         False      266d
+operator-lifecycle-manager                 4.5.4     True        False         False      266d
+operator-lifecycle-manager-catalog         4.5.4     True        False         False      266d
+operator-lifecycle-manager-packageserver   4.5.4     True        False         False      27h
+service-ca                                 4.5.4     True        False         False      266d
+storage                                    4.5.4     True        False         False      266d
+[student@workstation ~]$ 
+
