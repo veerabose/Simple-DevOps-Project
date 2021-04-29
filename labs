@@ -2962,6 +2962,42 @@ image registry, storage, networking providers, and centralized logging and monit
 Manager (OLM) handles installation and management of operators.
 • OperatorHub.io is an online catalog for discovering operators.
 
+
+---------------------------------GE-Troubleshooting OpenShift Clusters and Applications---------------------------------------
+[student@workstation ~]$ lab execute-troubleshoot start
+
+Checking prerequisites for Guided Exercise: Troubleshooting OpenShift Clusters and Applications
+
+ Preparing the student's workstation:
+ · Download exercise files.....................................  SUCCESS
+ Verify the OpenShift cluster is running:
+ · Router pods are available...................................  SUCCESS
+ · OAuth pods are available....................................  SUCCESS
+ · API pods are available......................................  SUCCESS
+ · Control plane node 'master01' is ready......................  SUCCESS
+ · Control plane node 'master02' is ready......................  SUCCESS
+ · Control plane node 'master03' is ready......................  SUCCESS
+ Checking for conflicts with existing OpenShift projects:
+ · The 'execute-troubleshoot' project is absent................  SUCCESS
+
+Setting up the classroom for Guided Exercise: Troubleshooting OpenShift Clusters and Applications
+
+ Restoring authentication settings to installation defaults:
+ · No need to perform any change...............................  SUCCESS
+ Preparing the exercise:
+ · Create project 'execute-troubleshoot'.......................  SUCCESS
+ · Deploy PostgreSQL in 'execute-troubleshoot'.................  SUCCESS
+
+Overall start status...........................................  SUCCESS
+
+[student@workstation ~]$ source /usr/local/etc/ocp4.config
+[student@workstation ~]$ oc login -u kubeadmin -p ${RHT_OCP4_KUBEADM_PASSWD} https://api.ocp4.example.com:6443
+Login successful.
+
+You have access to 60 projects, the list has been suppressed. You can list all projects with 'oc projects'
+
+Using project "execute-troubleshoot".
+[student@workstation ~]$
 [student@workstation ~]$ oc get nodes
 NAME       STATUS   ROLES           AGE    VERSION
 master01   Ready    master,worker   266d   v1.18.3+012b3ec
@@ -3269,5 +3305,293 @@ operator-lifecycle-manager-catalog         4.5.4     True        False         F
 operator-lifecycle-manager-packageserver   4.5.4     True        False         False      27h
 service-ca                                 4.5.4     True        False         False      266d
 storage                                    4.5.4     True        False         False      266d
+[student@workstation ~]$ 
+
+[student@workstation ~]$ oc get pod -n openshift-image-registry
+NAME                                               READY   STATUS    RESTARTS   AGE
+cluster-image-registry-operator-5f47f6fcf7-bh22s   2/2     Running   0          266d
+image-registry-64b69c4bf9-48xl5                    1/1     Running   0          266d
+node-ca-24k9d                                      1/1     Running   0          266d
+node-ca-lfh4z                                      1/1     Running   0          266d
+node-ca-qrrpd                                      1/1     Running   0          266d
+[student@workstation ~]$ oc logs --tail 3 -n openshift-image-registry cluster-image-registry-operator-5f47f6fcf7-bh22s
+error: a container name must be specified for pod cluster-image-registry-operator-5f47f6fcf7-bh22s, choose one of: [cluster-image-registry-operator cluster-image-registry-operator-watch]
+[student@workstation ~]$ oc logs --tail 3 -n openshift-image-registry -c cluster-image-registry-operator cluster-image-registry-operator-5f47f6fcf7-bh22s
+I0429 05:35:45.148485      11 controllerimagepruner.go:309] event from image pruner workqueue successfully processed
+I0429 05:35:45.221613      11 controller.go:314] event from workqueue successfully processed
+I0429 05:36:06.187978      11 clusteroperator.go:99] event from workqueue successfully processed
+[student@workstation ~]$ oc logs --tail 3 -n openshift-image-registry -c cluster-image-registry-operator image-registry-64b69c4bf9-48xl5
+error: container cluster-image-registry-operator is not valid for pod image-registry-64b69c4bf9-48xl5
+[student@workstation ~]$ oc logs --tail 3 -n openshift-image-registry  image-registry-64b69c4bf9-48xl5
+time="2021-04-29T05:42:16.183172327Z" level=info msg=response go.version=go1.13.4 http.request.host="10.10.0.23:5000" http.request.id=25424ae1-9943-4232-8b30-2246b872cdc5 http.request.method=GET http.request.remoteaddr="10.10.0.1:37244" http.request.uri=/healthz http.request.useragent=kube-probe/1.18+ http.response.duration="51.955µs" http.response.status=200 http.response.written=0
+time="2021-04-29T05:42:20.788203717Z" level=info msg=response go.version=go1.13.4 http.request.host="10.10.0.23:5000" http.request.id=173741f2-6c93-4011-bf2f-f3e1b68405c8 http.request.method=GET http.request.remoteaddr="10.10.0.1:37330" http.request.uri=/healthz http.request.useragent=kube-probe/1.18+ http.response.duration="54.903µs" http.response.status=200 http.response.written=0
+time="2021-04-29T05:42:26.183441096Z" level=info msg=response go.version=go1.13.4 http.request.host="10.10.0.23:5000" http.request.id=60e1c00b-c773-4ab8-ab3a-4e1674a1f078 http.request.method=GET http.request.remoteaddr="10.10.0.1:37448" http.request.uri=/healthz http.request.useragent=kube-probe/1.18+ http.response.duration="42.223µs" http.response.status=200 http.response.written=0
+[student@workstation ~]$ 
+[student@workstation ~]$ oc adm node-logs --tail 1 -u kubelet master01
+-- Logs begin at Tue 2021-04-27 13:32:12 UTC, end at Thu 2021-04-29 05:44:15 UTC. --
+Apr 28 15:58:06.095409 master01 systemd[1]: kubelet.service: Consumed 1h 45min 54.572s CPU time
+-- Logs begin at Tue 2021-04-27 13:32:12 UTC, end at Thu 2021-04-29 05:44:15 UTC. --
+Apr 29 05:44:15.910878 master01 hyperkube[1495]: I0429 05:44:15.910872    1495 prober.go:133] Readiness probe for "olm-operator-7d9844479b-txwc6_openshift-operator-lifecycle-manager(35d1d109-e5c7-4ca3-b93c-5ce39a1af7b7):olm-operator" succeeded
+[student@workstation ~]$ oc debug node/master01
+Starting pod/master01-debug ...
+To use host binaries, run `chroot /host`
+
+chroot /host
+Pod IP: 192.168.50.10
+If you don't see a command prompt, try pressing enter.
+sh-4.2# 
+sh-4.2# chroot /host
+sh-4.4# systemctl status kubelet
+● kubelet.service - MCO environment configuration
+   Loaded: loaded (/etc/systemd/system/kubelet.service; enabled; vendor preset: enabled)
+  Drop-In: /etc/systemd/system/kubelet.service.d
+           └─10-mco-default-env.conf
+   Active: active (running) since Thu 2021-04-29 02:09:38 UTC; 3h 35min ago
+  Process: 1493 ExecStartPre=/bin/rm -f /var/lib/kubelet/cpu_manager_state (code=exited, status=0/SUCCESS)
+  Process: 1491 ExecStartPre=/bin/mkdir --parents /etc/kubernetes/manifests (code=exited, status=0/SUCCESS)
+ Main PID: 1495 (kubelet)
+    Tasks: 28 (limit: 102120)
+   Memory: 1.8G
+      CPU: 27min 24.667s
+   CGroup: /system.slice/kubelet.service
+           └─1495 kubelet --config=/etc/kubernetes/kubelet.conf --bootstrap-kubeconfig=/etc/kubernetes/kubeconfig --kubeconfig=/>
+
+Apr 29 05:45:35 master01 hyperkube[1495]: I0429 05:45:35.909501    1495 prober.go:181] HTTP-Probe Host: http://10.10.0.22, Port:>
+Apr 29 05:45:35 master01 hyperkube[1495]: I0429 05:45:35.909537    1495 prober.go:184] HTTP-Probe Headers: map[]
+Apr 29 05:45:35 master01 hyperkube[1495]: I0429 05:45:35.910622    1495 http.go:128] Probe succeeded for http://10.10.0.22:8080/>
+Apr 29 05:45:35 master01 hyperkube[1495]: I0429 05:45:35.910694    1495 prober.go:133] Readiness probe for "olm-operator-7d98444>
+Apr 29 05:45:36 master01 hyperkube[1495]: I0429 05:45:36.008246    1495 http.go:128] Probe succeeded for https://10.10.0.8:5443/>
+Apr 29 05:45:36 master01 hyperkube[1495]: I0429 05:45:36.008333    1495 prober.go:133] Liveness probe for "packageserver-5668b56>
+Apr 29 05:45:36 master01 hyperkube[1495]: I0429 05:45:36.040996    1495 prober.go:181] HTTP-Probe Host: https://192.168.50.10, P>
+Apr 29 05:45:36 master01 hyperkube[1495]: I0429 05:45:36.041054    1495 prober.go:184] HTTP-Probe Headers: map[]
+Apr 29 05:45:36 master01 hyperkube[1495]: I0429 05:45:36.048122    1495 http.go:128] Probe succeeded for https://192.168.50.10:1>
+Apr 29 05:45:36 master01 hyperkube[1495]: I0429 05:45:36.048186    1495 prober.go:133] Liveness probe for "kube-controller-manag>
+Apr 29 05:45:36 master01 hyperkube[1495]: I0429 05:45:36.129623    1495 kubelet.go:1989] SyncLoop (SYNC): 1 pods; recyler-pod-ma>
+Apr 29 05:45:36 master01 hyperkube[1495]: I0429 05:45:36.129661    1495 kubelet.go:2034] Pod "recyler-pod-master01_openshift-inf>
+Apr 29 05:45:36 master01 hyperkube[1495]: I0429 05:45:36.178933    1495 prober.go:181] HTTP-Probe Host: https://10.10.0.23, Port>
+Apr 29 05:45:36 master01 hyperkube[1495]: I0429 05:45:36.178974    1495 prober.go:184] HTTP-Probe Headers: map[]
+Apr 29 05:45:36 master01 hyperkube[1495]: I0429 05:45:36.183725    1495 http.go:128] Probe succeeded for https://10.10.0.23:5000>
+Apr 29 05:45:36 master01 hyperkube[1495]: I0429 05:45:36.183979    1495 prober.go:133] Liveness probe for "image-registry-64b69c>
+sh-4.4# systemctl status cri-o
+● crio.service - MCO environment configuration
+   Loaded: loaded (/usr/lib/systemd/system/crio.service; disabled; vendor preset: disabled)
+  Drop-In: /etc/systemd/system/crio.service.d
+           └─10-mco-default-env.conf
+   Active: active (running) since Thu 2021-04-29 02:09:32 UTC; 3h 36min ago
+     Docs: https://github.com/cri-o/cri-o
+ Main PID: 1448 (crio)
+    Tasks: 29
+   Memory: 388.9M
+      CPU: 30min 33.902s
+   CGroup: /system.slice/crio.service
+           ├─  1448 /usr/bin/crio --enable-metrics=true --metrics-port=9537
+           ├─989723 /usr/libexec/crio/conmon -c 233b20d7ae004b11b2e6c19b6c3ab7698a83d5737d18477403aa9950eb757926 -n k8s_guard_et>
+           └─989724 /usr/bin/runc --root=/run/runc exec --pid-file /tmp/pidfile732566214 --process /tmp/exec-process-916037608 ->
+
+Apr 29 05:45:10 master01 crio[1448]: time="2021-04-29 05:45:10.769516151Z" level=info msg="Starting container: a7d2d637ef08cdfaa>
+Apr 29 05:45:10 master01 crio[1448]: time="2021-04-29 05:45:10.789632776Z" level=info msg="Started container a7d2d637ef08cdfaaa6>
+Apr 29 05:45:16 master01 crio[1448]: time="2021-04-29 05:45:16.131066853Z" level=info msg="Checking image status: registry.acces>
+Apr 29 05:45:16 master01 crio[1448]: time="2021-04-29 05:45:16.131335197Z" level=info msg="Image registry.access.redhat.com/rhsc>
+Apr 29 05:45:27 master01 crio[1448]: time="2021-04-29 05:45:27.131613108Z" level=info msg="Checking image status: registry.acces>
+Apr 29 05:45:27 master01 crio[1448]: time="2021-04-29 05:45:27.132162123Z" level=info msg="Image registry.access.redhat.com/rhsc>
+Apr 29 05:45:39 master01 crio[1448]: time="2021-04-29 05:45:39.146013714Z" level=info msg="Checking image status: registry.acces>
+Apr 29 05:45:39 master01 crio[1448]: time="2021-04-29 05:45:39.146311828Z" level=info msg="Image registry.access.redhat.com/rhsc>
+Apr 29 05:45:50 master01 crio[1448]: time="2021-04-29 05:45:50.131117904Z" level=info msg="Checking image status: registry.acces>
+Apr 29 05:45:50 master01 crio[1448]: time="2021-04-29 05:45:50.131471878Z" level=info msg="Image registry.access.redhat.com/rhsc>
+sh-4.4# crictl ps --name openvswitch
+CONTAINER           IMAGE                                                              CREATED             STATE               NAME                ATTEMPT             POD ID
+afce0d12594bc       81ac7e4df0c960f19146662f538bcc2b72709040390ef6f94bfa880f5c0ebc3a   4 hours ago         Running             openvswitch         0                   1f9c553f8887c
+sh-4.4# exit
+exit
+sh-4.2# exit
+exit
+
+Removing debug pod ...
+[student@workstation ~]$ oc project execute-troubleshoot
+Now using project "execute-troubleshoot" on server "https://api.ocp4.example.com:6443".
+[student@workstation ~]$ oc get pod
+NAME                    READY   STATUS             RESTARTS   AGE
+psql-69676884f8-6qjbd   0/1     ImagePullBackOff   0          66m
+[student@workstation ~]$ oc status
+In project execute-troubleshoot on server https://api.ocp4.example.com:6443
+
+svc/psql - 172.30.50.223:5432
+
+deployment/psql deploys registry.access.redhat.com/rhscl/postgresq-96-rhel7:1
+  deployment #1 running for about an hour - 0/1 pods
+
+View details with 'oc describe <resource>/<name>' or list everything with 'oc get all'.
+[student@workstation ~]$ oc get events
+LAST SEEN   TYPE      REASON              OBJECT                       MESSAGE
+67m         Normal    Scheduled           pod/psql-69676884f8-6qjbd    Successfully assigned execute-troubleshoot/psql-69676884f8-6qjbd to master01
+67m         Normal    AddedInterface      pod/psql-69676884f8-6qjbd    Add eth0 [10.10.0.33/23]
+65m         Normal    Pulling             pod/psql-69676884f8-6qjbd    Pulling image "registry.access.redhat.com/rhscl/postgresq-96-rhel7:1"
+65m         Warning   Failed              pod/psql-69676884f8-6qjbd    Failed to pull image "registry.access.redhat.com/rhscl/postgresq-96-rhel7:1": rpc error: code = Unknown desc = Error reading manifest 1 in registry.access.redhat.com/rhscl/postgresq-96-rhel7: name unknown: Repo not found
+65m         Warning   Failed              pod/psql-69676884f8-6qjbd    Error: ErrImagePull
+7m11s       Normal    BackOff             pod/psql-69676884f8-6qjbd    Back-off pulling image "registry.access.redhat.com/rhscl/postgresq-96-rhel7:1"
+2m7s        Warning   Failed              pod/psql-69676884f8-6qjbd    Error: ImagePullBackOff
+67m         Normal    SuccessfulCreate    replicaset/psql-69676884f8   Created pod: psql-69676884f8-6qjbd
+67m         Normal    ScalingReplicaSet   deployment/psql              Scaled up replica set psql-69676884f8 to 1
+[student@workstation ~]$ skopeo inspect docker://registry.access.redhat.com/rhscl/postgresq-96-rhel7:1
+FATA[0000] Error parsing image name "docker://registry.access.redhat.com/rhscl/postgresq-96-rhel7:1": Error reading manifest 1 in registry.access.redhat.com/rhscl/postgresq-96-rhel7: name unknown: Repo not found 
+[student@workstation ~]$ skopeo inspect docker://registry.access.redhat.com/rhscl/postgresq-96-rhel7
+FATA[0000] Error parsing image name "docker://registry.access.redhat.com/rhscl/postgresq-96-rhel7": Error reading manifest latest in registry.access.redhat.com/rhscl/postgresq-96-rhel7: name unknown: Repo not found 
+[student@workstation ~]$ skopeo inspect docker://registry.access.redhat.com/rhscl/postgresql-96-rhel7:1
+{
+    "Name": "registry.access.redhat.com/rhscl/postgresql-96-rhel7",
+    "Digest": "sha256:6c3090779c0553d773380ff4cb0532086075376964de398417d494313f9a933b",
+    "RepoTags": [
+        "1-42.1561731092",
+        "1-59",
+        "1-58",
+        "1-17",
+        "1-10",
+        "1-13",
+        "1-12",
+        "1-51",
+        "1-53",
+        "1-52",
+        "1-57",
+        "1-38",
+        "1-37",
+        "1-36",
+        "1-32",
+        "1",
+        "1-25.1535384678",
+        "1-8",
+        "1-5",
+        "1-4",
+        "1-7",
+        "1-6",
+        "1-61",
+        "1-63",
+        "1-48",
+        "1-49",
+        "1-46",
+        "1-47",
+        "1-44",
+        "1-45",
+        "1-42",
+        "1-40",
+        "1-51.1575996559",
+        "1-28",
+        "1-14",
+        "1-25",
+        "1-27",
+        "latest"
+    ],
+    "Created": "2020-09-21T15:39:59.766636Z",
+    "DockerVersion": "1.13.1",
+    "Labels": {
+        "architecture": "x86_64",
+        "build-date": "2020-09-21T15:38:28.666467",
+        "com.redhat.build-host": "cpt-1002.osbs.prod.upshift.rdu2.redhat.com",
+        "com.redhat.component": "rh-postgresql96-container",
+        "com.redhat.license_terms": "https://www.redhat.com/en/about/red-hat-end-user-license-agreements#rhel",
+        "description": "PostgreSQL is an advanced Object-Relational database management system (DBMS). The image contains the client and server programs that you'll need to create, run, maintain and access a PostgreSQL DBMS server.",
+        "distribution-scope": "public",
+        "io.k8s.description": "PostgreSQL is an advanced Object-Relational database management system (DBMS). The image contains the client and server programs that you'll need to create, run, maintain and access a PostgreSQL DBMS server.",
+        "io.k8s.display-name": "PostgreSQL 9.6",
+        "io.openshift.expose-services": "5432:postgresql",
+        "io.openshift.s2i.assemble-user": "26",
+        "io.openshift.s2i.scripts-url": "image:///usr/libexec/s2i",
+        "io.openshift.tags": "database,postgresql,postgresql96,rh-postgresql96",
+        "io.s2i.scripts-url": "image:///usr/libexec/s2i",
+        "maintainer": "SoftwareCollections.org \u003csclorg@redhat.com\u003e",
+        "name": "rhscl/postgresql-96-rhel7",
+        "release": "63",
+        "summary": "PostgreSQL is an advanced Object-Relational database management system",
+        "url": "https://access.redhat.com/containers/#/registry.access.redhat.com/rhscl/postgresql-96-rhel7/images/1-63",
+        "usage": "podman run -d --name postgresql_database -e POSTGRESQL_USER=user -e POSTGRESQL_PASSWORD=pass -e POSTGRESQL_DATABASE=db -p 5432:5432 rhscl/postgresql-96-rhel7",
+        "vcs-ref": "ae9489bc8bf8f1c543d15dbe9ed5b9d1b6adcacd",
+        "vcs-type": "git",
+        "vendor": "Red Hat, Inc.",
+        "version": "1"
+    },
+    "Architecture": "amd64",
+    "Os": "linux",
+    "Layers": [
+        "sha256:1323a241cc068f2816dd88f00168be73339471d6dc6eb2e6c761b63b734501b6",
+        "sha256:2bd25ca124579d6fce8668ff5d4ed83866d7e7438cb561a51ddde8cc40272822",
+        "sha256:5d011ac93e7456d4c646b0fbb53712598bda9a6b0d027b2be788016e078ded77",
+        "sha256:16634824fe3f2f2bbbf87f9a3082ec4b3d1b3b084ce14b3e63419a4dc5b3150d"
+    ],
+    "Env": [
+        "PATH=/opt/app-root/src/bin:/opt/app-root/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+        "container=oci",
+        "SUMMARY=PostgreSQL is an advanced Object-Relational database management system",
+        "DESCRIPTION=PostgreSQL is an advanced Object-Relational database management system (DBMS). The image contains the client and server programs that you'll need to create, run, maintain and access a PostgreSQL DBMS server.",
+        "STI_SCRIPTS_URL=image:///usr/libexec/s2i",
+        "STI_SCRIPTS_PATH=/usr/libexec/s2i",
+        "APP_ROOT=/opt/app-root",
+        "HOME=/var/lib/pgsql",
+        "PLATFORM=el7",
+        "BASH_ENV=/usr/share/container-scripts/postgresql/scl_enable",
+        "ENV=/usr/share/container-scripts/postgresql/scl_enable",
+        "PROMPT_COMMAND=. /usr/share/container-scripts/postgresql/scl_enable",
+        "POSTGRESQL_VERSION=9.6",
+        "POSTGRESQL_PREV_VERSION=9.5",
+        "PGUSER=postgres",
+        "APP_DATA=/opt/app-root",
+        "CONTAINER_SCRIPTS_PATH=/usr/share/container-scripts/postgresql",
+        "ENABLED_COLLECTIONS=rh-postgresql96"
+    ]
+}
+[student@workstation ~]$ man skopeo
+[student@workstation ~]$ oc get all
+NAME                        READY   STATUS             RESTARTS   AGE
+pod/psql-69676884f8-6qjbd   0/1     ImagePullBackOff   0          70m
+
+NAME           TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)    AGE
+service/psql   ClusterIP   172.30.50.223   <none>        5432/TCP   70m
+
+NAME                   READY   UP-TO-DATE   AVAILABLE   AGE
+deployment.apps/psql   0/1     1            0           70m
+
+NAME                              DESIRED   CURRENT   READY   AGE
+replicaset.apps/psql-69676884f8   1         1         0       70m
+[student@workstation ~]$ oc edit dc/psql
+Error from server (NotFound): deploymentconfigs.apps.openshift.io "psql" not found
+[student@workstation ~]$ oc edit deplyment/psql
+error: the server doesn't have a resource type "deplyment"
+[student@workstation ~]$ oc edit deployment/psql
+deployment.apps/psql edited
+[student@workstation ~]$ oc get all
+NAME                        READY   STATUS              RESTARTS   AGE
+pod/psql-69676884f8-6qjbd   0/1     ImagePullBackOff    0          71m
+pod/psql-7b586df5d-dst59    0/1     ContainerCreating   0          10s
+
+NAME           TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)    AGE
+service/psql   ClusterIP   172.30.50.223   <none>        5432/TCP   71m
+
+NAME                   READY   UP-TO-DATE   AVAILABLE   AGE
+deployment.apps/psql   0/1     1            0           71m
+
+NAME                              DESIRED   CURRENT   READY   AGE
+replicaset.apps/psql-69676884f8   1         1         0       71m
+replicaset.apps/psql-7b586df5d    1         1         0       10s
+[student@workstation ~]$ oc status
+In project execute-troubleshoot on server https://api.ocp4.example.com:6443
+
+svc/psql - 172.30.50.223:5432
+
+deployment/psql deploys registry.access.redhat.com/rhscl/postgresql-96-rhel7:1
+  deployment #2 running for 9 minutes - 1 pod
+  deployment #1 deployed about an hour ago
+
+View details with 'oc describe <resource>/<name>' or list everything with 'oc get all'.
+[student@workstation ~]$ oc get pods
+NAME                   READY   STATUS    RESTARTS   AGE
+psql-7b586df5d-dst59   1/1     Running   0          9m28s
+[student@workstation ~]$ lab execute-troubleshoot finish
+
+Completing Guided Exercise: Troubleshooting OpenShift Clusters and Applications
+
+ · Delete OpenShift project 'execute-troubleshoot'.............  SUCCESS
+ · Wait for project 'execute-troubleshoot' to be gone..........  SUCCESS
+ · Remove exercise files.......................................  SUCCESS
+
+Please use start if you wish to do the exercise again.
+
 [student@workstation ~]$ 
 
