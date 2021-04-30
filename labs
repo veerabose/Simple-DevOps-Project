@@ -3937,4 +3937,193 @@ Completing Guided Exercise: Managing Sensitive Information With Secrets
 Please use start if you wish to do the exercise again.
 
 [student@workstation ~]$ 
+-------------------------------------------------CH11-GE-Controlling Application Permissions with Security Context Constraints -----------------
+
+[student@workstation ~]$ lab authorization-scc start
+
+Checking prerequisites for Guided Exercise: Controlling Application Permissions with Security Context Constraints
+
+ Verify the OpenShift cluster is running:
+ · Router pods are available...................................  SUCCESS
+ · OAuth pods are available....................................  SUCCESS
+ · API pods are available......................................  SUCCESS
+ · Control plane node 'master01' is ready......................  SUCCESS
+ · Control plane node 'master02' is ready......................  SUCCESS
+ · Control plane node 'master03' is ready......................  SUCCESS
+ Checking for conflicts with existing OpenShift projects:
+ · The 'authorization-scc' project is absent...................  SUCCESS
+
+Setting up the classroom for Guided Exercise: Controlling Application Permissions with Security Context Constraints
+
+ · Validate 'admin' can log in with password 'redhat'..........  SUCCESS
+ · Validate 'leader' can log in with password 'redhat'.........  SUCCESS
+ · Validate 'developer' can log in with password 'developer'...  SUCCESS
+
+Overall start status...........................................  SUCCESS
+
+[student@workstation ~]$ oc login -u developer -p developer https://api.ocp4.example.com:6443
+Login successful.
+
+You don't have any projects. You can try to create a new project, by running
+
+    oc new-project <projectname>
+
+[student@workstation ~]$ oc new-project authorization-scc
+Now using project "authorization-scc" on server "https://api.ocp4.example.com:6443".
+
+You can add applications to this project with the 'new-app' command. For example, try:
+
+    oc new-app ruby~https://github.com/sclorg/ruby-ex.git
+
+to build a new example application in Ruby. Or use kubectl to deploy a simple Kubernetes application:
+
+    kubectl create deployment hello-node --image=gcr.io/hello-minikube-zero-install/hello-node
+
+[student@workstation ~]$ oc new-app --name gitlab --docker-image quay.io/redhattraining/gitlab-ce:8.4.3-ce.0
+--> Found container image a26371b (5 years old) from quay.io for "quay.io/redhattraining/gitlab-ce:8.4.3-ce.0"
+
+    * An image stream tag will be created as "gitlab:8.4.3-ce.0" that will track this image
+
+--> Creating resources ...
+    imagestream.image.openshift.io "gitlab" created
+    deployment.apps "gitlab" created
+    service "gitlab" created
+--> Success
+    Application is not exposed. You can expose services to the outside world by executing one or more of the commands below:
+     'oc expose svc/gitlab' 
+    Run 'oc status' to view your app.
+[student@workstation ~]$ oc get pods
+NAME                      READY   STATUS              RESTARTS   AGE
+gitlab-559f9d6f77-gl5q2   0/1     ContainerCreating   0          14s
+[student@workstation ~]$ oc logs pod/gitlab-559f9d6f77-gl5q2
+Thank you for using GitLab Docker Image!
+Current version: gitlab-ce=8.4.3-ce.0
+
+Configure GitLab for your system by editing /etc/gitlab/gitlab.rb file
+And restart this container to reload settings.
+To do it use docker exec:
+
+  docker exec -it gitlab vim /etc/gitlab/gitlab.rb
+  docker restart gitlab
+
+For a comprehensive list of configuration options please see the Omnibus GitLab readme
+https://gitlab.com/gitlab-org/omnibus-gitlab/blob/master/README.md
+
+If this container fails to start due to permission problems try to fix it by executing:
+
+  docker exec -it gitlab update-permissions
+  docker restart gitlab
+
+Installing gitlab.rb config...
+Generating ssh_host_rsa_key...
+Generating public/private rsa key pair.
+Your identification has been saved in /etc/gitlab/ssh_host_rsa_key.
+Your public key has been saved in /etc/gitlab/ssh_host_rsa_key.pub.
+The key fingerprint is:
+a5:0c:22:b2:cd:84:c4:61:70:4d:f1:f5:6e:e6:d6:1d 1000610000@gitlab-559f9d6f77-gl5q2
+The key's randomart image is:
++--[ RSA 2048]----+
+|++ooo.  .        |
+|o+  .. . .       |
+|o o . o   o      |
+| * . . o +       |
+|. o     S +   E  |
+|         + . . . |
+|          o . .  |
+|         .       |
+|                 |
++-----------------+
+Generating ssh_host_ecdsa_key...
+Generating public/private ecdsa key pair.
+Your identification has been saved in /etc/gitlab/ssh_host_ecdsa_key.
+Your public key has been saved in /etc/gitlab/ssh_host_ecdsa_key.pub.
+The key fingerprint is:
+a5:93:46:da:71:07:02:9a:61:75:18:7b:ae:43:78:cb 1000610000@gitlab-559f9d6f77-gl5q2
+The key's randomart image is:
++--[ECDSA  256]---+
+|    o.++o .      |
+|   . +.o . .     |
+|    o . + o .    |
+|     . * * .     |
+|    . + S        |
+|     + + .       |
+|      E          |
+|       .         |
+|                 |
++-----------------+
+Generating ssh_host_ed25519_key...
+Generating public/private ed25519 key pair.
+Your identification has been saved in /etc/gitlab/ssh_host_ed25519_key.
+Your public key has been saved in /etc/gitlab/ssh_host_ed25519_key.pub.
+The key fingerprint is:
+36:41:14:3d:9c:e1:c6:4d:4f:a4:bf:c6:64:8f:18:33 1000610000@gitlab-559f9d6f77-gl5q2
+The key's randomart image is:
++--[ED25519  256--+
+|       .++.o..o  |
+|       . o=o +   |
+|        . +.o .  |
+|         o   .   |
+|        S   E +  |
+|       . .   O + |
+|            . = .|
+|             .   |
+|                 |
++-----------------+
+Preparing services...
+Starting services...
+Configuring GitLab...
+/opt/gitlab/embedded/bin/runsvdir-start: line 34: ulimit: max user processes: cannot modify limit: Operation not permitted
+/opt/gitlab/embedded/bin/runsvdir-start: line 37: /proc/sys/fs/file-max: Read-only file system
+[2021-04-30T05:51:45+00:00] WARN: Ohai::Config[:disabled_plugins] is set. Ohai::Config[:disabled_plugins] is deprecated and will be removed in future releases of ohai. Use ohai.disabled_plugins in your configuration file to configure :disabled_plugins for ohai.
+[2021-04-30T05:51:45+00:00] INFO: Started chef-zero at chefzero://localhost:8889 with repository at /opt/gitlab/embedded
+  One version per cookbook
+
+[2021-04-30T05:51:45+00:00] INFO: Forking chef instance to converge...
+[2021-04-30T05:51:45+00:00] INFO: *** Chef 12.5.1 ***
+[2021-04-30T05:51:45+00:00] INFO: Chef-client pid: 31
+[student@workstation ~]$ oc login -u admin -p redhat
+Login successful.
+
+You have access to 61 projects, the list has been suppressed. You can list all projects with 'oc projects'
+
+Using project "authorization-scc".
+[student@workstation ~]$ oc get pod/gitlab-559f9d6f77-gl5q2 -o yaml | oc adm policy scc-subject-review -f -
+RESOURCE                      ALLOWED BY   
+Pod/gitlab-559f9d6f77-gl5q2   anyuid       
+[student@workstation ~]$ oc create sa gitlab-sa
+serviceaccount/gitlab-sa created
+[student@workstation ~]$ oc adm policy add-scc-to-user anyuid -z gitlab-sa
+clusterrole.rbac.authorization.k8s.io/system:openshift:scc:anyuid added: "gitlab-sa"
+[student@workstation ~]$ oc login -u developer -p developer
+Login successful.
+
+You have one project on this server: "authorization-scc"
+
+Using project "authorization-scc".
+[student@workstation ~]$ oc set serviceaccount deployment/gitlab gitlab-sa
+deployment.apps/gitlab serviceaccount updated
+[student@workstation ~]$ oc get pods
+NAME                      READY   STATUS              RESTARTS   AGE
+gitlab-559f9d6f77-gl5q2   0/1     Error               5          4m20s
+gitlab-7bb4dcc895-r4x4g   0/1     ContainerCreating   0          9s
+[student@workstation ~]$ oc expose service/gitlab --port 80 --hostname gitlab.apps.ocp4.example.com
+route.route.openshift.io/gitlab exposed
+[student@workstation ~]$ oc get routes
+NAME     HOST/PORT                      PATH   SERVICES   PORT   TERMINATION   WILDCARD
+gitlab   gitlab.apps.ocp4.example.com          gitlab     80                   None
+[student@workstation ~]$ curl -s http://gitlab.apps.ocp4.example.com/users/sign_in | grep '<title>'
+[student@workstation ~]$ curl -s http://gitlab.apps.ocp4.example.com/users/sign_in | grep '<title>'
+<title>Sign in · GitLab</title>
+[student@workstation ~]$ oc delete project authorization-scc
+project.project.openshift.io "authorization-scc" deleted
+[student@workstation ~]$ lab authorization-scc finish
+
+Completing Guided Exercise: Controlling Application Permissions with Security Context Constraints
+
+
+Please use start if you wish to do the exercise again.
+
+[student@workstation ~]$ 
+
+
 
