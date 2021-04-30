@@ -3778,4 +3778,18 @@ Please use start if you wish to do the exercise again.
 
 https://docs.openshift.com/container-platform/3.4/install_config/persistent_storage/dynamically_provisioning_pvs.html
 https://kubernetes.io/docs/concepts/storage/storage-classes/
+Setting up the classroom for Guided Exercise: Managing Sensitive Information With Secrets
 
+ · Create HTPasswd entry for 'admin'...........................  SUCCESS
+ · Create HTPasswd entry for 'leader'..........................  SUCCESS
+ · Create HTPasswd entry for 'developer'.......................  SUCCESS
+ · Create HTPasswd secret: 'localusers'........................  FAIL
+ · Add HTPasswd IdP............................................  SUCCESS
+ · Pause for creation of first oauth pod.......................  SUCCESS
+ · Pause for creation of second oauth pod......................  SUCCESS
+ · Wait up to 1 minute for oauth pod containers to be ready....  SUCCESS
+ · Delete all previous users...................................  SUCCESS
+ · Delete all previous identities..............................  SUCCESS
+ · Pause 5 seconds before validating authentication............  SUCCESS
+ · Validate 'admin' can log in with password 'redhat'..........  SUCCESS
+ · Validate 'leader' can log in with password 'redhat'......... 
