@@ -20,6 +20,48 @@ podman run --name persist-db -d -v /var/local/mysql:/var/lib/mysql/data -e MYSQL
 ----------------------------------------------------------------------------------------------------------------------
                                                               Day1
 --------------------------------------------------------------------------------------------------------------------
+
+[student@workstation ~]$ lab-configure 
+
+ . Enter the GitHub account name: veerabose
+   Verifying GitHub account name: veerabose
+
+ . Enter the Quay.io account name: veeraabose
+   Verifying Quay.io account name: veeraabose
+
+ . Configuring RHT_OCP4_GITHUB_USER variable: SUCCESS
+ . Configuring RHT_OCP4_QUAY_USER variable:   SUCCESS
+
+ . To reconfigure, run: lab-configure -d
+
+ . Ensuring user 'developer' can log in to the OpenShift cluster.
+Warning: Permanently added 'utility,172.25.250.253' (ECDSA) to the list of known hosts.
+ . HTPasswd Identify Provider configured
+ . NOTE: It might take up to one minute before user 'developer'
+         can successfully log in to the OpenShift cluster.
+
+[student@workstation ~]
+student@workstation ~]$ source /usr/local/etc/ocp4.config
+[student@workstation ~]$ git clone https://github.com/${RHT_OCP4_GITHUB_USER}/DO180-apps
+Cloning into 'DO180-apps'...
+remote: Enumerating objects: 172, done.
+remote: Total 172 (delta 0), reused 0 (delta 0), pack-reused 172
+Receiving objects: 100% (172/172), 286.98 KiB | 448.00 KiB/s, done.
+Resolving deltas: 100% (72/72), done.
+[student@workstation ~]$ cd D
+Desktop/    DO180-apps/ Documents/  Downloads/  
+[student@workstation ~]$ cd DO180-apps/
+[student@workstation DO180-apps]$ ls
+example  nodejs-app  nodejs-helloworld  php-helloworld  README.md  temps  todoapp
+[student@workstation DO180-apps]$ git status
+On branch master
+Your branch is up to date with 'origin/master'.
+
+nothing to commit, working tree clean
+[student@workstation DO180-apps]$ head README.md 
+# DO180-apps
+DO180 Repository for Sample Applications
+
 [root@workstation ~]# podman images
 REPOSITORY   TAG   IMAGE ID   CREATED   SIZE
 [root@workstation ~]# podman search rhel |wc -l
