@@ -4558,3 +4558,185 @@ CMD param1 param2
 
 
 ----------------------------------CH5-GE-Creating a Basic Apache Container Image-------------------------------------
+[student@workstation ~]$ lab dockerfile-create start
+
+Setting up workstation for the Guided Exercise: Building a basic Apache Container Image
+
+ · Checking podman configuration...............................  SUCCESS
+Exercise is already setup.
+[student@workstation ~]$ vim /home/student/DO180/labs/dockerfile-create/Dockerfile
+[student@workstation ~]$ cat !$
+cat /home/student/DO180/labs/dockerfile-create/Dockerfile
+FROM ubi7/ubi:7.7
+MAINTAINER Your Name <youremail>
+LABEL description="A custom Apache container based on UBI 7"
+RUN yum install -y httpd && \
+yum clean all
+RUN echo "Helo from Dockerfile" > /var/www/html/index.html
+EXPOSE 80
+CMD ["httpd", "-D", "FOREGROUND"]
+[student@workstation ~]$ cd /home/student/DO180/labs/dockerfile-create
+[student@workstation dockerfile-create]$ sudo podman build --layers=false -t do180/apache .
+STEP 1: FROM ubi7/ubi:7.7
+Getting image source signatures
+Copying blob 09dbbf8834d2 done
+Copying blob fcd63ccfdd0c done
+Copying config 0355cd652b done
+Writing manifest to image destination
+Storing signatures
+STEP 2: MAINTAINER Your Name <youremail>
+STEP 3: LABEL description="A custom Apache container based on UBI 7"
+STEP 4: RUN yum install -y httpd && yum clean all
+Loaded plugins: ovl, product-id, search-disabled-repos, subscription-manager
+This system is not receiving updates. You can use subscription-manager on the host to register and assign subscriptions.
+ubi-7                                                    | 3.8 kB     00:00     
+ubi-7-rhah                                               | 3.7 kB     00:00     
+ubi-7-server-devtools-rpms                               | 3.8 kB     00:00     
+ubi-7-server-extras-rpms                                 | 3.7 kB     00:00     
+ubi-7-server-optional-rpms                               | 3.8 kB     00:00     
+ubi-server-rhscl-7-rpms                                  | 3.8 kB     00:00     
+(1/18): ubi-7/x86_64/group                                 |  124 B   00:00     
+(2/18): ubi-7/x86_64/primary_db                            | 800 kB   00:00     
+(3/18): ubi-7/x86_64/updateinfo                            |   92 B   00:00     
+(4/18): ubi-7-rhah/x86_64/updateinfo                       |   92 B   00:00     
+(5/18): ubi-7-rhah/x86_64/primary_db                       | 2.5 kB   00:00     
+(6/18): ubi-7-rhah/x86_64/group                            |  124 B   00:00     
+(7/18): ubi-7-server-devtools-rpms/x86_64/group            |  124 B   00:00     
+(8/18): ubi-7-server-devtools-rpms/x86_64/updateinfo       |   92 B   00:00     
+(9/18): ubi-7-server-devtools-rpms/x86_64/primary_db       | 8.6 kB   00:00     
+(10/18): ubi-7-server-extras-rpms/x86_64/updateinfo        |   92 B   00:00     
+(11/18): ubi-7-server-extras-rpms/x86_64/primary_db        | 6.8 kB   00:00     
+(12/18): ubi-7-server-extras-rpms/x86_64/group             |  124 B   00:00     
+(13/18): ubi-7-server-optional-rpms/x86_64/updateinfo      |   92 B   00:00     
+(14/18): ubi-7-server-optional-rpms/x86_64/group           |  124 B   00:00     
+(15/18): ubi-7-server-optional-rpms/x86_64/primary_db      |  14 kB   00:00     
+(16/18): ubi-server-rhscl-7-rpms/x86_64/updateinfo         |   92 B   00:00     
+(17/18): ubi-server-rhscl-7-rpms/x86_64/group              |  124 B   00:00     
+(18/18): ubi-server-rhscl-7-rpms/x86_64/primary_db         | 383 kB   00:00     
+Resolving Dependencies
+--> Running transaction check
+---> Package httpd.x86_64 0:2.4.6-97.el7_9 will be installed
+--> Processing Dependency: httpd-tools = 2.4.6-97.el7_9 for package: httpd-2.4.6-97.el7_9.x86_64
+--> Processing Dependency: system-logos >= 7.92.1-1 for package: httpd-2.4.6-97.el7_9.x86_64
+--> Processing Dependency: /etc/mime.types for package: httpd-2.4.6-97.el7_9.x86_64
+--> Processing Dependency: libapr-1.so.0()(64bit) for package: httpd-2.4.6-97.el7_9.x86_64
+--> Processing Dependency: libaprutil-1.so.0()(64bit) for package: httpd-2.4.6-97.el7_9.x86_64
+--> Running transaction check
+---> Package apr.x86_64 0:1.4.8-7.el7 will be installed
+---> Package apr-util.x86_64 0:1.5.2-6.el7 will be installed
+---> Package httpd-tools.x86_64 0:2.4.6-97.el7_9 will be installed
+---> Package mailcap.noarch 0:2.1.41-2.el7 will be installed
+---> Package redhat-logos.noarch 0:70.7.0-1.el7 will be installed
+--> Finished Dependency Resolution
+
+Dependencies Resolved
+
+================================================================================
+ Package              Arch           Version                Repository     Size
+================================================================================
+Installing:
+ httpd                x86_64         2.4.6-97.el7_9         ubi-7         1.2 M
+Installing for dependencies:
+ apr                  x86_64         1.4.8-7.el7            ubi-7         104 k
+ apr-util             x86_64         1.5.2-6.el7            ubi-7          92 k
+ httpd-tools          x86_64         2.4.6-97.el7_9         ubi-7          93 k
+ mailcap              noarch         2.1.41-2.el7           ubi-7          31 k
+ redhat-logos         noarch         70.7.0-1.el7           ubi-7          13 M
+
+Transaction Summary
+================================================================================
+Install  1 Package (+5 Dependent packages)
+
+Total download size: 15 M
+Installed size: 18 M
+Downloading packages:
+warning: /var/cache/yum/x86_64/7Server/ubi-7/packages/apr-1.4.8-7.el7.x86_64.rpm: Header V3 RSA/SHA256 Signature, key ID fd431d51: NOKEY
+Public key for apr-1.4.8-7.el7.x86_64.rpm is not installed
+(1/6): apr-1.4.8-7.el7.x86_64.rpm                          | 104 kB   00:00     
+(2/6): httpd-2.4.6-97.el7_9.x86_64.rpm                     | 1.2 MB   00:00     
+(3/6): apr-util-1.5.2-6.el7.x86_64.rpm                     |  92 kB   00:00     
+(4/6): mailcap-2.1.41-2.el7.noarch.rpm                     |  31 kB   00:00     
+(5/6): httpd-tools-2.4.6-97.el7_9.x86_64.rpm               |  93 kB   00:00     
+(6/6): redhat-logos-70.7.0-1.el7.noarch.rpm                |  13 MB   00:00     
+--------------------------------------------------------------------------------
+Total                                               30 MB/s |  15 MB  00:00     
+Retrieving key from file:///etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release
+Importing GPG key 0xFD431D51:
+ Userid     : "Red Hat, Inc. (release key 2) <security@redhat.com>"
+ Fingerprint: 567e 347a d004 4ade 55ba 8a5f 199e 2f91 fd43 1d51
+ Package    : redhat-release-server-7.7-10.el7.x86_64 (@anaconda/7.7)
+ From       : /etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release
+Importing GPG key 0x2FA658E0:
+ Userid     : "Red Hat, Inc. (auxiliary key) <security@redhat.com>"
+ Fingerprint: 43a6 e49c 4a38 f4be 9abf 2a53 4568 9c88 2fa6 58e0
+ Package    : redhat-release-server-7.7-10.el7.x86_64 (@anaconda/7.7)
+ From       : /etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release
+Running transaction check
+Running transaction test
+Transaction test succeeded
+Running transaction
+  Installing : apr-1.4.8-7.el7.x86_64                                       1/6 
+  Installing : apr-util-1.5.2-6.el7.x86_64                                  2/6 
+  Installing : httpd-tools-2.4.6-97.el7_9.x86_64                            3/6 
+  Installing : redhat-logos-70.7.0-1.el7.noarch                             4/6 
+  Installing : mailcap-2.1.41-2.el7.noarch                                  5/6 
+  Installing : httpd-2.4.6-97.el7_9.x86_64                                  6/6 
+  Verifying  : httpd-tools-2.4.6-97.el7_9.x86_64                            1/6 
+  Verifying  : mailcap-2.1.41-2.el7.noarch                                  2/6 
+  Verifying  : apr-1.4.8-7.el7.x86_64                                       3/6 
+  Verifying  : apr-util-1.5.2-6.el7.x86_64                                  4/6 
+  Verifying  : httpd-2.4.6-97.el7_9.x86_64                                  5/6 
+  Verifying  : redhat-logos-70.7.0-1.el7.noarch                             6/6 
+
+Installed:
+  httpd.x86_64 0:2.4.6-97.el7_9                                                 
+
+Dependency Installed:
+  apr.x86_64 0:1.4.8-7.el7                  apr-util.x86_64 0:1.5.2-6.el7      
+  httpd-tools.x86_64 0:2.4.6-97.el7_9       mailcap.noarch 0:2.1.41-2.el7      
+  redhat-logos.noarch 0:70.7.0-1.el7       
+
+Complete!
+Loaded plugins: ovl, product-id, search-disabled-repos, subscription-manager
+This system is not receiving updates. You can use subscription-manager on the host to register and assign subscriptions.
+Cleaning repos: ubi-7 ubi-7-rhah ubi-7-server-devtools-rpms
+              : ubi-7-server-extras-rpms ubi-7-server-optional-rpms
+              : ubi-server-rhscl-7-rpms
+STEP 5: RUN echo "Helo from Dockerfile" > /var/www/html/index.html
+STEP 6: EXPOSE 80
+STEP 7: CMD ["httpd", "-D", "FOREGROUND"]
+STEP 8: COMMIT do180/apache
+Getting image source signatures
+Copying blob 5601485f0109 skipped: already exists
+Copying blob ac7577b8c383 skipped: already exists
+Copying blob d2655f1ed457 done
+Copying config 762a53024f done
+Writing manifest to image destination
+Storing signatures
+762a53024f154f10bd317c1f9ea2fabe0e126d3ec0b205155be30c2084ea96ce
+[student@workstation dockerfile-create]$ sudo podman images
+REPOSITORY                                        TAG        IMAGE ID       CREATED              SIZE
+localhost/do180/apache                            latest     762a53024f15   About a minute ago   247 MB
+registry.access.redhat.com/rhel                   latest     5a286023e73c   3 weeks ago          216 MB
+registry.access.redhat.com/ubi7/ubi               7.7        0355cd652bd1   14 months ago        215 MB
+registry.access.redhat.com/rhmap47/mysql          5.5        25e56fe83165   22 months ago        373 MB
+registry.access.redhat.com/rhel7                  7.5        7b875638cfd8   2 years ago          211 MB
+registry.access.redhat.com/rhscl/httpd-24-rhel7   2.4-36.8   5f9f898a3093   3 years ago          309 MB
+[student@workstation dockerfile-create]$ sudo podman run --name lab-apache -d -p 10080:80 do180/apache
+66d0b386aeacc945cad42924fc6a44e4077fc45aa62e54c445f79dfc4db276bb
+[student@workstation dockerfile-create]$ sudo podman ps
+CONTAINER ID  IMAGE                          COMMAND               CREATED             STATUS                 PORTS                  NAMES
+66d0b386aeac  localhost/do180/apache:latest  httpd -D FOREGROU...  About a minute ago  Up About a minute ago  0.0.0.0:10080->80/tcp  lab-apache
+[student@workstation dockerfile-create]$ curl 127.0.0.1:10080
+Helo from Dockerfile
+[student@workstation dockerfile-create]$ lab dockerfile-create finish
+
+Completing the Guided Exercise: Building a basic Apache Container Image
+
+ · Stopping lab-apache container that is running...............  SUCCESS
+ · Removing lab-apache container that is in the cache..........  SUCCESS
+ · Removing do180/apache custom container image................  SUCCESS
+ · Removing UBI7 container image...............................  SUCCESS
+[student@workstation dockerfile-create]$ 
+
+
