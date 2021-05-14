@@ -4166,6 +4166,10 @@ Completing Guided Exercise: Controlling Application Permissions with Security Co
 Please use start if you wish to do the exercise again.
 
 [student@workstation ~]$ 
+----------------------------------Chapter 4 | Managing Container Images ------------------------------------------------------
 
+Note
+By default, Podman stores container images in the /var/lib/containers/
+storage/overlay-images directory.
 
 
