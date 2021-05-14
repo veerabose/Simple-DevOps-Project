@@ -4298,4 +4298,154 @@ Completing the GE: Creating a Custom Apache Container Image
  · Removing localhost/do180-custom-httpd image.................  SUCCESS
 [student@workstation ~]$ 
 
+--------------------------------CH4-Lab- Managing Images-------------------
 
+[student@workstation ~]$ lab image-review start
+
+Setting up workstation for the Lab: Managing Images
+
+ · Checking podman configuration...............................  SUCCESS
+[student@workstation ~]$ sudo podman pull quay.io/redhattraining/nginx:1.17
+Trying to pull quay.io/redhattraining/nginx:1.17...
+Getting image source signatures
+Copying blob b00ee4473ca6 skipped: already exists
+Copying blob d1a81ca518e2 skipped: already exists
+Copying blob c78335199707 skipped: already exists
+Copying config 9beeba249f done
+Writing manifest to image destination
+Storing signatures
+9beeba249f3ee158d3e495a6ac25c5667ae2de8a43ac2a8bfd2bf687a58c06c9
+[student@workstation ~]$ sudo podman images
+REPOSITORY                                        TAG        IMAGE ID       CREATED         SIZE
+registry.access.redhat.com/rhel                   latest     5a286023e73c   3 weeks ago     216 MB
+quay.io/redhattraining/nginx                      1.17       9beeba249f3e   12 months ago   131 MB
+registry.access.redhat.com/ubi7/ubi               7.7        0355cd652bd1   14 months ago   215 MB
+registry.access.redhat.com/rhmap47/mysql          5.5        25e56fe83165   22 months ago   373 MB
+registry.access.redhat.com/rhel7                  7.5        7b875638cfd8   2 years ago     211 MB
+registry.access.redhat.com/rhscl/httpd-24-rhel7   2.4-36.8   5f9f898a3093   3 years ago     309 MB
+[student@workstation ~]$ sudo podman run --name official-nginx -d -p 8080:80 quay.io/redhattraining/nginx:1.17
+c7374f289b4326dc5a057fb916f3d75433b632e2a7a9ce379026e391209cfbcf
+[student@workstation ~]$ sudo podman ps
+CONTAINER ID  IMAGE                              COMMAND               CREATED         STATUS             PORTS                 NAMES
+c7374f289b43  quay.io/redhattraining/nginx:1.17  nginx -g daemon o...  14 seconds ago  Up 14 seconds ago  0.0.0.0:8080->80/tcp  official-nginx
+[student@workstation ~]$ sudo podman exec -it official-nginx /bin/bash
+root@c7374f289b43:/# echo 'DO180' > /usr/share/nginx/html/index.html
+root@c7374f289b43:/# exit
+exit
+[student@workstation ~]$ curl 127.0.0.1:8080
+DO180
+[student@workstation ~]$ sudo podman stop official-nginx
+c7374f289b4326dc5a057fb916f3d75433b632e2a7a9ce379026e391209cfbcf
+[student@workstation ~]$ sudo podman commit -a 'Your Name' official-nginx do180/mynginx:v1.0-SNAPSHOT
+Getting image source signatures
+Copying blob ffc9b21953f4 skipped: already exists
+Copying blob 2f4accd375d9 skipped: already exists
+Copying blob 6c7de695ede3 skipped: already exists
+Copying blob b726c6aa2fd0 done
+Copying config b48dddf4ff done
+Writing manifest to image destination
+Storing signatures
+b48dddf4ff742afdc6bf87b7d43142f61c68d04d1f4fa040ad72f1d74b261e5a
+[student@workstation ~]$ sudo podman images
+REPOSITORY                                        TAG             IMAGE ID       CREATED          SIZE
+localhost/do180/mynginx                           v1.0-SNAPSHOT   b48dddf4ff74   38 seconds ago   131 MB
+registry.access.redhat.com/rhel                   latest          5a286023e73c   3 weeks ago      216 MB
+quay.io/redhattraining/nginx                      1.17            9beeba249f3e   12 months ago    131 MB
+registry.access.redhat.com/ubi7/ubi               7.7             0355cd652bd1   14 months ago    215 MB
+registry.access.redhat.com/rhmap47/mysql          5.5             25e56fe83165   22 months ago    373 MB
+registry.access.redhat.com/rhel7                  7.5             7b875638cfd8   2 years ago      211 MB
+registry.access.redhat.com/rhscl/httpd-24-rhel7   2.4-36.8        5f9f898a3093   3 years ago      309 MB
+[student@workstation ~]$ sudo podman run --name official-nginx-dev -d -p 8080:80 do180/mynginx:v1.0-SNAPSHOT
+8bf12b61bf7d3d4b56e061f389f5df0075f7c6b69a7480d140689f149237ed34
+[student@workstation ~]$ sudo podman exec -it official-nginx-dev /bin/bash
+root@8bf12b61bf7d:/# echo 'DO180 Page' > /usr/share/nginx/html/index.html
+root@8bf12b61bf7d:/# exit
+exit
+[student@workstation ~]$ curl 127.0.0.1:8080
+DO180 Page
+[student@workstation ~]$ sudo podman stop official-nginx-dev
+8bf12b61bf7d3d4b56e061f389f5df0075f7c6b69a7480d140689f149237ed34
+[student@workstation ~]$ sudo podman commit -a 'veerabose' official-nginx-dev do180/mynginx:v1.0
+Getting image source signatures
+Copying blob ffc9b21953f4 skipped: already exists
+Copying blob 2f4accd375d9 skipped: already exists
+Copying blob 6c7de695ede3 skipped: already exists
+Copying blob b726c6aa2fd0 skipped: already exists
+Copying blob 63c10fb360be done
+Copying config 41ef242a62 done
+Writing manifest to image destination
+Storing signatures
+41ef242a62c84b54f5701cd437133b53f1a213d4ade91a2996448c0585440861
+[student@workstation ~]$ sudo podman images
+REPOSITORY                                        TAG             IMAGE ID       CREATED          SIZE
+localhost/do180/mynginx                           v1.0            41ef242a62c8   12 seconds ago   131 MB
+localhost/do180/mynginx                           v1.0-SNAPSHOT   b48dddf4ff74   3 minutes ago    131 MB
+registry.access.redhat.com/rhel                   latest          5a286023e73c   3 weeks ago      216 MB
+quay.io/redhattraining/nginx                      1.17            9beeba249f3e   12 months ago    131 MB
+registry.access.redhat.com/ubi7/ubi               7.7             0355cd652bd1   14 months ago    215 MB
+registry.access.redhat.com/rhmap47/mysql          5.5             25e56fe83165   22 months ago    373 MB
+registry.access.redhat.com/rhel7                  7.5             7b875638cfd8   2 years ago      211 MB
+registry.access.redhat.com/rhscl/httpd-24-rhel7   2.4-36.8        5f9f898a3093   3 years ago      309 MB
+[student@workstation ~]$ sudo podman ps -a --format="{{.ID}} {{.Names}} {{.Status}}"
+8bf12b61bf7d official-nginx-dev Exited (0) About a minute ago
+c7374f289b43 official-nginx Exited (0) 4 minutes ago
+36a9a7416244 beautiful_wiles Exited (0) 4 days ago
+fa2e42793df3 jolly_pare Exited (0) 4 days ago
+d340ed7af02c inspiring_hellman Exited (0) 4 days ago
+a36af9165c44 epic_hellman Exited (0) 4 days ago
+[student@workstation ~]$ sudo podman rm official-nginx-dev
+8bf12b61bf7d3d4b56e061f389f5df0075f7c6b69a7480d140689f149237ed34
+[student@workstation ~]$ sudo podman ps -a --format="{{.ID}} {{.Names}} {{.Status}}"
+c7374f289b43 official-nginx Exited (0) 4 minutes ago
+36a9a7416244 beautiful_wiles Exited (0) 4 days ago
+fa2e42793df3 jolly_pare Exited (0) 4 days ago
+d340ed7af02c inspiring_hellman Exited (0) 4 days ago
+a36af9165c44 epic_hellman Exited (0) 4 days ago
+[student@workstation ~]$ sudo podman rmi do180/mynginx:v1.0-SNAPSHOT
+Untagged: localhost/do180/mynginx:v1.0-SNAPSHOT
+[student@workstation ~]$ sudo podman images
+REPOSITORY                                        TAG        IMAGE ID       CREATED         SIZE
+localhost/do180/mynginx                           v1.0       41ef242a62c8   2 minutes ago   131 MB
+registry.access.redhat.com/rhel                   latest     5a286023e73c   3 weeks ago     216 MB
+quay.io/redhattraining/nginx                      1.17       9beeba249f3e   12 months ago   131 MB
+registry.access.redhat.com/ubi7/ubi               7.7        0355cd652bd1   14 months ago   215 MB
+registry.access.redhat.com/rhmap47/mysql          5.5        25e56fe83165   22 months ago   373 MB
+registry.access.redhat.com/rhel7                  7.5        7b875638cfd8   2 years ago     211 MB
+registry.access.redhat.com/rhscl/httpd-24-rhel7   2.4-36.8   5f9f898a3093   3 years ago     309 MB
+[student@workstation ~]$ sudo podman run -d --name my-nginx -p 8280:80 do180/mynginx:v1.0
+1a562dba068bb28172be17b922928f443f7b8eedc32468997ae7c88197ff2ab8
+[student@workstation ~]$ curl 127.0.0.1:8280
+DO180 Page
+[student@workstation ~]$ lab image-review grade
+
+Grading the student's work for the Lab: Managing Images
+
+ · Nginx container image is pulled.............................  PASS
+ · Container official-nginx is created.........................  PASS
+ · Container official-nginx is stopped.........................  PASS
+ · Tag do180/mynginx:v1.0-SNAPSHOT is removed..................  PASS
+ · Tag do180/mynginx:v1.0 is created...........................  PASS
+ · Container my-nginx is created and running...................  PASS
+ · index.html is available with the custom content.............  PASS
+[student@workstation ~]$ lab image-review finish
+
+Completing the Lab: Managing Images
+
+ · Stopping official-nginx-dev container.......................  SUCCESS
+ · Removing official-nginx-dev container.......................  SUCCESS
+ · Stopping official-nginx container...........................  SUCCESS
+ · Removing official-nginx container...........................  SUCCESS
+ · Removing do180/mynginx:v1.0 image...........................  SUCCESS
+ · Removing quay.io/redhattraining/nginx:1.17 image............  SUCCESS
+[student@workstation ~]$ 
+
+Summary
+In this chapter, you learned:
+ The Red Hat Container Catalog provides tested and certified images at
+ registry.redhat.io.
+  Podman can interact with remote container registries to search, pull, and push container images.
+   Image tags are a mechanism to support multiple releases of a container image.
+    Podman provides commands to manage container images both in local storage and as
+    compressed files.
+     Use the podman commit to create an image from a container.
+------------------------------------------------------------------------------------------------------------
