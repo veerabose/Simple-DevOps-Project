@@ -4957,3 +4957,55 @@ Completing the Lab: Creating Custom Container Images
 [student@workstation dockerfile-review]$ 
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
+-----------------------------------------------CH6 - Deploying Containerized Applications on OpenShift------------
+
+Important
+In OpenShift 4.5 the oc new-app command now produces Deployment resources
+instead of DeploymentConfig resources by default. This version of DO180
+does not cover the Deployment resource, only DeploymentConfigs. To create
+DeploymentConfig resources, you can pass the --as-deployment-config flag
+when invoking oc new-app, which is done throughout this version of the course.
+For more information, see Understanding Deployments and DeploymentConfigs
+[https://docs.openshift.com/container-platform/4.5/applications/deployments/
+what-deployments-are.html#what-deployments-are].
+
+oc get all
+Use the oc get all command to retrieve a summary of the most important components of a
+cluster. This command iterates through the major resource types for the current project and prints
+out a summary of their information.
+
+oc describe RESOURCE_TYPE RESOURCE_NAME
+If the summaries provided by oc get are insufficient, use the oc describe command to retrieve
+additional information. Unlike the oc get command, there is no way to iterate through all the
+different resources by type. Although most major resources can be described, this functionality
+is not available across all resources.
+
+oc get RESOURCE_TYPE RESOURCE_NAME -o yaml
+This command can be used to export a resource definition. Typical use cases include creating a
+backup, or to aid in the modification of a definition. The -o yaml option prints out the object
+representation in YAML format, but this can be changed to JSON format by providing a -o json
+option.
+
+oc create
+This command creates resources from a resource definition. Typically, this is paired with the oc
+get RESOURCE_TYPE RESOURCE_NAME -o yaml command for editing definitions.
+oc edit
+This command allows the user to edit resources of a resource definition. By default, this command
+opens a vi buffer for editing the resource definition.
+
+oc delete RESOURCE_TYPE name
+The oc delete command removes a resource from an OpenShift cluster. Note that a
+fundamental understanding of the OpenShift architecture is needed here, because deleting
+managed resources such as pods results in new instances of those resources being automatically
+created. When a project is deleted, it deletes all of the resources and applications contained within
+it.
+
+oc exec CONTAINER_ID options command
+The oc exec command executes commands inside a container. You can use this command to run
+interactive and noninteractive batch commands as part of a script.
+
+Many oc subcommands support a -l option to process resources from a label specification.
+For the oc get command, the -l option acts as a selector to only retrieve objects that have a
+matching label:
+
+-----------------CH6-GE-Deploying a Database Server on OpenShift -------------------------
