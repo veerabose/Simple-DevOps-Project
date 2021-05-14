@@ -4945,5 +4945,15 @@ Grading the student's work for Lab: Creating Custom Container Images
  · Removing grade container....................................  SUCCESS
 
 [student@workstation dockerfile-review]$ 
+[student@workstation dockerfile-review]$ lab dockerfile-review finish
 
+Completing the Lab: Creating Custom Container Images
+
+ · Stopping running container..................................  SUCCESS
+ · Removing the container......................................  SUCCESS
+ · Removing do180/custom-apache container image................  SUCCESS
+ · Removing ubi7 container image...............................  SUCCESS
+
+[student@workstation dockerfile-review]$ 
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
