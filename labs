@@ -4172,4 +4172,130 @@ Note
 By default, Podman stores container images in the /var/lib/containers/
 storage/overlay-images directory.
 
+------------------------------------CH4-GE-Creating a Custom Apache Container Image -----------------------------------------------------------
+
+[student@workstation ~]$ lab image-operations start
+
+Setting up workstation for the GE: Creating a Custom Apache Container Image
+
+ · Checking podman configuration...............................  SUCCESS
+[student@workstation ~]$ sudo podman login quay.io
+Username: veeraabose
+Password: 
+Login Succeeded!
+[student@workstation ~]$ sudo podman run -d --name official-httpd -p 8180:80 redhattraining/httpd-parent
+Trying to pull registry.access.redhat.com/redhattraining/httpd-parent...
+  name unknown: Repo not found
+Trying to pull quay.io/redhattraining/httpd-parent...
+Getting image source signatures
+Copying blob a3ed95caeb02 done
+Copying blob a3ed95caeb02 done
+Copying blob a3ed95caeb02 done
+Copying blob 08b8c9fdec44 done
+Copying blob 6a5240d60dc4 done
+Copying blob a3ed95caeb02 skipped: already exists
+Copying blob a3ed95caeb02 skipped: already exists
+Copying blob a3ed95caeb02 skipped: already exists
+Copying blob 787f47dbeaac done
+Copying blob 408208567b9a done
+Writing manifest to image destination
+Storing signatures
+aad28da0d38d9a3b3ff71eeba9707c0bc75524c80944496144b3a37aacdbce8b
+[student@workstation ~]$ sudo podman exec -it official-httpd /bin/bash
+bash-4.4# echo "DO180 Page" > /var/www/html/do180.html
+bash-4.4# exit
+exit
+[student@workstation ~]$ curl 127.0.0.1:8180/do180.html
+DO180 Page
+[student@workstation ~]$ sudo podman diff official-httpd
+C /root
+A /root/.bash_history
+C /run/httpd
+A /run/httpd/cgisock.1
+A /run/httpd/httpd.pid
+C /tmp
+C /var
+C /var/log
+C /var/log/httpd
+A /var/log/httpd/access_log
+A /var/log/httpd/error_log
+C /var/www
+C /var/www/html
+A /var/www/html/do180.html
+[student@workstation ~]$ podman images
+REPOSITORY   TAG   IMAGE ID   CREATED   SIZE
+[student@workstation ~]$ sudo podman images
+REPOSITORY                                        TAG        IMAGE ID       CREATED         SIZE
+registry.access.redhat.com/rhel                   latest     5a286023e73c   3 weeks ago     216 MB
+registry.access.redhat.com/ubi7/ubi               7.7        0355cd652bd1   14 months ago   215 MB
+registry.access.redhat.com/rhmap47/mysql          5.5        25e56fe83165   22 months ago   373 MB
+quay.io/redhattraining/httpd-parent               latest     4346d3cace25   23 months ago   236 MB
+registry.access.redhat.com/rhel7                  7.5        7b875638cfd8   2 years ago     211 MB
+registry.access.redhat.com/rhscl/httpd-24-rhel7   2.4-36.8   5f9f898a3093   3 years ago     309 MB
+[student@workstation ~]$ sudo podman stop official-httpd
+aad28da0d38d9a3b3ff71eeba9707c0bc75524c80944496144b3a37aacdbce8b
+[student@workstation ~]$ sudo podman commit -a 'veera' official-httpd do180-custom-httpd
+Getting image source signatures
+Copying blob 24d85c895b6b skipped: already exists
+Copying blob c613b100be16 skipped: already exists
+Copying blob 574bcc187eda skipped: already exists
+Copying blob 7f9108fde4a1 skipped: already exists
+Copying blob 62331ed2063c done
+Copying config ae17a15ee6 done
+Writing manifest to image destination
+Storing signatures
+ae17a15ee68a4eea343d559c9c0638ed74d07118f227ebd6c9a4e1a4dfbd9f11
+[student@workstation ~]$ sudo podman images
+REPOSITORY                                        TAG        IMAGE ID       CREATED          SIZE
+localhost/do180-custom-httpd                      latest     ae17a15ee68a   13 seconds ago   236 MB
+registry.access.redhat.com/rhel                   latest     5a286023e73c   3 weeks ago      216 MB
+registry.access.redhat.com/ubi7/ubi               7.7        0355cd652bd1   14 months ago    215 MB
+registry.access.redhat.com/rhmap47/mysql          5.5        25e56fe83165   22 months ago    373 MB
+quay.io/redhattraining/httpd-parent               latest     4346d3cace25   23 months ago    236 MB
+registry.access.redhat.com/rhel7                  7.5        7b875638cfd8   2 years ago      211 MB
+registry.access.redhat.com/rhscl/httpd-24-rhel7   2.4-36.8   5f9f898a3093   3 years ago      309 MB
+[student@workstation ~]$ source /usr/local/etc/ocp4.config
+[student@workstation ~]$ sudo podman tag do180-custom-httpd quay.io/${RHT_OCP4_QUAY_USER}/do180-custom-httpd:v1.0
+[student@workstation ~]$ sudo podman images
+REPOSITORY                                        TAG        IMAGE ID       CREATED         SIZE
+localhost/do180-custom-httpd                      latest     ae17a15ee68a   2 minutes ago   236 MB
+quay.io/veeraabose/do180-custom-httpd             v1.0       ae17a15ee68a   2 minutes ago   236 MB
+registry.access.redhat.com/rhel                   latest     5a286023e73c   3 weeks ago     216 MB
+registry.access.redhat.com/ubi7/ubi               7.7        0355cd652bd1   14 months ago   215 MB
+registry.access.redhat.com/rhmap47/mysql          5.5        25e56fe83165   22 months ago   373 MB
+quay.io/redhattraining/httpd-parent               latest     4346d3cace25   23 months ago   236 MB
+registry.access.redhat.com/rhel7                  7.5        7b875638cfd8   2 years ago     211 MB
+registry.access.redhat.com/rhscl/httpd-24-rhel7   2.4-36.8   5f9f898a3093   3 years ago     309 MB
+[student@workstation ~]$ sudo podman push quay.io/${RHT_OCP4_QUAY_USER}/do180-custom-httpd:v1.0
+Getting image source signatures
+Copying blob 62331ed2063c done
+Copying blob 7f9108fde4a1 skipped: already exists
+Copying blob c613b100be16 skipped: already exists
+Copying blob 574bcc187eda skipped: already exists
+Copying blob 24d85c895b6b skipped: already exists
+Copying config ae17a15ee6 done
+Writing manifest to image destination
+Copying config ae17a15ee6 done
+Writing manifest to image destination
+Writing manifest to image destination
+Storing signatures
+[student@workstation ~]$ sudo podman pull -q quay.io/${RHT_OCP4_QUAY_USER}/do180-custom-httpd:v1.0
+a171cf112073de0431c3e0dc8f17d07acd963b6703fc193203ea74354d0f3a96
+[student@workstation ~]$ sudo podman run -d --name test-httpd -p 8280:80 ${RHT_OCP4_QUAY_USER}/do180-custom-httpd:v1.0
+253693557bb5abfe9a429fda2c4d16644d55997e3825915e246568fdc2075c50
+[student@workstation ~]$ curl http://localhost:8280/do180.html
+DO180 Page
+[student@workstation ~]$ lab image-operations finish
+
+Completing the GE: Creating a Custom Apache Container Image
+
+ · Stopping official-httpd container...........................  SUCCESS
+ · Removing official-httpd container...........................  SUCCESS
+ · Stopping test-httpd container...............................  SUCCESS
+ · Removing test-httpd container...............................  SUCCESS
+ · Removing redhattraining/httpd-parent image..................  SUCCESS
+ · Removing quay.io/veeraabose/do180-custom-httpd image........  SUCCESS
+ · Removing localhost/do180-custom-httpd image.................  SUCCESS
+[student@workstation ~]$ 
+
 
