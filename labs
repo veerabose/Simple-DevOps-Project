@@ -5273,3 +5273,122 @@ Completing the Guided Exercise: Deploying a Database Server on OpenShift
 [student@workstation dockerfile-review]$ 
 
 ---------------------------------------------------------------------------------------------------------------------------------------------------------
+
+Route
+-------
+
+The oc new-app command does not create a route resource when building a pod from container
+images, Dockerfiles, or application source code. After all, oc new-app does not know if the pod is
+intended to be accessible from outside the OpenShift instance or not.
+Another way to create a route is to use the oc expose service command, passing a service
+resource name as the input. The --name option can be used to control the name of the route
+resource. For example:
+$ oc expose service quotedb --name quote
+By default, routes created by oc expose generate DNS names of the form:
+route-name-project-name.default-domain
+Where:
+• route-name is the name assigned to the route. If no explicit name is set, OpenShift assigns the
+route the same name as the originating resource (for example, the service name).
+• project-name is the name of the project containing the resource.
+• default-domain is configured on the OpenShift master and corresponds to the wildcard DNS
+domain listed as a prerequisite for installing OpenShift.
+For example, creating a route named quote in project named test from an OpenShift instance
+where the wildcard domain is cloudapps.example.com results in the FQDN quote-
+test.cloudapps.example.com.
+Note
+The DNS server that hosts the wildcard domain knows nothing about route host
+names. It merely resolves any name to the configured IP addresses. Only the
+OpenShift router knows about route host names, treating each one as an HTTP
+virtual host. The OpenShift router blocks invalid wildcard domain host names that
+do not correspond to any route and returns an HTTP 404 error.
+
+S2I
+------
+The Source-to-Image (S2I) Process
+Source-to-Image (S2I) is a tool that makes it easy to build container images from application
+source code. This tool takes an application's source code from a Git repository, injects the source
+code into a base container based on the language and framework desired, and produces a new
+container image that runs the assembled application.
+
+S2I is the primary strategy used for building applications in OpenShift Container Platform. The
+main reasons for using source builds are:
+• User efficiency: Developers do not need to understand Dockerfiles and operating system
+commands such as yum install. They work using their standard programming language tools.
+Patching: S2I allows for rebuilding all the applications consistently if a base image needs a
+patch due to a security issue. For example, if a security issue is found in a PHP base image, then
+updating this image with security patches updates all applications that use this image as a base.
+• Speed: With S2I, the assembly process can perform a large number of complex operations
+without creating a new layer at each step, resulting in faster builds.
+• Ecosystem: S2I encourages a shared ecosystem of images where base images and scripts can
+be customized and reused across multiple types of applications.
+
+Describing Image Streams
+OpenShift deploys new versions of user applications into pods quickly. To create a new application,
+in addition to the application source code, a base image (the S2I builder image) is required. If
+either of these two components gets updated, OpenShift creates a new container image. Pods
+created using the older container image are replaced by pods using the new image.
+
+The image stream resource is a configuration that names specific container images associated
+with image stream tags, an alias for these container images. OpenShift builds applications against
+an image stream. The OpenShift installer populates several image streams by default during
+installation. To determine available image streams, use the oc get command, as follows:
+
+
+oc get is -n openshift
+
+oc new-app
+--name=myapp
+--as-deployment-config
+php~http://my.git.server.com/my-app
+
+Create a DeploymentConfig instead of a Deployment
+The image stream used in the process appears to the left of the tilde (~).
+The URL after the tilde indicates the location of the source code's Git repository.
+Sets the application name.
+
+If an image stream is not specified in the command, new-app attempts to determine which
+language builder to use based on the presence of certain files in the root of the repository:
+Language 	Files
+Ruby 		Rakefile Gemfile, config.ru
+Java 		EE pom.xml
+Node.js 	app.json package.json
+PHP 		index.php composer.json
+
+
+Define a resource type of BuildConfig.
+Name the BuildConfig myapp.
+Define the address to the source code Git repository.
+Define the strategy to use S2I.
+Define the builder image as the php:7.3 image stream.
+Name the output image stream myapp:latest.
+
+Define a resource type of DeploymentConfig.
+Name the DeploymentConfig myapp.
+A configuration change trigger causes a new deployment to be created any time the
+replication controller template changes.
+An image change trigger causes the creation of a new deployment each time a new version of
+the myapp:latest image is available in the repository.
+Defines the container image to deploy: myapp:latest.
+Specifies the container ports.
+
+oc get builds
+
+oc get buildconfig
+
+Trigger a new build with the oc start-build build_config_name command:
+Python requirements.txt config.py
+
+Relationship Between Build and Deployment Configurations
+The BuildConfig pod is responsible for creating the images in OpenShift and pushing them to
+the internal container registry. Any source code or content update typically requires a new build to
+guarantee the image is updated.
+The DeploymentConfig pod is responsible for deploying pods to OpenShift. The outcome of
+a DeploymentConfig pod execution is the creation of pods with the images deployed in the
+internal container registry. Any existing running pod may be destroyed, depending on how the
+DeploymentConfig resource is set.
+The BuildConfig and DeploymentConfig resources do not interact directly. The
+BuildConfig resource creates or updates a container image. The DeploymentConfig reacts to
+this new image or updated image event and creates pods from the container image.
+Perl index.pl cpanfile
+
+--------------------------Chapter 6 | Deploying Containerized Applications on OpenShift----------------------------------------------
