@@ -4448,4 +4448,113 @@ In this chapter, you learned:
     Podman provides commands to manage container images both in local storage and as
     compressed files.
      Use the podman commit to create an image from a container.
-------------------------------------------------------------------------------------------------------------
+---------------------------------------Chapter 5----------------------------------------------------
+
+Note
+All RHEL subscribers have access to the RHSCL. To enable a particular software
+collection for a specific user or application environment (for example, MySQL 5.7,
+which is named rh-mysql57), enable the RHSCL software Yum repositories and
+follow a few simple steps
+
+Note
+Many RHSCL container images include support for Source-to-Image (S2I), best
+known as an OpenShift Container Platform feature. Having support for S2I does not
+affect the use of these container images with Docker
+
+Describing How to use the OpenShift Source-to-Image Tool
+
+Source-to-Image (S2I) provides an alternative to using Dockerfiles to create new container
+images and can be used either as a feature from OpenShift or as the standalone s2i utility. S2I
+allows developers to work using their usual tools, instead of learning Dockerfile syntax and using
+operating system commands such as yum, and usually creates slimmer images, with fewer layers.
+S2I uses the following process to build a custom container image for an application:
+1. Start a container from a base container image called the builder image, which includes a
+programming language runtime and essential development tools such as compilers and
+package managers.
+2. Fetch the application source code, usually from a Git server, and send it to the container.
+3. Build the application binary files inside the container.
+4. Save the container, after some clean up, as a new container image, which includes the
+programming language runtime and the application binaries.
+The builder image is a regular container image following a standard directory structure and
+providing scripts that are called during the S2I process. Most of these builder images can also be
+used as base images for Dockerfiles, outside the S2I process.
+The s2i command is used to run the S2I process outside of OpenShift, in a Docker-only
+environment. It can be installed on a RHEL system from the source-to-image RPM package, and
+on other platforms, including Windows and Mac OS, from the installers available in the S2I project
+on GitHub.
+
+
+A Dockerfile is a text file that must exist in the working directory. This file contains the
+instructions needed to build the image. The basic syntax of a Dockerfile follows:
+# Comment
+INSTRUCTION arguments
+
+Note
+The ARG instruction can appear before the FROM instruction, but ARG instructions
+are outside the objectives for this section
+
+# This is a comment line
+FROM ubi7/ubi:7.7
+LABEL description="This is a custom httpd container image"
+MAINTAINER John Doe <jdoe@xyz.com>
+RUN yum install -y httpd
+EXPOSE 80
+ENV LogLevel "info"
+ADD http://someserver.com/filename.pdf /var/www/html
+COPY ./src/ /var/www/html/
+USER apache
+ENTRYPOINT ["/usr/sbin/httpd"]
+CMD ["-D", "FOREGROUND"]
+
+Lines that begin with a hash, or pound, sign (#) are comments.
+The FROM instruction declares that the new container image extends ubi7/ubi:7.7
+container base image. Dockerfiles can use any other container image as a base image, not
+only images from operating system distributions. Red Hat provides a set of container images
+that are certified and tested and highly recommends using these container images as a base.
+The LABEL is responsible for adding generic metadata to an image. A LABEL is a simple key-
+value pair.
+MAINTAINER indicates the Author field of the generated container image's metadata. You
+can use the podman inspect command to view image metadata.
+RUN executes commands in a new layer on top of the current image. The shell that is used to
+execute commands is /bin/sh.
+EXPOSE indicates that the container listens on the specified network port at runtime. The
+EXPOSE instruction defines metadata only; it does not make ports accessible from the host.
+The -p option in the podman run command exposes container ports from the host.
+ENV is responsible for defining environment variables that are available in the container. You
+can declare multiple ENV instructions within the Dockerfile. You can use the env command
+inside the container to view each of the environment variables.
+ADD instruction copies files or folders from a local or remote source and adds them to the
+container's file system. If used to copy local files, those must be in the working directory. ADD
+instruction unpacks local .tar files to the destination image directory.
+COPY copies files from the working directory and adds them to the container's file system. It
+is not possible to copy a remote file using its URL with this Dockerfile instruction.
+USER specifies the username or the UID to use when running the container image for the
+RUN, CMD, and ENTRYPOINT instructions. It is a good practice to define a different user other
+than root for security reasons.
+ENTRYPOINT specifies the default command to execute when the image runs in a container.
+If omitted, the default ENTRYPOINT is /bin/sh -c.
+CMD provides the default arguments for the ENTRYPOINT instruction. If the default
+ENTRYPOINT applies (/bin/sh -c), then CMD forms an executable command and
+parameters that run at container start.
+
+CMD and ENTRYPOINT
+ENTRYPOINT and CMD instructions have two formats:
+• Exec form (using a JSON array):
+ENTRYPOINT ["command", "param1", "param2"]
+CMD ["param1","param2"]
+
+ENTRYPOINT command param1 param2
+
+ENTRYPOINT ["/bin/date", "+%H:%M"]
+
+ENTRYPOINT ["/bin/date"]
+CMD ["+%H:%M"]
+
+ADD ["<source>",... "<destination>"]
+COPY ["<source>",... "<destination>"]
+
+ADD http://someserver.com/filename.pdf /var/www/html
+CMD param1 param2
+
+
+----------------------------------CH5-GE-Creating a Basic Apache Container Image-------------------------------------
