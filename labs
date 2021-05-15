@@ -5390,3 +5390,240 @@ this new image or updated image event and creates pods from the container image.
 Perl index.pl cpanfile
 
 --------------------------Chapter 6 | Deploying Containerized Applications on OpenShift----------------------------------------------
+----------------------------------CH6-GE-Exposing a Service as a Route--------------------------------------------
+[student@workstation ~]$ lab openshift-routes start
+
+Setting up workstation for the Guided Exercise: Exposing a Service as a Route
+
+ Verifying the OpenShift cluster is running:
+ · Log in on OpenShift.........................................  SUCCESS
+ · Check the internal registry is up and running...............  SUCCESS
+ · Ensuring the 'developer-route' project does not exist.......  SUCCESS
+[student@workstation ~]$ source /usr/local/etc/ocp4.config
+[student@workstation ~]$ oc login -u ${RHT_OCP4_DEV_USER} -p ${RHT_OCP4_DEV_PASSWORD} ${RHT_OCP4_MASTER_API}
+Login successful.
+
+You don't have any projects. You can try to create a new project, by running
+
+    oc new-project <projectname>
+
+[student@workstation ~]$ oc new-project ${RHT_OCP4_DEV_USER}-route
+Now using project "developer-route" on server "https://api.ocp4.example.com:6443".
+
+You can add applications to this project with the 'new-app' command. For example, try:
+
+    oc new-app ruby~https://github.com/sclorg/ruby-ex.git
+
+to build a new example application in Ruby. Or use kubectl to deploy a simple Kubernetes application:
+
+    kubectl create deployment hello-node --image=gcr.io/hello-minikube-zero-install/hello-node
+
+[student@workstation ~]$ oc projects
+You have one project on this server: "developer-route".
+
+Using project "developer-route" on server "https://api.ocp4.example.com:6443".
+[student@workstation ~]$ oc new-app --as-deployment-config php:7.3~https://github.com/${RHT_OCP4_GITHUB_USER}/DO180-apps --context-dir php-helloworld --name php-helloworld
+--> Found image 988e5d4 (9 months old) in image stream "openshift/php" under tag "7.3" for "php:7.3"
+
+    Apache 2.4 with PHP 7.3 
+    ----------------------- 
+    PHP 7.3 available as container is a base platform for building and running various PHP 7.3 applications and frameworks. PHP is an HTML-embedded scripting language. PHP attempts to make it easy for developers to write dynamically generated web pages. PHP also offers built-in database integration for several commercial and non-commercial database management systems, so writing a database-enabled webpage with PHP is fairly simple. The most common use of PHP coding is probably as a replacement for CGI scripts.
+
+    Tags: builder, php, php73, rh-php73
+
+    * A source build using source code from https://github.com/veerabose/DO180-apps will be created
+      * The resulting image will be pushed to image stream tag "php-helloworld:latest"
+      * Use 'oc start-build' to trigger a new build
+    * This image will be deployed in deployment config "php-helloworld"
+    * Ports 8080/tcp, 8443/tcp will be load balanced by service "php-helloworld"
+      * Other containers can access this service through the hostname "php-helloworld"
+
+--> Creating resources ...
+    imagestream.image.openshift.io "php-helloworld" created
+    buildconfig.build.openshift.io "php-helloworld" created
+    deploymentconfig.apps.openshift.io "php-helloworld" created
+    service "php-helloworld" created
+--> Success
+    Build scheduled, use 'oc logs -f bc/php-helloworld' to track its progress.
+    Application is not exposed. You can expose services to the outside world by executing one or more of the commands below:
+     'oc expose svc/php-helloworld' 
+    Run 'oc status' to view your app.
+[student@workstation ~]$ oc get all
+NAME                         READY   STATUS    RESTARTS   AGE
+pod/php-helloworld-1-build   1/1     Running   0          11s
+
+NAME                     TYPE        CLUSTER-IP       EXTERNAL-IP   PORT(S)             AGE
+service/php-helloworld   ClusterIP   172.30.201.239   <none>        8080/TCP,8443/TCP   12s
+
+NAME                                                REVISION   DESIRED   CURRENT   TRIGGERED BY
+deploymentconfig.apps.openshift.io/php-helloworld   0          1         0         config,image(php-helloworld:latest)
+
+NAME                                            TYPE     FROM   LATEST
+buildconfig.build.openshift.io/php-helloworld   Source   Git    1
+
+NAME                                        TYPE     FROM          STATUS    STARTED          DURATION
+build.build.openshift.io/php-helloworld-1   Source   Git@180da89   Running   11 seconds ago   
+
+NAME                                            IMAGE REPOSITORY                                                                  TAGS   UPDATED
+imagestream.image.openshift.io/php-helloworld   image-registry.openshift-image-registry.svc:5000/developer-route/php-helloworld          
+[student@workstation ~]$ oc get pods -w
+NAME                     READY   STATUS    RESTARTS   AGE
+php-helloworld-1-build   1/1     Running   0          23s
+php-helloworld-1-deploy   0/1     Pending   0          0s
+php-helloworld-1-deploy   0/1     Pending   0          0s
+php-helloworld-1-deploy   0/1     ContainerCreating   0          0s
+php-helloworld-1-build    0/1     Completed           0          27s
+php-helloworld-1-deploy   0/1     ContainerCreating   0          2s
+php-helloworld-1-deploy   1/1     Running             0          3s
+php-helloworld-1-8lbqv    0/1     Pending             0          0s
+php-helloworld-1-8lbqv    0/1     Pending             0          0s
+php-helloworld-1-8lbqv    0/1     ContainerCreating   0          0s
+php-helloworld-1-8lbqv    0/1     ContainerCreating   0          2s
+php-helloworld-1-8lbqv    0/1     ContainerCreating   0          3s
+php-helloworld-1-8lbqv    1/1     Running             0          15s
+php-helloworld-1-deploy   0/1     Completed           0          19s
+^C[student@workstation ~]$ oc logs -f bc/php-helloworld
+Cloning "https://github.com/veerabose/DO180-apps" ...
+	Commit:	180da897d2146855cd58eef0bdb6483d3b880f97 (Delete labs)
+	Author:	veerabose <34031941+veerabose@users.noreply.github.com>
+	Date:	Wed Apr 28 17:20:06 2021 +0530
+Caching blobs under "/var/cache/blobs".
+Getting image source signatures
+Copying blob sha256:14e4b218199e7985dbeca760da0fa9b969ca5fdaae5095a273cd924afa6898e9
+Copying blob sha256:e7021e0589e97471d99c4265b7c8e64da328e48f116b5f260353b2e0a2adb373
+Copying blob sha256:fc5b206e9329a1674dd9e8efbee45c9be28d0d0dcbabba3c6bb67a2f22cfcf2a
+Copying blob sha256:9e7a6dc796f0a75c560158a9f9e30fb8b5a90cb53edce9ffbdf5778406e4de39
+Copying blob sha256:f659c5c779ac4373302bfe3dc7d713c59cf9ec9f179a71e9b26336a51043fad2
+Copying config sha256:988e5d4c035d1585f006d0c57a0cfe4bc9f8aae412585f4a6b8fed87da45105f
+Writing manifest to image destination
+Storing signatures
+Generating dockerfile with builder image image-registry.openshift-image-registry.svc:5000/openshift/php@sha256:962d936b00f4953d977be9b85268a289bf2f9d49df4d51b408a7c7835a551103
+STEP 1: FROM image-registry.openshift-image-registry.svc:5000/openshift/php@sha256:962d936b00f4953d977be9b85268a289bf2f9d49df4d51b408a7c7835a551103
+STEP 2: LABEL "io.openshift.build.source-location"="https://github.com/veerabose/DO180-apps"       "io.openshift.build.source-context-dir"="php-helloworld"       "io.openshift.build.image"="image-registry.openshift-image-registry.svc:5000/openshift/php@sha256:962d936b00f4953d977be9b85268a289bf2f9d49df4d51b408a7c7835a551103"       "io.openshift.build.commit.author"="veerabose <34031941+veerabose@users.noreply.github.com>"       "io.openshift.build.commit.date"="Wed Apr 28 17:20:06 2021 +0530"       "io.openshift.build.commit.id"="180da897d2146855cd58eef0bdb6483d3b880f97"       "io.openshift.build.commit.ref"="master"       "io.openshift.build.commit.message"="Delete labs"
+STEP 3: ENV OPENSHIFT_BUILD_NAME="php-helloworld-1"     OPENSHIFT_BUILD_NAMESPACE="developer-route"     OPENSHIFT_BUILD_SOURCE="https://github.com/veerabose/DO180-apps"     OPENSHIFT_BUILD_COMMIT="180da897d2146855cd58eef0bdb6483d3b880f97"
+STEP 4: USER root
+STEP 5: COPY upload/src /tmp/src
+STEP 6: RUN chown -R 1001:0 /tmp/src
+STEP 7: USER 1001
+STEP 8: RUN /usr/libexec/s2i/assemble
+---> Installing application source...
+=> sourcing 20-copy-config.sh ...
+---> 06:58:27     Processing additional arbitrary httpd configuration provided by s2i ...
+=> sourcing 00-documentroot.conf ...
+=> sourcing 50-mpm-tuning.conf ...
+=> sourcing 40-ssl-certs.sh ...
+STEP 9: CMD /usr/libexec/s2i/run
+STEP 10: COMMIT temp.builder.openshift.io/developer-route/php-helloworld-1:ea481b28
+time="2021-05-15T06:58:27Z" level=info msg="Image operating system mismatch: image uses \"\", expecting \"linux\""
+time="2021-05-15T06:58:27Z" level=info msg="Image architecture mismatch: image uses \"\", expecting \"amd64\""
+Getting image source signatures
+Copying blob sha256:abc8c32bad762f509f729872b552e8366b9c71a863dc5e9e648dda04a7896e50
+Copying blob sha256:b9e30d7689db4040323cb65632888c37d96cbd60d0f05c4dd37e78b9b8a0566a
+Copying blob sha256:8b0dba9179a6a0d5de65c6b001c8c9c83eaa169ce526b22a33845ede8f74568c
+Copying blob sha256:bda7ec697f579121100fed608753105e2150894241b011af8b12fea98296f8f7
+Copying blob sha256:5daa741fd16f3d131c8667e9e7bcbcb0ce95243275070d34686eb6df2c6200fd
+Copying blob sha256:c9e4a57f6fd8d87cc44f05bebb0d44524f79461881b6f00f5bfd03e3bbbbf7e6
+Copying config sha256:36b8a4001eec21278e214cc52832ba8b096e91ccc3f902aea1409018c61063ea
+Writing manifest to image destination
+Storing signatures
+--> 36b8a4001ee
+36b8a4001eec21278e214cc52832ba8b096e91ccc3f902aea1409018c61063ea
+
+Pushing image image-registry.openshift-image-registry.svc:5000/developer-route/php-helloworld:latest ...
+Getting image source signatures
+Copying blob sha256:c9e4a57f6fd8d87cc44f05bebb0d44524f79461881b6f00f5bfd03e3bbbbf7e6
+Copying blob sha256:9e7a6dc796f0a75c560158a9f9e30fb8b5a90cb53edce9ffbdf5778406e4de39
+Copying blob sha256:14e4b218199e7985dbeca760da0fa9b969ca5fdaae5095a273cd924afa6898e9
+Copying blob sha256:e7021e0589e97471d99c4265b7c8e64da328e48f116b5f260353b2e0a2adb373
+Copying blob sha256:fc5b206e9329a1674dd9e8efbee45c9be28d0d0dcbabba3c6bb67a2f22cfcf2a
+Copying blob sha256:f659c5c779ac4373302bfe3dc7d713c59cf9ec9f179a71e9b26336a51043fad2
+Copying config sha256:36b8a4001eec21278e214cc52832ba8b096e91ccc3f902aea1409018c61063ea
+Writing manifest to image destination
+Storing signatures
+Successfully pushed image-registry.openshift-image-registry.svc:5000/developer-route/php-helloworld@sha256:ea3b271a2d74b138114fbf8547e5070ab273ab8bb94aafef0d390fb99e62c771
+Push successful
+[student@workstation ~]$ oc logs -f dc/php-helloworld
+=> sourcing 20-copy-config.sh ...
+---> 06:58:48     Processing additional arbitrary httpd configuration provided by s2i ...
+=> sourcing 00-documentroot.conf ...
+=> sourcing 50-mpm-tuning.conf ...
+=> sourcing 40-ssl-certs.sh ...
+AH00558: httpd: Could not reliably determine the server's fully qualified domain name, using 10.10.0.33. Set the 'ServerName' directive globally to suppress this message
+[Sat May 15 06:58:48.380752 2021] [ssl:warn] [pid 1] AH01909: 10.10.0.33:8443:0 server certificate does NOT include an ID which matches the server name
+[Sat May 15 06:58:48.453087 2021] [ssl:warn] [pid 1] AH01909: 10.10.0.33:8443:0 server certificate does NOT include an ID which matches the server name
+[Sat May 15 06:58:48.453277 2021] [http2:warn] [pid 1] AH10034: The mpm module (prefork.c) is not supported by mod_http2. The mpm determines how things are processed in your server. HTTP/2 has more demands in this regard and the currently selected mpm will just not do. This is an advisory warning. Your server will continue to work, but the HTTP/2 protocol will be inactive.
+[Sat May 15 06:58:48.454011 2021] [lbmethod_heartbeat:notice] [pid 1] AH02282: No slotmem from mod_heartmonitor
+[Sat May 15 06:58:48.545332 2021] [mpm_prefork:notice] [pid 1] AH00163: Apache/2.4.34 (Red Hat) OpenSSL/1.0.2k-fips configured -- resuming normal operations
+[Sat May 15 06:58:48.545380 2021] [core:notice] [pid 1] AH00094: Command line: 'httpd -D FOREGROUND'
+^C
+[student@workstation ~]$ oc describe svc/php-helloworld
+Name:              php-helloworld
+Namespace:         developer-route
+Labels:            app=php-helloworld
+                   app.kubernetes.io/component=php-helloworld
+                   app.kubernetes.io/instance=php-helloworld
+Annotations:       openshift.io/generated-by: OpenShiftNewApp
+Selector:          deploymentconfig=php-helloworld
+Type:              ClusterIP
+IP:                172.30.201.239
+Port:              8080-tcp  8080/TCP
+TargetPort:        8080/TCP
+Endpoints:         10.10.0.33:8080
+Port:              8443-tcp  8443/TCP
+TargetPort:        8443/TCP
+Endpoints:         10.10.0.33:8443
+Session Affinity:  None
+Events:            <none>
+[student@workstation ~]$ oc expose svc/php-helloworld
+route.route.openshift.io/php-helloworld exposed
+[student@workstation ~]$ oc describe route
+Name:			php-helloworld
+Namespace:		developer-route
+Created:		18 seconds ago
+Labels:			app=php-helloworld
+			app.kubernetes.io/component=php-helloworld
+			app.kubernetes.io/instance=php-helloworld
+Annotations:		openshift.io/host.generated=true
+Requested Host:		php-helloworld-developer-route.apps.ocp4.example.com
+			  exposed on router default (host apps.ocp4.example.com) 18 seconds ago
+Path:			<none>
+TLS Termination:	<none>
+Insecure Policy:	<none>
+Endpoint Port:		8080-tcp
+
+Service:	php-helloworld
+Weight:		100 (100%)
+Endpoints:	10.10.0.33:8443, 10.10.0.33:8080
+[student@workstation ~]$ curl php-helloworld-${RHT_OCP4_DEV_USER}-route.${RHT_OCP4_WILDCARD_DOMAIN}
+Hello, World! php version is 7.3.11
+[student@workstation ~]$ oc delete route/php-helloworld
+route.route.openshift.io "php-helloworld" deleted
+[student@workstation ~]$ oc expose svc/php-helloworld --name=${RHT_OCP4_DEV_USER}-xyz
+route.route.openshift.io/developer-xyz exposed
+[student@workstation ~]$ oc describe route
+Name:			developer-xyz
+Namespace:		developer-route
+Created:		11 seconds ago
+Labels:			app=php-helloworld
+			app.kubernetes.io/component=php-helloworld
+			app.kubernetes.io/instance=php-helloworld
+Annotations:		openshift.io/host.generated=true
+Requested Host:		developer-xyz-developer-route.apps.ocp4.example.com
+			  exposed on router default (host apps.ocp4.example.com) 11 seconds ago
+Path:			<none>
+TLS Termination:	<none>
+Insecure Policy:	<none>
+Endpoint Port:		8080-tcp
+
+Service:	php-helloworld
+Weight:		100 (100%)
+Endpoints:	10.10.0.33:8443, 10.10.0.33:8080
+[student@workstation ~]$ curl ${RHT_OCP4_DEV_USER}-xyz-${RHT_OCP4_DEV_USER}-route.${RHT_OCP4_WILDCARD_DOMAIN}
+Hello, World! php version is 7.3.11
+[student@workstation ~]$ lab openshift-routes finish
+
+Completing the Guided Exercise: Exposing a Service as a Route
+
+ · Removing OpenShift project 'developer-route'................  SUCCESS
+[student@workstation ~]$ 
+
