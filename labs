@@ -5949,4 +5949,204 @@ Completing the Guided Excercise: Creating a Containerized Application with Sourc
  · Deleting the 'developer-s2i' project........................  SUCCESS
 [student@workstation php-helloworld]$ 
 
+-----------------------CH6-Lab-Deploying Containerized Applications on OpenShift------------------------------------------------
+[student@workstation php-helloworld]$ lab openshift-review start
+
+Setting up workstation for the Lab: Deploying Containerized Applications on OpenShift
+
+ Verifying the OpenShift cluster is running:
+ · Log in on OpenShift.........................................  SUCCESS
+ · Check the internal registry is up and running...............  SUCCESS
+ · Ensuring the 'developer-ocp' project does not exist.........  SUCCESS
+
+[student@workstation php-helloworld]$ source /usr/local/etc/ocp4.config
+[student@workstation php-helloworld]$ oc login -u ${RHT_OCP4_DEV_USER} -p  ${RHT_OCP4_DEV_PASSWORD} ${RHT_OCP4_MASTER_API}
+Login successful.
+
+You don't have any projects. You can try to create a new project, by running
+
+    oc new-project <projectname>
+
+[student@workstation php-helloworld]$ oc new-project ${RHT_OCP4_DEV_USER}-ocp
+Now using project "developer-ocp" on server "https://api.ocp4.example.com:6443".
+
+You can add applications to this project with the 'new-app' command. For example, try:
+
+    oc new-app ruby~https://github.com/sclorg/ruby-ex.git
+
+to build a new example application in Ruby. Or use kubectl to deploy a simple Kubernetes application:
+
+    kubectl create deployment hello-node --image=gcr.io/hello-minikube-zero-install/hello-node
+
+[student@workstation php-helloworld]$ oc new-app --as-deployment-config php:7.3~https://github.com/RedHatTraining/DO180-apps --context-dir temps --name temps
+--> Found image 988e5d4 (9 months old) in image stream "openshift/php" under tag "7.3" for "php:7.3"
+
+    Apache 2.4 with PHP 7.3 
+    ----------------------- 
+    PHP 7.3 available as container is a base platform for building and running various PHP 7.3 applications and frameworks. PHP is an HTML-embedded scripting language. PHP attempts to make it easy for developers to write dynamically generated web pages. PHP also offers built-in database integration for several commercial and non-commercial database management systems, so writing a database-enabled webpage with PHP is fairly simple. The most common use of PHP coding is probably as a replacement for CGI scripts.
+
+    Tags: builder, php, php73, rh-php73
+
+    * A source build using source code from https://github.com/RedHatTraining/DO180-apps will be created
+      * The resulting image will be pushed to image stream tag "temps:latest"
+      * Use 'oc start-build' to trigger a new build
+    * This image will be deployed in deployment config "temps"
+    * Ports 8080/tcp, 8443/tcp will be load balanced by service "temps"
+      * Other containers can access this service through the hostname "temps"
+
+--> Creating resources ...
+    imagestream.image.openshift.io "temps" created
+    buildconfig.build.openshift.io "temps" created
+    deploymentconfig.apps.openshift.io "temps" created
+    service "temps" created
+--> Success
+    Build scheduled, use 'oc logs -f bc/temps' to track its progress.
+    Application is not exposed. You can expose services to the outside world by executing one or more of the commands below:
+     'oc expose svc/temps' 
+    Run 'oc status' to view your app.
+[student@workstation php-helloworld]$ oc logs -f bc/temps
+Cloning "https://github.com/RedHatTraining/DO180-apps" ...
+	Commit:	f7cd8963ef353d9173c3a21dcccf402f3616840b (Initial commit, including all apps previously in course)
+	Author:	Jordi Sola <someth2say@gmail.com>
+	Date:	Fri Oct 4 13:04:03 2019 +0200
+Caching blobs under "/var/cache/blobs".
+Getting image source signatures
+Copying blob sha256:9e7a6dc796f0a75c560158a9f9e30fb8b5a90cb53edce9ffbdf5778406e4de39
+Copying blob sha256:f659c5c779ac4373302bfe3dc7d713c59cf9ec9f179a71e9b26336a51043fad2
+Copying blob sha256:e7021e0589e97471d99c4265b7c8e64da328e48f116b5f260353b2e0a2adb373
+Copying blob sha256:fc5b206e9329a1674dd9e8efbee45c9be28d0d0dcbabba3c6bb67a2f22cfcf2a
+Copying blob sha256:14e4b218199e7985dbeca760da0fa9b969ca5fdaae5095a273cd924afa6898e9
+Copying config sha256:988e5d4c035d1585f006d0c57a0cfe4bc9f8aae412585f4a6b8fed87da45105f
+Writing manifest to image destination
+Storing signatures
+Generating dockerfile with builder image image-registry.openshift-image-registry.svc:5000/openshift/php@sha256:962d936b00f4953d977be9b85268a289bf2f9d49df4d51b408a7c7835a551103
+STEP 1: FROM image-registry.openshift-image-registry.svc:5000/openshift/php@sha256:962d936b00f4953d977be9b85268a289bf2f9d49df4d51b408a7c7835a551103
+STEP 2: LABEL "io.openshift.build.commit.ref"="master"       "io.openshift.build.commit.message"="Initial commit, including all apps previously in course"       "io.openshift.build.source-location"="https://github.com/RedHatTraining/DO180-apps"       "io.openshift.build.source-context-dir"="temps"       "io.openshift.build.image"="image-registry.openshift-image-registry.svc:5000/openshift/php@sha256:962d936b00f4953d977be9b85268a289bf2f9d49df4d51b408a7c7835a551103"       "io.openshift.build.commit.author"="Jordi Sola <someth2say@gmail.com>"       "io.openshift.build.commit.date"="Fri Oct 4 13:04:03 2019 +0200"       "io.openshift.build.commit.id"="f7cd8963ef353d9173c3a21dcccf402f3616840b"
+STEP 3: ENV OPENSHIFT_BUILD_NAME="temps-1"     OPENSHIFT_BUILD_NAMESPACE="developer-ocp"     OPENSHIFT_BUILD_SOURCE="https://github.com/RedHatTraining/DO180-apps"     OPENSHIFT_BUILD_COMMIT="f7cd8963ef353d9173c3a21dcccf402f3616840b"
+STEP 4: USER root
+STEP 5: COPY upload/src /tmp/src
+STEP 6: RUN chown -R 1001:0 /tmp/src
+STEP 7: USER 1001
+STEP 8: RUN /usr/libexec/s2i/assemble
+---> Installing application source...
+=> sourcing 20-copy-config.sh ...
+---> 07:31:02     Processing additional arbitrary httpd configuration provided by s2i ...
+=> sourcing 00-documentroot.conf ...
+=> sourcing 50-mpm-tuning.conf ...
+=> sourcing 40-ssl-certs.sh ...
+STEP 9: CMD /usr/libexec/s2i/run
+STEP 10: COMMIT temp.builder.openshift.io/developer-ocp/temps-1:6a632b82
+time="2021-05-15T07:31:02Z" level=info msg="Image operating system mismatch: image uses \"\", expecting \"linux\""
+time="2021-05-15T07:31:02Z" level=info msg="Image architecture mismatch: image uses \"\", expecting \"amd64\""
+Getting image source signatures
+Copying blob sha256:abc8c32bad762f509f729872b552e8366b9c71a863dc5e9e648dda04a7896e50
+Copying blob sha256:b9e30d7689db4040323cb65632888c37d96cbd60d0f05c4dd37e78b9b8a0566a
+Copying blob sha256:8b0dba9179a6a0d5de65c6b001c8c9c83eaa169ce526b22a33845ede8f74568c
+Copying blob sha256:bda7ec697f579121100fed608753105e2150894241b011af8b12fea98296f8f7
+Copying blob sha256:5daa741fd16f3d131c8667e9e7bcbcb0ce95243275070d34686eb6df2c6200fd
+Copying blob sha256:956e5d2395c64b10bcff65b963be6d17ccd1cfeff1adb6b657fd1364ba6f71dc
+Copying config sha256:2c07def02268065e0aeaba3ce0678207ea9197591f6ae03174adf4ef19c426ae
+Writing manifest to image destination
+Storing signatures
+--> 2c07def0226
+2c07def02268065e0aeaba3ce0678207ea9197591f6ae03174adf4ef19c426ae
+
+Pushing image image-registry.openshift-image-registry.svc:5000/developer-ocp/temps:latest ...
+Getting image source signatures
+Copying blob sha256:956e5d2395c64b10bcff65b963be6d17ccd1cfeff1adb6b657fd1364ba6f71dc
+Copying blob sha256:e7021e0589e97471d99c4265b7c8e64da328e48f116b5f260353b2e0a2adb373
+Copying blob sha256:f659c5c779ac4373302bfe3dc7d713c59cf9ec9f179a71e9b26336a51043fad2
+Copying blob sha256:fc5b206e9329a1674dd9e8efbee45c9be28d0d0dcbabba3c6bb67a2f22cfcf2a
+Copying blob sha256:9e7a6dc796f0a75c560158a9f9e30fb8b5a90cb53edce9ffbdf5778406e4de39
+Copying blob sha256:14e4b218199e7985dbeca760da0fa9b969ca5fdaae5095a273cd924afa6898e9
+Copying config sha256:2c07def02268065e0aeaba3ce0678207ea9197591f6ae03174adf4ef19c426ae
+Writing manifest to image destination
+Storing signatures
+Successfully pushed image-registry.openshift-image-registry.svc:5000/developer-ocp/temps@sha256:7f2ab82289cffc49c7375368ad21217623a656466531c946a111bf3be8c63ed2
+Push successful
+[student@workstation php-helloworld]$ oc get pods -w
+NAME             READY   STATUS      RESTARTS   AGE
+temps-1-build    0/1     Completed   0          59s
+temps-1-deploy   0/1     Completed   0          14s
+temps-1-fqf47    1/1     Running     0          11s
+^C[student@workstation php-helloworld]$ oc expose svc/temps
+route.route.openshift.io/temps exposed
+[student@workstation php-helloworld]$ oc get all
+NAME                 READY   STATUS      RESTARTS   AGE
+pod/temps-1-build    0/1     Completed   0          85s
+pod/temps-1-deploy   0/1     Completed   0          40s
+pod/temps-1-fqf47    1/1     Running     0          37s
+
+NAME                            DESIRED   CURRENT   READY   AGE
+replicationcontroller/temps-1   1         1         1       40s
+
+NAME            TYPE        CLUSTER-IP       EXTERNAL-IP   PORT(S)             AGE
+service/temps   ClusterIP   172.30.216.216   <none>        8080/TCP,8443/TCP   86s
+
+NAME                                       REVISION   DESIRED   CURRENT   TRIGGERED BY
+deploymentconfig.apps.openshift.io/temps   1          1         1         config,image(temps:latest)
+
+NAME                                   TYPE     FROM   LATEST
+buildconfig.build.openshift.io/temps   Source   Git    1
+
+NAME                               TYPE     FROM          STATUS     STARTED              DURATION
+build.build.openshift.io/temps-1   Source   Git@f7cd896   Complete   About a minute ago   45s
+
+NAME                                   IMAGE REPOSITORY                                                       TAGS     UPDATED
+imagestream.image.openshift.io/temps   image-registry.openshift-image-registry.svc:5000/developer-ocp/temps   latest   41 seconds ago
+
+NAME                             HOST/PORT                                   PATH   SERVICES   PORT       TERMINATION   WILDCARD
+route.route.openshift.io/temps   temps-developer-ocp.apps.ocp4.example.com          temps      8080-tcp                 None
+[student@workstation php-helloworld]$ oc get route/temps
+NAME    HOST/PORT                                   PATH   SERVICES   PORT       TERMINATION   WILDCARD
+temps   temps-developer-ocp.apps.ocp4.example.com          temps      8080-tcp                 None
+[student@workstation php-helloworld]$ oc describe service/temps
+Name:              temps
+Namespace:         developer-ocp
+Labels:            app=temps
+                   app.kubernetes.io/component=temps
+                   app.kubernetes.io/instance=temps
+Annotations:       openshift.io/generated-by: OpenShiftNewApp
+Selector:          deploymentconfig=temps
+Type:              ClusterIP
+IP:                172.30.216.216
+Port:              8080-tcp  8080/TCP
+TargetPort:        8080/TCP
+Endpoints:         10.10.0.41:8080
+Port:              8443-tcp  8443/TCP
+TargetPort:        8443/TCP
+Endpoints:         10.10.0.41:8443
+Session Affinity:  None
+Events:            <none>
+[student@workstation php-helloworld]$ oc describe route
+Name:			temps
+Namespace:		developer-ocp
+Created:		3 minutes ago
+Labels:			app=temps
+			app.kubernetes.io/component=temps
+			app.kubernetes.io/instance=temps
+Annotations:		openshift.io/host.generated=true
+Requested Host:		temps-developer-ocp.apps.ocp4.example.com
+			  exposed on router default (host apps.ocp4.example.com) 3 minutes ago
+Path:			<none>
+TLS Termination:	<none>
+Insecure Policy:	<none>
+Endpoint Port:		8080-tcp
+
+Service:	temps
+Weight:		100 (100%)
+Endpoints:	10.10.0.41:8443, 10.10.0.41:8080
+[student@workstation php-helloworld]$ lab openshift-review grade
+
+Grading the student's work for the Lab: Deploying Containerized Applications on OpenShift
+
+ · Log in on OpenShift.........................................  SUCCESS
+Accessing the web application..................................  PASS
+[student@workstation php-helloworld]$ lab openshift-review finish
+
+Completing the Lab: Deploying Containerized Applications on OpenShift
+
+ · Log in on OpenShift.........................................  SUCCESS
+ · Deleting the developer-ocp project..........................  SUCCESS
+[student@workstation php-helloworld]$ 
 
