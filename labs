@@ -5261,8 +5261,6 @@ MySQL [(none)]> exit
 Bye
 [student@workstation dockerfile-review]$ 
 
-
-
 oc delete project ${RHT_OCP4_DEV_USER}-mysql-openshift
 project.project.openshift.io "developer-mysql-openshift" deleted
 [student@workstation dockerfile-review]$ lab openshift-resources finish
@@ -5272,7 +5270,7 @@ Completing the Guided Exercise: Deploying a Database Server on OpenShift
  · Deleting the 'developer-mysql-openshift' project............  SUCCESS
 [student@workstation dockerfile-review]$ 
 
----------------------------------------------------------------------------------------------------------------------------------------------------------
+------------------------------------------------Creating Routes------------------------------------------------------
 
 Route
 -------
