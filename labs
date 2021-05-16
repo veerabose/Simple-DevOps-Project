@@ -6320,63 +6320,12 @@ Writing manifest to image destination
 Writing manifest to image destination
 Storing signatures
 [student@workstation mysql]$ 
+
 Warning
+------
 Make sure the repository is public in quay.io so OpenShift can get the image from
 it. Refer to the Repositories Visibility section of the Appendix C to read
 details about how to change repository visibility.
-
-
-
------[student@workstation mysql]$ 
-[student@workstation mysql]$ 
-[student@workstation mysql]$ clear
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 [student@workstation mysql]$ cd ~/DO180/labs/multicontainer-openshift
 [student@workstation multicontainer-openshift]$ cd images/nodejs
@@ -6653,7 +6602,7 @@ service/todoapi   ClusterIP   172.30.212.226   <none>        30080/TCP   7s
 NAME      READY   STATUS    RESTARTS   AGE
 mysql     1/1     Running   0          32s
 todoapi   1/1     Running   0          32s
-^C[student@workstation multicontainer-openshift]$ oc status | grep -o "http:.*com"
+^C
 [student@workstation multicontainer-openshift]$ oc expose service todoapi
 route.route.openshift.io/todoapi exposed
 [student@workstation multicontainer-openshift]$ oc status | grep -o "http:.*com"
