@@ -7712,3 +7712,10 @@ Cleaning up the lab for Lab: Comprehensive Review Lab
  · Deleting OpenShift project developer-review.................  SUCCESS
 [student@workstation openshift]$ 
 
+Summary
+In this chapter, you learned:
+• Kubernetes and OpenShift create a software-defined network between all containers in a pod.
+• Within the same project, Kubernetes injects a set of variables for each service into all pods.
+• Kubernetes templates automate creating applications consisting of multiple resources.
+Template parameters allow using the same values when creating multiple resources.
+------------------------------------------------------------------------------------------------------------------------------------------------------------
