@@ -6623,5 +6623,12 @@ Completing the Guided Exercise: Creating an Application with a Template
  · Removing quay.io/veeraabose/do180-todonodejs image..........  SUCCESS
  · Removing registry.access.redhat.com/ubi7/ubi:7.7 image......  SUCCESS
 [student@workstation multicontainer-openshift]$ 
-----------------------------------------------------
+----------------------------------------CH-7-Lab-Containerizing and Deploying a Software Application ----------------------------------
+In this review, you will containerize a Nexus server, build and test it using Podman, and deploy
+it to an OpenShift cluster.
+Outcomes
+You should be able to:
+• Write a Dockerfile that successfully containerizes a Nexus server.
+• Build a Nexus server container image and deploy it using Podman.
+• Deploy the Nexus server container image to an OpenShift cluster.
 
