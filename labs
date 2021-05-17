@@ -7718,4 +7718,39 @@ In this chapter, you learned:
 • Within the same project, Kubernetes injects a set of variables for each service into all pods.
 • Kubernetes templates automate creating applications consisting of multiple resources.
 Template parameters allow using the same values when creating multiple resources.
-------------------------------------------------------------------------------------------------------------------------------------------------------------
+------------------------------------------------------------CH8-Describing OpenShift Container Platform Features------------------
+
+A container orchestrator, such as OpenShift Container Platform, manages a cluster of servers that
+runs multiple containerized applications. The Red Hat OpenShift product family includes a set of
+solutions to improve the delivery of business applications in a variety of environments:
+
+Red Hat OpenShift Container Platform
+Provides an enterprise-ready Kubernetes environment for building, deploying, and managing
+container-based applications in any public or private data center, including bare metal servers.
+RHOCP is compatible with multiple cloud and virtualization providers, isolating application
+developers and administrators from differences between these providers. You decide when to
+update to newer releases and which additional components to enable.
+
+Red Hat OpenShift Dedicated
+Provides a managed OpenShift environment in a public cloud, such as Amazon Web Services
+(AWS), Google Cloud Platform (GCP), Microsoft Azure, or IBM Cloud. This product provides
+all the features that RHOCP provides, however, Red Hat manages the cluster for you. You
+retain some control of decisions such as when to update to a newer release of OpenShift or to
+install add-on services.
+
+Red Hat OpenShift Online
+Provides a hosted, public container orchestration platform that offers an application
+development, build, deployment, and hosting solution in a cloud environment. The solution is
+shared across multiple customers, and Red Hat manages the cluster life cycle, which includes
+applying updates or integrating new features.
+
+Red Hat OpenShift Kubernetes Engine
+Provides a subset of the features present in OpenShift Container Platform, such as the
+Red Hat Enterprise Linux CoreOS lightweight transactional operating system, the CRI-O
+engine, the Kubernetes container orchestration platform, and the core cluster services (web
+console, Over-the-air updates, internal registry, and Operator Lifecycle Manager, among
+others).
+
+Red Hat Code Ready Containers
+Provides a minimal installation of OpenShift that you can run on a laptop for local
+development and experimentation.
