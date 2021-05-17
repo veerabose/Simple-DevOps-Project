@@ -7562,5 +7562,153 @@ Initializing Nexus Repository Manager OSS 2.14.3-02
 > GET /nexus/ HTTP/1.1
 < HTTP/1.1 200 OK
   <title>Nexus Repository Manager</title>
-[student@workstation local]$ sudo podman 
+
+[student@workstation local]$ sudo podman kill blissful_rubin
+8a1508a22dfd6bf77a62859eb355302eec246607150b8ec1299ed2b3f94c6c20
+[student@workstation local]$ sudo podman login -u ${RHT_OCP4_QUAY_USER} quay.io
+Password: 
+Login Succeeded!
+[student@workstation local]$
+[student@workstation local]$ sudo podman push localhost/nexus:latest quay.io/${RHT_OCP4_QUAY_USER}/nexus:latest
+Getting image source signatures
+Copying blob ac7577b8c383 done
+Copying blob 6d5076040ce7 done
+Copying blob 5601485f0109 done
+Copying config 4c79c61cdd done
+Writing manifest to image destination
+Copying config 4c79c61cdd done
+Writing manifest to image destination
+Storing signatures
+[student@workstation local]$ cd ~/DO180/labs/comprehensive-review/deploy/openshift
+[student@workstation openshift]$ oc login -u ${RHT_OCP4_DEV_USER} -p ${RHT_OCP4_DEV_PASSWORD} ${RHT_OCP4_MASTER_API}
+Login successful.
+
+You don't have any projects. You can try to create a new project, by running
+
+    oc new-project <projectname>
+
+[student@workstation openshift]$ oc new-project ${RHT_OCP4_DEV_USER}-review
+Now using project "developer-review" on server "https://api.ocp4.example.com:6443".
+
+You can add applications to this project with the 'new-app' command. For example, try:
+
+    oc new-app ruby~https://github.com/sclorg/ruby-ex.git
+
+to build a new example application in Ruby. Or use kubectl to deploy a simple Kubernetes application:
+
+    kubectl create deployment hello-node --image=gcr.io/hello-minikube-zero-install/hello-node
+
+[student@workstation openshift]$ oc process -f resources/nexus-template.json -p RHT_OCP4_QUAY_USER=${RHT_OCP4_QUAY_USER} | oc create -f -
+service/nexus created
+persistentvolumeclaim/nexus created
+deploymentconfig.apps.openshift.io/nexus created
+[student@workstation openshift]$ oc get all
+NAME                 READY   STATUS              RESTARTS   AGE
+pod/nexus-1-deploy   0/1     ContainerCreating   0          10s
+
+NAME                            DESIRED   CURRENT   READY   AGE
+replicationcontroller/nexus-1   0         0         0       10s
+
+NAME            TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)    AGE
+service/nexus   ClusterIP   172.30.99.131   <none>        8081/TCP   11s
+
+NAME                                       REVISION   DESIRED   CURRENT   TRIGGERED BY
+deploymentconfig.apps.openshift.io/nexus   1          1         0         config
+[student@workstation openshift]$ oc get pods
+NAME             READY   STATUS              RESTARTS   AGE
+nexus-1-5w4lc    0/1     ContainerCreating   0          3s
+nexus-1-deploy   1/1     Running             0          15s
+[student@workstation openshift]$ oc get pods
+NAME             READY   STATUS              RESTARTS   AGE
+nexus-1-5w4lc    0/1     ContainerCreating   0          20s
+nexus-1-deploy   1/1     Running             0          32s
+[student@workstation openshift]$ 
+[student@workstation openshift]$ oc get pods
+NAME             READY   STATUS      RESTARTS   AGE
+nexus-1-5w4lc    1/1     Running     0          108s
+nexus-1-deploy   0/1     Completed   0          2m
+[student@workstation openshift]$ oc expose svc/nexus
+route.route.openshift.io/nexus exposed
+[student@workstation openshift]$ oc get route -o yaml
+apiVersion: v1
+items:
+- apiVersion: route.openshift.io/v1
+  kind: Route
+  metadata:
+    annotations:
+      openshift.io/host.generated: "true"
+    creationTimestamp: "2021-05-17T08:48:25Z"
+    labels:
+      app: nexus
+      template: nexus-persistent-template
+    managedFields:
+    - apiVersion: route.openshift.io/v1
+      fieldsType: FieldsV1
+      fieldsV1:
+        f:metadata:
+          f:labels:
+            .: {}
+            f:app: {}
+            f:template: {}
+        f:spec:
+          f:port:
+            .: {}
+            f:targetPort: {}
+          f:to:
+            f:kind: {}
+            f:name: {}
+            f:weight: {}
+          f:wildcardPolicy: {}
+      manager: oc
+      operation: Update
+      time: "2021-05-17T08:48:25Z"
+    - apiVersion: route.openshift.io/v1
+      fieldsType: FieldsV1
+      fieldsV1:
+        f:status:
+          f:ingress: {}
+      manager: openshift-router
+      operation: Update
+      time: "2021-05-17T08:48:26Z"
+    name: nexus
+    namespace: developer-review
+    resourceVersion: "76536"
+    selfLink: /apis/route.openshift.io/v1/namespaces/developer-review/routes/nexus
+    uid: df383f62-dfaa-4698-a527-c59c55987b2a
+  spec:
+    host: nexus-developer-review.apps.ocp4.example.com
+    port:
+      targetPort: nexus
+    to:
+      kind: Service
+      name: nexus
+      weight: 100
+    wildcardPolicy: None
+  status:
+    ingress:
+    - conditions:
+      - lastTransitionTime: "2021-05-17T08:48:26Z"
+        status: "True"
+        type: Admitted
+      host: nexus-developer-review.apps.ocp4.example.com
+      routerCanonicalHostname: apps.ocp4.example.com
+      routerName: default
+      wildcardPolicy: None
+kind: List
+metadata:
+  resourceVersion: ""
+  selfLink: ""
+[student@workstation openshift]$ 
+
+[student@workstation openshift]$ lab comprehensive-review grade
+
+Grading the student's work for the Lab: Comprehensive Review Lab
+
+ · Accessing Nexus web application.............................  PASS
+[student@workstation openshift]$ lab comprehensive-review finish
+
+Cleaning up the lab for Lab: Comprehensive Review Lab
+
+ · Deleting OpenShift project developer-review.................  SUCCESS
+[student@workstation openshift]$ 
 
