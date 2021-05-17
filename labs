@@ -7754,3 +7754,24 @@ others).
 Red Hat Code Ready Containers
 Provides a minimal installation of OpenShift that you can run on a laptop for local
 development and experimentation.
+
+The Red Hat OpenShift product family integrates many components:
+• The Red Hat Enterprise Linux CoreOS container-optimized, immutable operating system.
+• The CRI-O engine, a small footprint, Open Container Initiative (OCI)-compliant container
+runtime engine with a reduced attack surface.
+• Kubernetes, an open source container orchestration platform.
+• A self-service web console.
+• A number of preinstalled application services, such as an internal container image registry and
+monitoring framework.
+• Certified container images for multiple programming language runtimes, databases, and other
+software packages.
+
+High Availability
+Lightweight Operating System
+Load Balancing
+Automating Scaling
+Logging and Monitoring
+Services Discovery
+Storage
+Application Management
+Cluster Extensibility
