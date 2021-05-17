@@ -6632,3 +6632,935 @@ You should be able to:
 • Build a Nexus server container image and deploy it using Podman.
 • Deploy the Nexus server container image to an OpenShift cluster.
 
+[student@workstation ~]$ lab comprehensive-review start
+
+Setting up workstation for the Lab: Comprehensive Review Lab
+
+ · Checking podman configuration...............................  SUCCESS
+Exercise is already setup.
+[student@workstation ~]$ cd /home/student/DO180/labs/comprehensive-review/image
+[student@workstation image]$ ./get-nexus-bundle.sh
+################################################################################################################################################################################## 100.0%
+Nexus bundle download successful
+[student@workstation image]$ pwd
+/home/student/DO180/labs/comprehensive-review/image
+[student@workstation image]$ ls
+create_nexus_account.snippet  get-nexus-bundle.sh  install_java.snippet  nexus-2.14.3-02-bundle.tar.gz  nexus-start.sh  training.repo
+[student@workstation image]$ vi Dockerfile
+[student@workstation image]$ cat Dockerfile 
+FROM ubi7/ubi:7.7
+MAINTAINER veerabose <test@test.com>
+ARG NEXUS_VERSION=2.14.3-02
+ENV NEXUS_HOME=/opt/nexus
+RUN yum install -y --setopt=tsflags=nodocs java-1.8.0-openjdk-devel && \
+yum clean all -y
+RUN groupadd -r nexus -f -g 1001 && \
+useradd -u 1001 -r -g nexus -m -d ${NEXUS_HOME} -s /sbin/nologin \
+-c "Nexus User" nexus && \
+chown -R nexus:nexus ${NEXUS_HOME} && \
+chmod -R 755 ${NEXUS_HOME}
+USER nexus
+ADD nexus-${NEXUS_VERSION}-bundle.tar.gz ${NEXUS_HOME}
+ADD nexus-start.sh ${NEXUS_HOME}/
+RUN ln -s ${NEXUS_HOME}/nexus-${NEXUS_VERSION} \
+${NEXUS_HOME}/nexus2
+WORKDIR ${NEXUS_HOME}
+VOLUME ["/opt/nexus/sonatype-work"]
+CMD ["sh", "nexus-start.sh"]
+[student@workstation image]$ sudo podman build --layers=false -t nexus .
+STEP 1: FROM ubi7/ubi:7.7
+Getting image source signatures
+Copying blob 09dbbf8834d2 done
+Copying blob fcd63ccfdd0c done
+Copying config 0355cd652b done
+Writing manifest to image destination
+Storing signatures
+STEP 2: MAINTAINER veerabose <test@test.com>
+STEP 3: ARG NEXUS_VERSION=2.14.3-02
+STEP 4: ENV NEXUS_HOME=/opt/nexus
+STEP 5: RUN yum install -y --setopt=tsflags=nodocs java-1.8.0-openjdk-devel && yum clean all -y
+Loaded plugins: ovl, product-id, search-disabled-repos, subscription-manager
+This system is not receiving updates. You can use subscription-manager on the host to register and assign subscriptions.
+ubi-7                                                    | 3.8 kB     00:00     
+ubi-7-rhah                                               | 3.7 kB     00:00     
+ubi-7-server-devtools-rpms                               | 3.8 kB     00:00     
+ubi-7-server-extras-rpms                                 | 3.7 kB     00:00     
+ubi-7-server-optional-rpms                               | 3.8 kB     00:00     
+ubi-server-rhscl-7-rpms                                  | 3.8 kB     00:00     
+(1/18): ubi-7/x86_64/updateinfo                            |   92 B   00:00     
+(2/18): ubi-7/x86_64/primary_db                            | 800 kB   00:00     
+(3/18): ubi-7/x86_64/group                                 |  124 B   00:00     
+(4/18): ubi-7-rhah/x86_64/updateinfo                       |   92 B   00:00     
+(5/18): ubi-7-rhah/x86_64/group                            |  124 B   00:00     
+(6/18): ubi-7-rhah/x86_64/primary_db                       | 2.5 kB   00:00     
+(7/18): ubi-7-server-devtools-rpms/x86_64/updateinfo       |   92 B   00:00     
+(8/18): ubi-7-server-devtools-rpms/x86_64/primary_db       | 8.6 kB   00:00     
+(9/18): ubi-7-server-extras-rpms/x86_64/group              |  124 B   00:00     
+(10/18): ubi-7-server-extras-rpms/x86_64/primary_db        | 6.8 kB   00:00     
+(11/18): ubi-7-server-extras-rpms/x86_64/updateinfo        |   92 B   00:00     
+(12/18): ubi-7-server-devtools-rpms/x86_64/group           |  124 B   00:00     
+(13/18): ubi-7-server-optional-rpms/x86_64/updateinfo      |   92 B   00:00     
+(14/18): ubi-7-server-optional-rpms/x86_64/primary_db      |  14 kB   00:00     
+(15/18): ubi-server-rhscl-7-rpms/x86_64/updateinfo         |   92 B   00:00     
+(16/18): ubi-server-rhscl-7-rpms/x86_64/primary_db         | 383 kB   00:00     
+(17/18): ubi-7-server-optional-rpms/x86_64/group           |  124 B   00:00     
+(18/18): ubi-server-rhscl-7-rpms/x86_64/group              |  124 B   00:00     
+Resolving Dependencies
+--> Running transaction check
+---> Package java-1.8.0-openjdk-devel.x86_64 1:1.8.0.292.b10-1.el7_9 will be installed
+--> Processing Dependency: java-1.8.0-openjdk(x86-64) = 1:1.8.0.292.b10-1.el7_9 for package: 1:java-1.8.0-openjdk-devel-1.8.0.292.b10-1.el7_9.x86_64
+--> Processing Dependency: libX11.so.6()(64bit) for package: 1:java-1.8.0-openjdk-devel-1.8.0.292.b10-1.el7_9.x86_64
+--> Processing Dependency: libjava.so()(64bit) for package: 1:java-1.8.0-openjdk-devel-1.8.0.292.b10-1.el7_9.x86_64
+--> Processing Dependency: libjvm.so()(64bit) for package: 1:java-1.8.0-openjdk-devel-1.8.0.292.b10-1.el7_9.x86_64
+--> Running transaction check
+---> Package java-1.8.0-openjdk.x86_64 1:1.8.0.292.b10-1.el7_9 will be installed
+--> Processing Dependency: fontconfig(x86-64) for package: 1:java-1.8.0-openjdk-1.8.0.292.b10-1.el7_9.x86_64
+--> Processing Dependency: gtk2(x86-64) for package: 1:java-1.8.0-openjdk-1.8.0.292.b10-1.el7_9.x86_64
+--> Processing Dependency: libXcomposite(x86-64) for package: 1:java-1.8.0-openjdk-1.8.0.292.b10-1.el7_9.x86_64
+--> Processing Dependency: libasound.so.2(ALSA_0.9)(64bit) for package: 1:java-1.8.0-openjdk-1.8.0.292.b10-1.el7_9.x86_64
+--> Processing Dependency: libasound.so.2(ALSA_0.9.0rc4)(64bit) for package: 1:java-1.8.0-openjdk-1.8.0.292.b10-1.el7_9.x86_64
+--> Processing Dependency: libjpeg.so.62(LIBJPEG_6.2)(64bit) for package: 1:java-1.8.0-openjdk-1.8.0.292.b10-1.el7_9.x86_64
+--> Processing Dependency: libpng15.so.15(PNG15_0)(64bit) for package: 1:java-1.8.0-openjdk-1.8.0.292.b10-1.el7_9.x86_64
+--> Processing Dependency: xorg-x11-fonts-Type1 for package: 1:java-1.8.0-openjdk-1.8.0.292.b10-1.el7_9.x86_64
+--> Processing Dependency: libXext.so.6()(64bit) for package: 1:java-1.8.0-openjdk-1.8.0.292.b10-1.el7_9.x86_64
+--> Processing Dependency: libXi.so.6()(64bit) for package: 1:java-1.8.0-openjdk-1.8.0.292.b10-1.el7_9.x86_64
+--> Processing Dependency: libXrender.so.1()(64bit) for package: 1:java-1.8.0-openjdk-1.8.0.292.b10-1.el7_9.x86_64
+--> Processing Dependency: libXtst.so.6()(64bit) for package: 1:java-1.8.0-openjdk-1.8.0.292.b10-1.el7_9.x86_64
+--> Processing Dependency: libasound.so.2()(64bit) for package: 1:java-1.8.0-openjdk-1.8.0.292.b10-1.el7_9.x86_64
+--> Processing Dependency: libgif.so.4()(64bit) for package: 1:java-1.8.0-openjdk-1.8.0.292.b10-1.el7_9.x86_64
+--> Processing Dependency: libjpeg.so.62()(64bit) for package: 1:java-1.8.0-openjdk-1.8.0.292.b10-1.el7_9.x86_64
+--> Processing Dependency: libpng15.so.15()(64bit) for package: 1:java-1.8.0-openjdk-1.8.0.292.b10-1.el7_9.x86_64
+---> Package java-1.8.0-openjdk-headless.x86_64 1:1.8.0.292.b10-1.el7_9 will be installed
+--> Processing Dependency: copy-jdk-configs >= 3.3 for package: 1:java-1.8.0-openjdk-headless-1.8.0.292.b10-1.el7_9.x86_64
+--> Processing Dependency: tzdata-java >= 2021a for package: 1:java-1.8.0-openjdk-headless-1.8.0.292.b10-1.el7_9.x86_64
+--> Processing Dependency: cups-libs(x86-64) for package: 1:java-1.8.0-openjdk-headless-1.8.0.292.b10-1.el7_9.x86_64
+--> Processing Dependency: jpackage-utils for package: 1:java-1.8.0-openjdk-headless-1.8.0.292.b10-1.el7_9.x86_64
+--> Processing Dependency: lksctp-tools(x86-64) for package: 1:java-1.8.0-openjdk-headless-1.8.0.292.b10-1.el7_9.x86_64
+--> Processing Dependency: pcsc-lite-libs(x86-64) for package: 1:java-1.8.0-openjdk-headless-1.8.0.292.b10-1.el7_9.x86_64
+--> Processing Dependency: libfreetype.so.6()(64bit) for package: 1:java-1.8.0-openjdk-headless-1.8.0.292.b10-1.el7_9.x86_64
+---> Package libX11.x86_64 0:1.6.7-3.el7_9 will be installed
+--> Processing Dependency: libX11-common >= 1.6.7-3.el7_9 for package: libX11-1.6.7-3.el7_9.x86_64
+--> Processing Dependency: libxcb.so.1()(64bit) for package: libX11-1.6.7-3.el7_9.x86_64
+--> Running transaction check
+---> Package alsa-lib.x86_64 0:1.1.8-1.el7 will be installed
+---> Package copy-jdk-configs.noarch 0:3.3-10.el7_5 will be installed
+---> Package cups-libs.x86_64 1:1.6.3-51.el7 will be installed
+--> Processing Dependency: libavahi-client.so.3()(64bit) for package: 1:cups-libs-1.6.3-51.el7.x86_64
+--> Processing Dependency: libavahi-common.so.3()(64bit) for package: 1:cups-libs-1.6.3-51.el7.x86_64
+---> Package fontconfig.x86_64 0:2.13.0-4.3.el7 will be installed
+--> Processing Dependency: dejavu-sans-fonts for package: fontconfig-2.13.0-4.3.el7.x86_64
+--> Processing Dependency: fontpackages-filesystem for package: fontconfig-2.13.0-4.3.el7.x86_64
+---> Package freetype.x86_64 0:2.8-14.el7_9.1 will be installed
+---> Package giflib.x86_64 0:4.1.6-9.el7 will be installed
+--> Processing Dependency: libICE.so.6()(64bit) for package: giflib-4.1.6-9.el7.x86_64
+--> Processing Dependency: libSM.so.6()(64bit) for package: giflib-4.1.6-9.el7.x86_64
+---> Package gtk2.x86_64 0:2.24.31-1.el7 will be installed
+--> Processing Dependency: atk >= 1.29.4-2 for package: gtk2-2.24.31-1.el7.x86_64
+--> Processing Dependency: libXrandr >= 1.2.99.4-2 for package: gtk2-2.24.31-1.el7.x86_64
+--> Processing Dependency: libtiff >= 3.6.1 for package: gtk2-2.24.31-1.el7.x86_64
+--> Processing Dependency: pango >= 1.20.0-1 for package: gtk2-2.24.31-1.el7.x86_64
+--> Processing Dependency: gtk-update-icon-cache for package: gtk2-2.24.31-1.el7.x86_64
+--> Processing Dependency: hicolor-icon-theme for package: gtk2-2.24.31-1.el7.x86_64
+--> Processing Dependency: libXcursor.so.1()(64bit) for package: gtk2-2.24.31-1.el7.x86_64
+--> Processing Dependency: libXdamage.so.1()(64bit) for package: gtk2-2.24.31-1.el7.x86_64
+--> Processing Dependency: libXfixes.so.3()(64bit) for package: gtk2-2.24.31-1.el7.x86_64
+--> Processing Dependency: libXinerama.so.1()(64bit) for package: gtk2-2.24.31-1.el7.x86_64
+--> Processing Dependency: libXrandr.so.2()(64bit) for package: gtk2-2.24.31-1.el7.x86_64
+--> Processing Dependency: libatk-1.0.so.0()(64bit) for package: gtk2-2.24.31-1.el7.x86_64
+--> Processing Dependency: libcairo.so.2()(64bit) for package: gtk2-2.24.31-1.el7.x86_64
+--> Processing Dependency: libgdk_pixbuf-2.0.so.0()(64bit) for package: gtk2-2.24.31-1.el7.x86_64
+--> Processing Dependency: libpango-1.0.so.0()(64bit) for package: gtk2-2.24.31-1.el7.x86_64
+--> Processing Dependency: libpangocairo-1.0.so.0()(64bit) for package: gtk2-2.24.31-1.el7.x86_64
+--> Processing Dependency: libpangoft2-1.0.so.0()(64bit) for package: gtk2-2.24.31-1.el7.x86_64
+---> Package javapackages-tools.noarch 0:3.4.1-11.el7 will be installed
+--> Processing Dependency: python-javapackages = 3.4.1-11.el7 for package: javapackages-tools-3.4.1-11.el7.noarch
+--> Processing Dependency: libxslt for package: javapackages-tools-3.4.1-11.el7.noarch
+---> Package libX11-common.noarch 0:1.6.7-3.el7_9 will be installed
+---> Package libXcomposite.x86_64 0:0.4.4-4.1.el7 will be installed
+---> Package libXext.x86_64 0:1.3.3-3.el7 will be installed
+---> Package libXi.x86_64 0:1.7.9-1.el7 will be installed
+---> Package libXrender.x86_64 0:0.9.10-1.el7 will be installed
+---> Package libXtst.x86_64 0:1.2.3-1.el7 will be installed
+---> Package libjpeg-turbo.x86_64 0:1.2.90-8.el7 will be installed
+---> Package libpng.x86_64 2:1.5.13-8.el7 will be installed
+---> Package libxcb.x86_64 0:1.13-1.el7 will be installed
+--> Processing Dependency: libXau.so.6()(64bit) for package: libxcb-1.13-1.el7.x86_64
+---> Package lksctp-tools.x86_64 0:1.0.17-2.el7 will be installed
+---> Package pcsc-lite-libs.x86_64 0:1.8.8-8.el7 will be installed
+---> Package tzdata-java.noarch 0:2021a-1.el7 will be installed
+---> Package xorg-x11-fonts-Type1.noarch 0:7.5-9.el7 will be installed
+--> Processing Dependency: mkfontdir for package: xorg-x11-fonts-Type1-7.5-9.el7.noarch
+--> Processing Dependency: mkfontdir for package: xorg-x11-fonts-Type1-7.5-9.el7.noarch
+--> Processing Dependency: ttmkfdir for package: xorg-x11-fonts-Type1-7.5-9.el7.noarch
+--> Processing Dependency: ttmkfdir for package: xorg-x11-fonts-Type1-7.5-9.el7.noarch
+--> Running transaction check
+---> Package atk.x86_64 0:2.28.1-2.el7 will be installed
+---> Package avahi-libs.x86_64 0:0.6.31-20.el7 will be installed
+---> Package cairo.x86_64 0:1.15.12-4.el7 will be installed
+--> Processing Dependency: libEGL.so.1()(64bit) for package: cairo-1.15.12-4.el7.x86_64
+--> Processing Dependency: libGL.so.1()(64bit) for package: cairo-1.15.12-4.el7.x86_64
+--> Processing Dependency: libpixman-1.so.0()(64bit) for package: cairo-1.15.12-4.el7.x86_64
+---> Package dejavu-sans-fonts.noarch 0:2.33-6.el7 will be installed
+--> Processing Dependency: dejavu-fonts-common = 2.33-6.el7 for package: dejavu-sans-fonts-2.33-6.el7.noarch
+---> Package fontpackages-filesystem.noarch 0:1.44-8.el7 will be installed
+---> Package gdk-pixbuf2.x86_64 0:2.36.12-3.el7 will be installed
+--> Processing Dependency: libjasper.so.1()(64bit) for package: gdk-pixbuf2-2.36.12-3.el7.x86_64
+---> Package gtk-update-icon-cache.x86_64 0:3.22.30-6.el7 will be installed
+---> Package hicolor-icon-theme.noarch 0:0.12-7.el7 will be installed
+---> Package libICE.x86_64 0:1.0.9-9.el7 will be installed
+---> Package libSM.x86_64 0:1.2.2-2.el7 will be installed
+---> Package libXau.x86_64 0:1.0.8-2.1.el7 will be installed
+---> Package libXcursor.x86_64 0:1.1.15-1.el7 will be installed
+---> Package libXdamage.x86_64 0:1.1.4-4.1.el7 will be installed
+---> Package libXfixes.x86_64 0:5.0.3-1.el7 will be installed
+---> Package libXinerama.x86_64 0:1.1.3-2.1.el7 will be installed
+---> Package libXrandr.x86_64 0:1.5.1-2.el7 will be installed
+---> Package libtiff.x86_64 0:4.0.3-35.el7 will be installed
+--> Processing Dependency: libjbig.so.2.0()(64bit) for package: libtiff-4.0.3-35.el7.x86_64
+---> Package libxslt.x86_64 0:1.1.28-6.el7 will be installed
+---> Package pango.x86_64 0:1.42.4-4.el7_7 will be installed
+--> Processing Dependency: fribidi(x86-64) >= 1.0 for package: pango-1.42.4-4.el7_7.x86_64
+--> Processing Dependency: harfbuzz(x86-64) >= 1.4.2 for package: pango-1.42.4-4.el7_7.x86_64
+--> Processing Dependency: libXft(x86-64) >= 2.0.0 for package: pango-1.42.4-4.el7_7.x86_64
+--> Processing Dependency: libthai(x86-64) >= 0.1.9 for package: pango-1.42.4-4.el7_7.x86_64
+--> Processing Dependency: libthai.so.0(LIBTHAI_0.1)(64bit) for package: pango-1.42.4-4.el7_7.x86_64
+--> Processing Dependency: libXft.so.2()(64bit) for package: pango-1.42.4-4.el7_7.x86_64
+--> Processing Dependency: libfribidi.so.0()(64bit) for package: pango-1.42.4-4.el7_7.x86_64
+--> Processing Dependency: libharfbuzz.so.0()(64bit) for package: pango-1.42.4-4.el7_7.x86_64
+--> Processing Dependency: libthai.so.0()(64bit) for package: pango-1.42.4-4.el7_7.x86_64
+---> Package python-javapackages.noarch 0:3.4.1-11.el7 will be installed
+--> Processing Dependency: python-lxml for package: python-javapackages-3.4.1-11.el7.noarch
+---> Package ttmkfdir.x86_64 0:3.0.9-42.el7 will be installed
+---> Package xorg-x11-font-utils.x86_64 1:7.5-21.el7 will be installed
+--> Processing Dependency: libfontenc.so.1()(64bit) for package: 1:xorg-x11-font-utils-7.5-21.el7.x86_64
+--> Running transaction check
+---> Package dejavu-fonts-common.noarch 0:2.33-6.el7 will be installed
+---> Package fribidi.x86_64 0:1.0.2-1.el7_7.1 will be installed
+---> Package harfbuzz.x86_64 0:1.7.5-2.el7 will be installed
+--> Processing Dependency: libgraphite2.so.3()(64bit) for package: harfbuzz-1.7.5-2.el7.x86_64
+---> Package jasper-libs.x86_64 0:1.900.1-33.el7 will be installed
+---> Package jbigkit-libs.x86_64 0:2.0-11.el7 will be installed
+---> Package libXft.x86_64 0:2.3.2-2.el7 will be installed
+---> Package libfontenc.x86_64 0:1.1.3-3.el7 will be installed
+---> Package libglvnd-egl.x86_64 1:1.0.1-0.8.git5baa1e5.el7 will be installed
+--> Processing Dependency: libglvnd(x86-64) = 1:1.0.1-0.8.git5baa1e5.el7 for package: 1:libglvnd-egl-1.0.1-0.8.git5baa1e5.el7.x86_64
+--> Processing Dependency: mesa-libEGL(x86-64) >= 13.0.4-1 for package: 1:libglvnd-egl-1.0.1-0.8.git5baa1e5.el7.x86_64
+--> Processing Dependency: libGLdispatch.so.0()(64bit) for package: 1:libglvnd-egl-1.0.1-0.8.git5baa1e5.el7.x86_64
+---> Package libglvnd-glx.x86_64 1:1.0.1-0.8.git5baa1e5.el7 will be installed
+--> Processing Dependency: mesa-libGL(x86-64) >= 13.0.4-1 for package: 1:libglvnd-glx-1.0.1-0.8.git5baa1e5.el7.x86_64
+---> Package libthai.x86_64 0:0.1.14-9.el7 will be installed
+---> Package pixman.x86_64 0:0.34.0-1.el7 will be installed
+---> Package python-lxml.x86_64 0:3.2.1-4.el7 will be installed
+--> Running transaction check
+---> Package graphite2.x86_64 0:1.3.10-1.el7_3 will be installed
+---> Package libglvnd.x86_64 1:1.0.1-0.8.git5baa1e5.el7 will be installed
+---> Package mesa-libEGL.x86_64 0:18.3.4-12.el7_9 will be installed
+--> Processing Dependency: mesa-libgbm = 18.3.4-12.el7_9 for package: mesa-libEGL-18.3.4-12.el7_9.x86_64
+--> Processing Dependency: libdrm.so.2()(64bit) for package: mesa-libEGL-18.3.4-12.el7_9.x86_64
+--> Processing Dependency: libgbm.so.1()(64bit) for package: mesa-libEGL-18.3.4-12.el7_9.x86_64
+--> Processing Dependency: libglapi.so.0()(64bit) for package: mesa-libEGL-18.3.4-12.el7_9.x86_64
+--> Processing Dependency: libwayland-client.so.0()(64bit) for package: mesa-libEGL-18.3.4-12.el7_9.x86_64
+--> Processing Dependency: libwayland-server.so.0()(64bit) for package: mesa-libEGL-18.3.4-12.el7_9.x86_64
+--> Processing Dependency: libxshmfence.so.1()(64bit) for package: mesa-libEGL-18.3.4-12.el7_9.x86_64
+---> Package mesa-libGL.x86_64 0:18.3.4-12.el7_9 will be installed
+--> Processing Dependency: libXxf86vm.so.1()(64bit) for package: mesa-libGL-18.3.4-12.el7_9.x86_64
+--> Running transaction check
+---> Package libXxf86vm.x86_64 0:1.1.4-1.el7 will be installed
+---> Package libdrm.x86_64 0:2.4.97-2.el7 will be installed
+--> Processing Dependency: libpciaccess.so.0()(64bit) for package: libdrm-2.4.97-2.el7.x86_64
+---> Package libwayland-client.x86_64 0:1.15.0-1.el7 will be installed
+---> Package libwayland-server.x86_64 0:1.15.0-1.el7 will be installed
+---> Package libxshmfence.x86_64 0:1.2-1.el7 will be installed
+---> Package mesa-libgbm.x86_64 0:18.3.4-12.el7_9 will be installed
+---> Package mesa-libglapi.x86_64 0:18.3.4-12.el7_9 will be installed
+--> Running transaction check
+---> Package libpciaccess.x86_64 0:0.14-1.el7 will be installed
+--> Processing Dependency: hwdata for package: libpciaccess-0.14-1.el7.x86_64
+--> Running transaction check
+---> Package hwdata.x86_64 0:0.252-9.7.el7 will be installed
+--> Finished Dependency Resolution
+
+Dependencies Resolved
+
+================================================================================
+ Package                      Arch    Version                      Repository
+                                                                           Size
+================================================================================
+Installing:
+ java-1.8.0-openjdk-devel     x86_64  1:1.8.0.292.b10-1.el7_9      ubi-7  9.8 M
+Installing for dependencies:
+ alsa-lib                     x86_64  1.1.8-1.el7                  ubi-7  425 k
+ atk                          x86_64  2.28.1-2.el7                 ubi-7  263 k
+ avahi-libs                   x86_64  0.6.31-20.el7                ubi-7   62 k
+ cairo                        x86_64  1.15.12-4.el7                ubi-7  741 k
+ copy-jdk-configs             noarch  3.3-10.el7_5                 ubi-7   21 k
+ cups-libs                    x86_64  1:1.6.3-51.el7               ubi-7  359 k
+ dejavu-fonts-common          noarch  2.33-6.el7                   ubi-7   64 k
+ dejavu-sans-fonts            noarch  2.33-6.el7                   ubi-7  1.4 M
+ fontconfig                   x86_64  2.13.0-4.3.el7               ubi-7  254 k
+ fontpackages-filesystem      noarch  1.44-8.el7                   ubi-7  9.9 k
+ freetype                     x86_64  2.8-14.el7_9.1               ubi-7  380 k
+ fribidi                      x86_64  1.0.2-1.el7_7.1              ubi-7   80 k
+ gdk-pixbuf2                  x86_64  2.36.12-3.el7                ubi-7  570 k
+ giflib                       x86_64  4.1.6-9.el7                  ubi-7   40 k
+ graphite2                    x86_64  1.3.10-1.el7_3               ubi-7  115 k
+ gtk-update-icon-cache        x86_64  3.22.30-6.el7                ubi-7   27 k
+ gtk2                         x86_64  2.24.31-1.el7                ubi-7  3.4 M
+ harfbuzz                     x86_64  1.7.5-2.el7                  ubi-7  267 k
+ hicolor-icon-theme           noarch  0.12-7.el7                   ubi-7   43 k
+ hwdata                       x86_64  0.252-9.7.el7                ubi-7  2.5 M
+ jasper-libs                  x86_64  1.900.1-33.el7               ubi-7  150 k
+ java-1.8.0-openjdk           x86_64  1:1.8.0.292.b10-1.el7_9      ubi-7  310 k
+ java-1.8.0-openjdk-headless  x86_64  1:1.8.0.292.b10-1.el7_9      ubi-7   33 M
+ javapackages-tools           noarch  3.4.1-11.el7                 ubi-7   73 k
+ jbigkit-libs                 x86_64  2.0-11.el7                   ubi-7   46 k
+ libICE                       x86_64  1.0.9-9.el7                  ubi-7   66 k
+ libSM                        x86_64  1.2.2-2.el7                  ubi-7   39 k
+ libX11                       x86_64  1.6.7-3.el7_9                ubi-7  607 k
+ libX11-common                noarch  1.6.7-3.el7_9                ubi-7  164 k
+ libXau                       x86_64  1.0.8-2.1.el7                ubi-7   29 k
+ libXcomposite                x86_64  0.4.4-4.1.el7                ubi-7   22 k
+ libXcursor                   x86_64  1.1.15-1.el7                 ubi-7   30 k
+ libXdamage                   x86_64  1.1.4-4.1.el7                ubi-7   20 k
+ libXext                      x86_64  1.3.3-3.el7                  ubi-7   39 k
+ libXfixes                    x86_64  5.0.3-1.el7                  ubi-7   18 k
+ libXft                       x86_64  2.3.2-2.el7                  ubi-7   58 k
+ libXi                        x86_64  1.7.9-1.el7                  ubi-7   40 k
+ libXinerama                  x86_64  1.1.3-2.1.el7                ubi-7   14 k
+ libXrandr                    x86_64  1.5.1-2.el7                  ubi-7   27 k
+ libXrender                   x86_64  0.9.10-1.el7                 ubi-7   26 k
+ libXtst                      x86_64  1.2.3-1.el7                  ubi-7   20 k
+ libXxf86vm                   x86_64  1.1.4-1.el7                  ubi-7   18 k
+ libdrm                       x86_64  2.4.97-2.el7                 ubi-7  151 k
+ libfontenc                   x86_64  1.1.3-3.el7                  ubi-7   31 k
+ libglvnd                     x86_64  1:1.0.1-0.8.git5baa1e5.el7   ubi-7   90 k
+ libglvnd-egl                 x86_64  1:1.0.1-0.8.git5baa1e5.el7   ubi-7   44 k
+ libglvnd-glx                 x86_64  1:1.0.1-0.8.git5baa1e5.el7   ubi-7  125 k
+ libjpeg-turbo                x86_64  1.2.90-8.el7                 ubi-7  135 k
+ libpciaccess                 x86_64  0.14-1.el7                   ubi-7   26 k
+ libpng                       x86_64  2:1.5.13-8.el7               ubi-7  213 k
+ libthai                      x86_64  0.1.14-9.el7                 ubi-7  187 k
+ libtiff                      x86_64  4.0.3-35.el7                 ubi-7  172 k
+ libwayland-client            x86_64  1.15.0-1.el7                 ubi-7   33 k
+ libwayland-server            x86_64  1.15.0-1.el7                 ubi-7   39 k
+ libxcb                       x86_64  1.13-1.el7                   ubi-7  214 k
+ libxshmfence                 x86_64  1.2-1.el7                    ubi-7  7.1 k
+ libxslt                      x86_64  1.1.28-6.el7                 ubi-7  242 k
+ lksctp-tools                 x86_64  1.0.17-2.el7                 ubi-7   88 k
+ mesa-libEGL                  x86_64  18.3.4-12.el7_9              ubi-7  110 k
+ mesa-libGL                   x86_64  18.3.4-12.el7_9              ubi-7  166 k
+ mesa-libgbm                  x86_64  18.3.4-12.el7_9              ubi-7   39 k
+ mesa-libglapi                x86_64  18.3.4-12.el7_9              ubi-7   46 k
+ pango                        x86_64  1.42.4-4.el7_7               ubi-7  280 k
+ pcsc-lite-libs               x86_64  1.8.8-8.el7                  ubi-7   34 k
+ pixman                       x86_64  0.34.0-1.el7                 ubi-7  248 k
+ python-javapackages          noarch  3.4.1-11.el7                 ubi-7   31 k
+ python-lxml                  x86_64  3.2.1-4.el7                  ubi-7  758 k
+ ttmkfdir                     x86_64  3.0.9-42.el7                 ubi-7   48 k
+ tzdata-java                  noarch  2021a-1.el7                  ubi-7  190 k
+ xorg-x11-font-utils          x86_64  1:7.5-21.el7                 ubi-7  104 k
+ xorg-x11-fonts-Type1         noarch  7.5-9.el7                    ubi-7  521 k
+
+Transaction Summary
+================================================================================
+Install  1 Package (+71 Dependent packages)
+
+Total download size: 60 M
+Installed size: 211 M
+Downloading packages:
+warning: /var/cache/yum/x86_64/7Server/ubi-7/packages/atk-2.28.1-2.el7.x86_64.rpm: Header V3 RSA/SHA256 Signature, key ID fd431d51: NOKEY
+Public key for atk-2.28.1-2.el7.x86_64.rpm is not installed
+(1/72): atk-2.28.1-2.el7.x86_64.rpm                        | 263 kB   00:00     
+(2/72): avahi-libs-0.6.31-20.el7.x86_64.rpm                |  62 kB   00:00     
+(3/72): cairo-1.15.12-4.el7.x86_64.rpm                     | 741 kB   00:00     
+(4/72): alsa-lib-1.1.8-1.el7.x86_64.rpm                    | 425 kB   00:00     
+(5/72): copy-jdk-configs-3.3-10.el7_5.noarch.rpm           |  21 kB   00:00     
+(6/72): cups-libs-1.6.3-51.el7.x86_64.rpm                  | 359 kB   00:00     
+(7/72): dejavu-fonts-common-2.33-6.el7.noarch.rpm          |  64 kB   00:00     
+(8/72): fontconfig-2.13.0-4.3.el7.x86_64.rpm               | 254 kB   00:00     
+(9/72): dejavu-sans-fonts-2.33-6.el7.noarch.rpm            | 1.4 MB   00:00     
+(10/72): fontpackages-filesystem-1.44-8.el7.noarch.rpm     | 9.9 kB   00:00     
+(11/72): freetype-2.8-14.el7_9.1.x86_64.rpm                | 380 kB   00:00     
+(12/72): gdk-pixbuf2-2.36.12-3.el7.x86_64.rpm              | 570 kB   00:00     
+(13/72): giflib-4.1.6-9.el7.x86_64.rpm                     |  40 kB   00:00     
+(14/72): graphite2-1.3.10-1.el7_3.x86_64.rpm               | 115 kB   00:00     
+(15/72): gtk-update-icon-cache-3.22.30-6.el7.x86_64.rpm    |  27 kB   00:00     
+(16/72): gtk2-2.24.31-1.el7.x86_64.rpm                     | 3.4 MB   00:00     
+(17/72): harfbuzz-1.7.5-2.el7.x86_64.rpm                   | 267 kB   00:00     
+(18/72): hicolor-icon-theme-0.12-7.el7.noarch.rpm          |  43 kB   00:00     
+(19/72): hwdata-0.252-9.7.el7.x86_64.rpm                   | 2.5 MB   00:00     
+(20/72): fribidi-1.0.2-1.el7_7.1.x86_64.rpm                |  80 kB   00:00     
+(21/72): jasper-libs-1.900.1-33.el7.x86_64.rpm             | 150 kB   00:00     
+(22/72): java-1.8.0-openjdk-1.8.0.292.b10-1.el7_9.x86_64.r | 310 kB   00:00     
+(23/72): java-1.8.0-openjdk-devel-1.8.0.292.b10-1.el7_9.x8 | 9.8 MB   00:00     
+(24/72): javapackages-tools-3.4.1-11.el7.noarch.rpm        |  73 kB   00:00     
+(25/72): java-1.8.0-openjdk-headless-1.8.0.292.b10-1.el7_9 |  33 MB   00:00     
+(26/72): jbigkit-libs-2.0-11.el7.x86_64.rpm                |  46 kB   00:00     
+(27/72): libICE-1.0.9-9.el7.x86_64.rpm                     |  66 kB   00:00     
+(28/72): libX11-1.6.7-3.el7_9.x86_64.rpm                   | 607 kB   00:00     
+(29/72): libX11-common-1.6.7-3.el7_9.noarch.rpm            | 164 kB   00:00     
+(30/72): libXau-1.0.8-2.1.el7.x86_64.rpm                   |  29 kB   00:00     
+(31/72): libXcomposite-0.4.4-4.1.el7.x86_64.rpm            |  22 kB   00:00     
+(32/72): libXcursor-1.1.15-1.el7.x86_64.rpm                |  30 kB   00:00     
+(33/72): libXdamage-1.1.4-4.1.el7.x86_64.rpm               |  20 kB   00:00     
+(34/72): libXext-1.3.3-3.el7.x86_64.rpm                    |  39 kB   00:00     
+(35/72): libXfixes-5.0.3-1.el7.x86_64.rpm                  |  18 kB   00:00     
+(36/72): libXft-2.3.2-2.el7.x86_64.rpm                     |  58 kB   00:00     
+(37/72): libXi-1.7.9-1.el7.x86_64.rpm                      |  40 kB   00:00     
+(38/72): libXinerama-1.1.3-2.1.el7.x86_64.rpm              |  14 kB   00:00     
+(39/72): libXrandr-1.5.1-2.el7.x86_64.rpm                  |  27 kB   00:00     
+(40/72): libXrender-0.9.10-1.el7.x86_64.rpm                |  26 kB   00:00     
+(41/72): libXtst-1.2.3-1.el7.x86_64.rpm                    |  20 kB   00:00     
+(42/72): libXxf86vm-1.1.4-1.el7.x86_64.rpm                 |  18 kB   00:00     
+(43/72): libdrm-2.4.97-2.el7.x86_64.rpm                    | 151 kB   00:00     
+(44/72): libfontenc-1.1.3-3.el7.x86_64.rpm                 |  31 kB   00:00     
+(45/72): libSM-1.2.2-2.el7.x86_64.rpm                      |  39 kB   00:00     
+(46/72): libglvnd-egl-1.0.1-0.8.git5baa1e5.el7.x86_64.rpm  |  44 kB   00:00     
+(47/72): libglvnd-1.0.1-0.8.git5baa1e5.el7.x86_64.rpm      |  90 kB   00:00     
+(48/72): libglvnd-glx-1.0.1-0.8.git5baa1e5.el7.x86_64.rpm  | 125 kB   00:00     
+(49/72): libjpeg-turbo-1.2.90-8.el7.x86_64.rpm             | 135 kB   00:00     
+(50/72): libpng-1.5.13-8.el7.x86_64.rpm                    | 213 kB   00:00     
+(51/72): libthai-0.1.14-9.el7.x86_64.rpm                   | 187 kB   00:00     
+(52/72): libtiff-4.0.3-35.el7.x86_64.rpm                   | 172 kB   00:00     
+(53/72): libwayland-client-1.15.0-1.el7.x86_64.rpm         |  33 kB   00:00     
+(54/72): libwayland-server-1.15.0-1.el7.x86_64.rpm         |  39 kB   00:00     
+(55/72): libxcb-1.13-1.el7.x86_64.rpm                      | 214 kB   00:00     
+(56/72): libxshmfence-1.2-1.el7.x86_64.rpm                 | 7.1 kB   00:00     
+(57/72): libxslt-1.1.28-6.el7.x86_64.rpm                   | 242 kB   00:00     
+(58/72): lksctp-tools-1.0.17-2.el7.x86_64.rpm              |  88 kB   00:00     
+(59/72): mesa-libEGL-18.3.4-12.el7_9.x86_64.rpm            | 110 kB   00:00     
+(60/72): mesa-libGL-18.3.4-12.el7_9.x86_64.rpm             | 166 kB   00:00     
+(61/72): mesa-libgbm-18.3.4-12.el7_9.x86_64.rpm            |  39 kB   00:00     
+(62/72): mesa-libglapi-18.3.4-12.el7_9.x86_64.rpm          |  46 kB   00:00     
+(63/72): pango-1.42.4-4.el7_7.x86_64.rpm                   | 280 kB   00:00     
+(64/72): pcsc-lite-libs-1.8.8-8.el7.x86_64.rpm             |  34 kB   00:00     
+(65/72): pixman-0.34.0-1.el7.x86_64.rpm                    | 248 kB   00:00     
+(66/72): python-javapackages-3.4.1-11.el7.noarch.rpm       |  31 kB   00:00     
+(67/72): python-lxml-3.2.1-4.el7.x86_64.rpm                | 758 kB   00:00     
+(68/72): ttmkfdir-3.0.9-42.el7.x86_64.rpm                  |  48 kB   00:00     
+(69/72): tzdata-java-2021a-1.el7.noarch.rpm                | 190 kB   00:00     
+(70/72): libpciaccess-0.14-1.el7.x86_64.rpm                |  26 kB   00:00     
+(71/72): xorg-x11-font-utils-7.5-21.el7.x86_64.rpm         | 104 kB   00:00     
+(72/72): xorg-x11-fonts-Type1-7.5-9.el7.noarch.rpm         | 521 kB   00:00     
+--------------------------------------------------------------------------------
+Total                                               29 MB/s |  60 MB  00:02     
+Retrieving key from file:///etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release
+Importing GPG key 0xFD431D51:
+ Userid     : "Red Hat, Inc. (release key 2) <security@redhat.com>"
+ Fingerprint: 567e 347a d004 4ade 55ba 8a5f 199e 2f91 fd43 1d51
+ Package    : redhat-release-server-7.7-10.el7.x86_64 (@anaconda/7.7)
+ From       : /etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release
+Importing GPG key 0x2FA658E0:
+ Userid     : "Red Hat, Inc. (auxiliary key) <security@redhat.com>"
+ Fingerprint: 43a6 e49c 4a38 f4be 9abf 2a53 4568 9c88 2fa6 58e0
+ Package    : redhat-release-server-7.7-10.el7.x86_64 (@anaconda/7.7)
+ From       : /etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release
+Running transaction check
+Running transaction test
+Transaction test succeeded
+Running transaction
+  Installing : libjpeg-turbo-1.2.90-8.el7.x86_64                           1/72 
+  Installing : 2:libpng-1.5.13-8.el7.x86_64                                2/72 
+  Installing : freetype-2.8-14.el7_9.1.x86_64                              3/72 
+  Installing : mesa-libglapi-18.3.4-12.el7_9.x86_64                        4/72 
+  Installing : libxslt-1.1.28-6.el7.x86_64                                 5/72 
+  Installing : libxshmfence-1.2-1.el7.x86_64                               6/72 
+  Installing : 1:libglvnd-1.0.1-0.8.git5baa1e5.el7.x86_64                  7/72 
+  Installing : fontpackages-filesystem-1.44-8.el7.noarch                   8/72 
+  Installing : libICE-1.0.9-9.el7.x86_64                                   9/72 
+  Installing : libwayland-server-1.15.0-1.el7.x86_64                      10/72 
+  Installing : libSM-1.2.2-2.el7.x86_64                                   11/72 
+  Installing : dejavu-fonts-common-2.33-6.el7.noarch                      12/72 
+  Installing : dejavu-sans-fonts-2.33-6.el7.noarch                        13/72 
+  Installing : fontconfig-2.13.0-4.3.el7.x86_64                           14/72 
+  Installing : python-lxml-3.2.1-4.el7.x86_64                             15/72 
+  Installing : python-javapackages-3.4.1-11.el7.noarch                    16/72 
+  Installing : javapackages-tools-3.4.1-11.el7.noarch                     17/72 
+  Installing : ttmkfdir-3.0.9-42.el7.x86_64                               18/72 
+  Installing : jasper-libs-1.900.1-33.el7.x86_64                          19/72 
+  Installing : avahi-libs-0.6.31-20.el7.x86_64                            20/72 
+  Installing : 1:cups-libs-1.6.3-51.el7.x86_64                            21/72 
+  Installing : libfontenc-1.1.3-3.el7.x86_64                              22/72 
+  Installing : 1:xorg-x11-font-utils-7.5-21.el7.x86_64                    23/72 
+  Installing : xorg-x11-fonts-Type1-7.5-9.el7.noarch                      24/72 
+  Installing : atk-2.28.1-2.el7.x86_64                                    25/72 
+  Installing : libthai-0.1.14-9.el7.x86_64                                26/72 
+  Installing : libXau-1.0.8-2.1.el7.x86_64                                27/72 
+  Installing : libxcb-1.13-1.el7.x86_64                                   28/72 
+  Installing : jbigkit-libs-2.0-11.el7.x86_64                             29/72 
+  Installing : libtiff-4.0.3-35.el7.x86_64                                30/72 
+  Installing : pcsc-lite-libs-1.8.8-8.el7.x86_64                          31/72 
+  Installing : libX11-common-1.6.7-3.el7_9.noarch                         32/72 
+  Installing : libX11-1.6.7-3.el7_9.x86_64                                33/72 
+  Installing : libXext-1.3.3-3.el7.x86_64                                 34/72 
+  Installing : libXrender-0.9.10-1.el7.x86_64                             35/72 
+  Installing : libXfixes-5.0.3-1.el7.x86_64                               36/72 
+  Installing : libXi-1.7.9-1.el7.x86_64                                   37/72 
+  Installing : libXdamage-1.1.4-4.1.el7.x86_64                            38/72 
+  Installing : gdk-pixbuf2-2.36.12-3.el7.x86_64                           39/72 
+  Installing : libXcomposite-0.4.4-4.1.el7.x86_64                         40/72 
+  Installing : gtk-update-icon-cache-3.22.30-6.el7.x86_64                 41/72 
+  Installing : libXtst-1.2.3-1.el7.x86_64                                 42/72 
+  Installing : libXcursor-1.1.15-1.el7.x86_64                             43/72 
+  Installing : libXft-2.3.2-2.el7.x86_64                                  44/72 
+  Installing : libXrandr-1.5.1-2.el7.x86_64                               45/72 
+  Installing : libXinerama-1.1.3-2.1.el7.x86_64                           46/72 
+  Installing : libXxf86vm-1.1.4-1.el7.x86_64                              47/72 
+  Installing : giflib-4.1.6-9.el7.x86_64                                  48/72 
+  Installing : pixman-0.34.0-1.el7.x86_64                                 49/72 
+  Installing : hicolor-icon-theme-0.12-7.el7.noarch                       50/72 
+  Installing : lksctp-tools-1.0.17-2.el7.x86_64                           51/72 
+  Installing : fribidi-1.0.2-1.el7_7.1.x86_64                             52/72 
+  Installing : tzdata-java-2021a-1.el7.noarch                             53/72 
+  Installing : copy-jdk-configs-3.3-10.el7_5.noarch                       54/72 
+  Installing : 1:java-1.8.0-openjdk-headless-1.8.0.292.b10-1.el7_9.x86_   55/72 
+  Installing : libwayland-client-1.15.0-1.el7.x86_64                      56/72 
+  Installing : alsa-lib-1.1.8-1.el7.x86_64                                57/72 
+  Installing : graphite2-1.3.10-1.el7_3.x86_64                            58/72 
+  Installing : harfbuzz-1.7.5-2.el7.x86_64                                59/72 
+  Installing : hwdata-0.252-9.7.el7.x86_64                                60/72 
+  Installing : libpciaccess-0.14-1.el7.x86_64                             61/72 
+  Installing : libdrm-2.4.97-2.el7.x86_64                                 62/72 
+  Installing : mesa-libGL-18.3.4-12.el7_9.x86_64                          63/72 
+  Installing : 1:libglvnd-glx-1.0.1-0.8.git5baa1e5.el7.x86_64             64/72 
+  Installing : mesa-libgbm-18.3.4-12.el7_9.x86_64                         65/72 
+  Installing : 1:libglvnd-egl-1.0.1-0.8.git5baa1e5.el7.x86_64             66/72 
+  Installing : mesa-libEGL-18.3.4-12.el7_9.x86_64                         67/72 
+  Installing : cairo-1.15.12-4.el7.x86_64                                 68/72 
+  Installing : pango-1.42.4-4.el7_7.x86_64                                69/72 
+  Installing : gtk2-2.24.31-1.el7.x86_64                                  70/72 
+  Installing : 1:java-1.8.0-openjdk-1.8.0.292.b10-1.el7_9.x86_64          71/72 
+  Installing : 1:java-1.8.0-openjdk-devel-1.8.0.292.b10-1.el7_9.x86_64    72/72 
+  Verifying  : libXext-1.3.3-3.el7.x86_64                                  1/72 
+  Verifying  : libpciaccess-0.14-1.el7.x86_64                              2/72 
+  Verifying  : libXi-1.7.9-1.el7.x86_64                                    3/72 
+  Verifying  : python-javapackages-3.4.1-11.el7.noarch                     4/72 
+  Verifying  : fontconfig-2.13.0-4.3.el7.x86_64                            5/72 
+  Verifying  : giflib-4.1.6-9.el7.x86_64                                   6/72 
+  Verifying  : libXinerama-1.1.3-2.1.el7.x86_64                            7/72 
+  Verifying  : mesa-libGL-18.3.4-12.el7_9.x86_64                           8/72 
+  Verifying  : libXrender-0.9.10-1.el7.x86_64                              9/72 
+  Verifying  : hwdata-0.252-9.7.el7.x86_64                                10/72 
+  Verifying  : 1:xorg-x11-font-utils-7.5-21.el7.x86_64                    11/72 
+  Verifying  : libXxf86vm-1.1.4-1.el7.x86_64                              12/72 
+  Verifying  : graphite2-1.3.10-1.el7_3.x86_64                            13/72 
+  Verifying  : libwayland-server-1.15.0-1.el7.x86_64                      14/72 
+  Verifying  : 1:java-1.8.0-openjdk-devel-1.8.0.292.b10-1.el7_9.x86_64    15/72 
+  Verifying  : libXcursor-1.1.15-1.el7.x86_64                             16/72 
+  Verifying  : libICE-1.0.9-9.el7.x86_64                                  17/72 
+  Verifying  : 1:java-1.8.0-openjdk-1.8.0.292.b10-1.el7_9.x86_64          18/72 
+  Verifying  : gtk2-2.24.31-1.el7.x86_64                                  19/72 
+  Verifying  : ttmkfdir-3.0.9-42.el7.x86_64                               20/72 
+  Verifying  : 1:cups-libs-1.6.3-51.el7.x86_64                            21/72 
+  Verifying  : alsa-lib-1.1.8-1.el7.x86_64                                22/72 
+  Verifying  : libwayland-client-1.15.0-1.el7.x86_64                      23/72 
+  Verifying  : gdk-pixbuf2-2.36.12-3.el7.x86_64                           24/72 
+  Verifying  : pango-1.42.4-4.el7_7.x86_64                                25/72 
+  Verifying  : fontpackages-filesystem-1.44-8.el7.noarch                  26/72 
+  Verifying  : copy-jdk-configs-3.3-10.el7_5.noarch                       27/72 
+  Verifying  : 1:java-1.8.0-openjdk-headless-1.8.0.292.b10-1.el7_9.x86_   28/72 
+  Verifying  : tzdata-java-2021a-1.el7.noarch                             29/72 
+  Verifying  : dejavu-fonts-common-2.33-6.el7.noarch                      30/72 
+  Verifying  : libXcomposite-0.4.4-4.1.el7.x86_64                         31/72 
+  Verifying  : fribidi-1.0.2-1.el7_7.1.x86_64                             32/72 
+  Verifying  : libXtst-1.2.3-1.el7.x86_64                                 33/72 
+  Verifying  : 1:libglvnd-1.0.1-0.8.git5baa1e5.el7.x86_64                 34/72 
+  Verifying  : libxcb-1.13-1.el7.x86_64                                   35/72 
+  Verifying  : libXft-2.3.2-2.el7.x86_64                                  36/72 
+  Verifying  : libdrm-2.4.97-2.el7.x86_64                                 37/72 
+  Verifying  : 1:libglvnd-egl-1.0.1-0.8.git5baa1e5.el7.x86_64             38/72 
+  Verifying  : gtk-update-icon-cache-3.22.30-6.el7.x86_64                 39/72 
+  Verifying  : lksctp-tools-1.0.17-2.el7.x86_64                           40/72 
+  Verifying  : harfbuzz-1.7.5-2.el7.x86_64                                41/72 
+  Verifying  : hicolor-icon-theme-0.12-7.el7.noarch                       42/72 
+  Verifying  : libjpeg-turbo-1.2.90-8.el7.x86_64                          43/72 
+  Verifying  : pixman-0.34.0-1.el7.x86_64                                 44/72 
+  Verifying  : xorg-x11-fonts-Type1-7.5-9.el7.noarch                      45/72 
+  Verifying  : libX11-common-1.6.7-3.el7_9.noarch                         46/72 
+  Verifying  : libX11-1.6.7-3.el7_9.x86_64                                47/72 
+  Verifying  : mesa-libglapi-18.3.4-12.el7_9.x86_64                       48/72 
+  Verifying  : 1:libglvnd-glx-1.0.1-0.8.git5baa1e5.el7.x86_64             49/72 
+  Verifying  : dejavu-sans-fonts-2.33-6.el7.noarch                        50/72 
+  Verifying  : libXrandr-1.5.1-2.el7.x86_64                               51/72 
+  Verifying  : 2:libpng-1.5.13-8.el7.x86_64                               52/72 
+  Verifying  : pcsc-lite-libs-1.8.8-8.el7.x86_64                          53/72 
+  Verifying  : javapackages-tools-3.4.1-11.el7.noarch                     54/72 
+  Verifying  : jbigkit-libs-2.0-11.el7.x86_64                             55/72 
+  Verifying  : cairo-1.15.12-4.el7.x86_64                                 56/72 
+  Verifying  : mesa-libgbm-18.3.4-12.el7_9.x86_64                         57/72 
+  Verifying  : libxshmfence-1.2-1.el7.x86_64                              58/72 
+  Verifying  : libXau-1.0.8-2.1.el7.x86_64                                59/72 
+  Verifying  : libSM-1.2.2-2.el7.x86_64                                   60/72 
+  Verifying  : libxslt-1.1.28-6.el7.x86_64                                61/72 
+  Verifying  : jasper-libs-1.900.1-33.el7.x86_64                          62/72 
+  Verifying  : python-lxml-3.2.1-4.el7.x86_64                             63/72 
+  Verifying  : mesa-libEGL-18.3.4-12.el7_9.x86_64                         64/72 
+  Verifying  : libthai-0.1.14-9.el7.x86_64                                65/72 
+  Verifying  : libXdamage-1.1.4-4.1.el7.x86_64                            66/72 
+  Verifying  : libXfixes-5.0.3-1.el7.x86_64                               67/72 
+  Verifying  : atk-2.28.1-2.el7.x86_64                                    68/72 
+  Verifying  : libfontenc-1.1.3-3.el7.x86_64                              69/72 
+  Verifying  : freetype-2.8-14.el7_9.1.x86_64                             70/72 
+  Verifying  : libtiff-4.0.3-35.el7.x86_64                                71/72 
+  Verifying  : avahi-libs-0.6.31-20.el7.x86_64                            72/72 
+
+Installed:
+  java-1.8.0-openjdk-devel.x86_64 1:1.8.0.292.b10-1.el7_9                       
+
+Dependency Installed:
+  alsa-lib.x86_64 0:1.1.8-1.el7                                                 
+  atk.x86_64 0:2.28.1-2.el7                                                     
+  avahi-libs.x86_64 0:0.6.31-20.el7                                             
+  cairo.x86_64 0:1.15.12-4.el7                                                  
+  copy-jdk-configs.noarch 0:3.3-10.el7_5                                        
+  cups-libs.x86_64 1:1.6.3-51.el7                                               
+  dejavu-fonts-common.noarch 0:2.33-6.el7                                       
+  dejavu-sans-fonts.noarch 0:2.33-6.el7                                         
+  fontconfig.x86_64 0:2.13.0-4.3.el7                                            
+  fontpackages-filesystem.noarch 0:1.44-8.el7                                   
+  freetype.x86_64 0:2.8-14.el7_9.1                                              
+  fribidi.x86_64 0:1.0.2-1.el7_7.1                                              
+  gdk-pixbuf2.x86_64 0:2.36.12-3.el7                                            
+  giflib.x86_64 0:4.1.6-9.el7                                                   
+  graphite2.x86_64 0:1.3.10-1.el7_3                                             
+  gtk-update-icon-cache.x86_64 0:3.22.30-6.el7                                  
+  gtk2.x86_64 0:2.24.31-1.el7                                                   
+  harfbuzz.x86_64 0:1.7.5-2.el7                                                 
+  hicolor-icon-theme.noarch 0:0.12-7.el7                                        
+  hwdata.x86_64 0:0.252-9.7.el7                                                 
+  jasper-libs.x86_64 0:1.900.1-33.el7                                           
+  java-1.8.0-openjdk.x86_64 1:1.8.0.292.b10-1.el7_9                             
+  java-1.8.0-openjdk-headless.x86_64 1:1.8.0.292.b10-1.el7_9                    
+  javapackages-tools.noarch 0:3.4.1-11.el7                                      
+  jbigkit-libs.x86_64 0:2.0-11.el7                                              
+  libICE.x86_64 0:1.0.9-9.el7                                                   
+  libSM.x86_64 0:1.2.2-2.el7                                                    
+  libX11.x86_64 0:1.6.7-3.el7_9                                                 
+  libX11-common.noarch 0:1.6.7-3.el7_9                                          
+  libXau.x86_64 0:1.0.8-2.1.el7                                                 
+  libXcomposite.x86_64 0:0.4.4-4.1.el7                                          
+  libXcursor.x86_64 0:1.1.15-1.el7                                              
+  libXdamage.x86_64 0:1.1.4-4.1.el7                                             
+  libXext.x86_64 0:1.3.3-3.el7                                                  
+  libXfixes.x86_64 0:5.0.3-1.el7                                                
+  libXft.x86_64 0:2.3.2-2.el7                                                   
+  libXi.x86_64 0:1.7.9-1.el7                                                    
+  libXinerama.x86_64 0:1.1.3-2.1.el7                                            
+  libXrandr.x86_64 0:1.5.1-2.el7                                                
+  libXrender.x86_64 0:0.9.10-1.el7                                              
+  libXtst.x86_64 0:1.2.3-1.el7                                                  
+  libXxf86vm.x86_64 0:1.1.4-1.el7                                               
+  libdrm.x86_64 0:2.4.97-2.el7                                                  
+  libfontenc.x86_64 0:1.1.3-3.el7                                               
+  libglvnd.x86_64 1:1.0.1-0.8.git5baa1e5.el7                                    
+  libglvnd-egl.x86_64 1:1.0.1-0.8.git5baa1e5.el7                                
+  libglvnd-glx.x86_64 1:1.0.1-0.8.git5baa1e5.el7                                
+  libjpeg-turbo.x86_64 0:1.2.90-8.el7                                           
+  libpciaccess.x86_64 0:0.14-1.el7                                              
+  libpng.x86_64 2:1.5.13-8.el7                                                  
+  libthai.x86_64 0:0.1.14-9.el7                                                 
+  libtiff.x86_64 0:4.0.3-35.el7                                                 
+  libwayland-client.x86_64 0:1.15.0-1.el7                                       
+  libwayland-server.x86_64 0:1.15.0-1.el7                                       
+  libxcb.x86_64 0:1.13-1.el7                                                    
+  libxshmfence.x86_64 0:1.2-1.el7                                               
+  libxslt.x86_64 0:1.1.28-6.el7                                                 
+  lksctp-tools.x86_64 0:1.0.17-2.el7                                            
+  mesa-libEGL.x86_64 0:18.3.4-12.el7_9                                          
+  mesa-libGL.x86_64 0:18.3.4-12.el7_9                                           
+  mesa-libgbm.x86_64 0:18.3.4-12.el7_9                                          
+  mesa-libglapi.x86_64 0:18.3.4-12.el7_9                                        
+  pango.x86_64 0:1.42.4-4.el7_7                                                 
+  pcsc-lite-libs.x86_64 0:1.8.8-8.el7                                           
+  pixman.x86_64 0:0.34.0-1.el7                                                  
+  python-javapackages.noarch 0:3.4.1-11.el7                                     
+  python-lxml.x86_64 0:3.2.1-4.el7                                              
+  ttmkfdir.x86_64 0:3.0.9-42.el7                                                
+  tzdata-java.noarch 0:2021a-1.el7                                              
+  xorg-x11-font-utils.x86_64 1:7.5-21.el7                                       
+  xorg-x11-fonts-Type1.noarch 0:7.5-9.el7                                       
+
+Complete!
+Loaded plugins: ovl, product-id, search-disabled-repos, subscription-manager
+This system is not receiving updates. You can use subscription-manager on the host to register and assign subscriptions.
+Cleaning repos: ubi-7 ubi-7-rhah ubi-7-server-devtools-rpms
+              : ubi-7-server-extras-rpms ubi-7-server-optional-rpms
+              : ubi-server-rhscl-7-rpms
+STEP 6: RUN groupadd -r nexus -f -g 1001 && useradd -u 1001 -r -g nexus -m -d ${NEXUS_HOME} -s /sbin/nologin -c "Nexus User" nexus && chown -R nexus:nexus ${NEXUS_HOME} && chmod -R 755 ${NEXUS_HOME}
+STEP 7: USER nexus
+STEP 8: ADD nexus-${NEXUS_VERSION}-bundle.tar.gz ${NEXUS_HOME}
+STEP 9: ADD nexus-start.sh ${NEXUS_HOME}/
+STEP 10: RUN ln -s ${NEXUS_HOME}/nexus-${NEXUS_VERSION} ${NEXUS_HOME}/nexus2
+STEP 11: WORKDIR ${NEXUS_HOME}
+STEP 12: VOLUME ["/opt/nexus/sonatype-work"]
+STEP 13: CMD ["sh", "nexus-start.sh"]
+STEP 14: COMMIT nexus
+Getting image source signatures
+Copying blob 5601485f0109 skipped: already exists
+Copying blob ac7577b8c383 skipped: already exists
+Copying blob ae56a7c40bfa done
+Copying config 4c79c61cdd done
+Writing manifest to image destination
+Storing signatures
+4c79c61cdd3aa68f534f5be8cffccaea526a7dd01b7d262116aa75dbf4806af2
+[student@workstation image]$ sudo podman images
+REPOSITORY                            TAG      IMAGE ID       CREATED          SIZE
+localhost/nexus                       latest   4c79c61cdd3a   58 seconds ago   557 MB
+registry.access.redhat.com/ubi7/ubi   7.7      0355cd652bd1   14 months ago    215 MB
+[student@workstation image]$ cd /home/student/DO180/labs/comprehensive-review
+[student@workstation comprehensive-review]$ cd deploy/local
+[student@workstation local]$ ./run-persistent.sh
+8a1508a22dfd6bf77a62859eb355302eec246607150b8ec1299ed2b3f94c6c20
+[student@workstation local]$ cat run-persistent.sh 
+#!/bin/bash
+if [ ! -d /tmp/docker/work ]; then
+  mkdir -p /tmp/docker/work
+  sudo semanage fcontext -a -t container_file_t '/tmp/docker/work(/.*)?'
+  sudo restorecon -R /tmp/docker/work
+  sudo chown 1001:1001 /tmp/docker/work
+fi
+
+sudo podman run -d -v /tmp/docker/work:/opt/nexus/sonatype-work nexus
+[student@workstation local]$ sudo podman ps --format="{{.ID}} {{.Names}} {{.Image}}"
+8a1508a22dfd blissful_rubin localhost/nexus:latest
+[student@workstation local]$ sudo podman log rubin
+Error: unrecognized command `podman log`
+Try 'podman --help' for more information.
+[student@workstation local]$ sudo podman logs rubin
+Error: no container with name or ID rubin found: no such container
+[student@workstation local]$ sudo podman logs r8150
+Error: no container with name or ID r8150 found: no such container
+[student@workstation local]$ sudo podman logs blissful_rubin
+2021-05-17 08:27:39,356+0000 INFO  [main] *SYSTEM org.sonatype.nexus.bootstrap.ConfigurationBuilder - Properties:
+2021-05-17 08:27:39,360+0000 INFO  [main] *SYSTEM org.sonatype.nexus.bootstrap.ConfigurationBuilder -   application-conf='/opt/nexus/sonatype-work/conf'
+2021-05-17 08:27:39,362+0000 INFO  [main] *SYSTEM org.sonatype.nexus.bootstrap.ConfigurationBuilder -   application-host='0.0.0.0'
+2021-05-17 08:27:39,362+0000 INFO  [main] *SYSTEM org.sonatype.nexus.bootstrap.ConfigurationBuilder -   application-port='8081'
+2021-05-17 08:27:39,362+0000 INFO  [main] *SYSTEM org.sonatype.nexus.bootstrap.ConfigurationBuilder -   bundleBasedir='/opt/nexus/nexus-2.14.3-02'
+2021-05-17 08:27:39,362+0000 INFO  [main] *SYSTEM org.sonatype.nexus.bootstrap.ConfigurationBuilder -   java.awt.headless='true'
+2021-05-17 08:27:39,362+0000 INFO  [main] *SYSTEM org.sonatype.nexus.bootstrap.ConfigurationBuilder -   networkaddress.cache.ttl='3600'
+2021-05-17 08:27:39,362+0000 INFO  [main] *SYSTEM org.sonatype.nexus.bootstrap.ConfigurationBuilder -   nexus-app='/opt/nexus/nexus-2.14.3-02/nexus/WEB-INF'
+2021-05-17 08:27:39,362+0000 INFO  [main] *SYSTEM org.sonatype.nexus.bootstrap.ConfigurationBuilder -   nexus-webapp='/opt/nexus/nexus-2.14.3-02/nexus'
+2021-05-17 08:27:39,362+0000 INFO  [main] *SYSTEM org.sonatype.nexus.bootstrap.ConfigurationBuilder -   nexus-webapp-context-path='/nexus'
+2021-05-17 08:27:39,362+0000 INFO  [main] *SYSTEM org.sonatype.nexus.bootstrap.ConfigurationBuilder -   nexus-work='/opt/nexus/sonatype-work'
+2021-05-17 08:27:39,362+0000 INFO  [main] *SYSTEM org.sonatype.nexus.bootstrap.ConfigurationBuilder -   org.eclipse.ecf.provider.filetransfer.retrieve.readTimeout='30000'
+2021-05-17 08:27:39,362+0000 INFO  [main] *SYSTEM org.sonatype.nexus.bootstrap.ConfigurationBuilder -   runtime='/opt/nexus/nexus-2.14.3-02/nexus/WEB-INF'
+2021-05-17 08:27:39,362+0000 INFO  [main] *SYSTEM org.sonatype.nexus.bootstrap.ConfigurationBuilder -   security-xml-file='/opt/nexus/sonatype-work/conf/security.xml'
+2021-05-17 08:27:39,362+0000 INFO  [main] *SYSTEM org.sonatype.nexus.bootstrap.ConfigurationBuilder -   storage.diskCache.bufferSize='4096'
+2021-05-17 08:27:39,362+0000 INFO  [main] *SYSTEM org.sonatype.nexus.bootstrap.Launcher - Java: 1.8.0_292, OpenJDK 64-Bit Server VM, Red Hat, Inc., 25.292-b10
+2021-05-17 08:27:39,363+0000 INFO  [main] *SYSTEM org.sonatype.nexus.bootstrap.Launcher - OS: Linux, 4.18.0-193.el8.x86_64, amd64
+2021-05-17 08:27:39,363+0000 INFO  [main] *SYSTEM org.sonatype.nexus.bootstrap.Launcher - User: nexus, en, /opt/nexus
+2021-05-17 08:27:39,363+0000 INFO  [main] *SYSTEM org.sonatype.nexus.bootstrap.Launcher - CWD: /opt/nexus/nexus-2.14.3-02
+2021-05-17 08:27:39,384+0000 INFO  [main] *SYSTEM org.sonatype.nexus.bootstrap.Launcher - TMP: /tmp
+2021-05-17 08:27:39,386+0000 INFO  [main] *SYSTEM org.sonatype.nexus.bootstrap.jetty.JettyServer - Starting
+2021-05-17 08:27:39,397+0000 INFO  [main] *SYSTEM org.sonatype.nexus.bootstrap.jetty.JettyServer - Applying configuration: file:/opt/nexus/nexus-2.14.3-02/conf/jetty.xml
+2021-05-17 08:27:39,670+0000 INFO  [main] *SYSTEM org.sonatype.nexus.bootstrap.jetty.JettyServer - Applying configuration: file:/opt/nexus/nexus-2.14.3-02/conf/jetty-requestlog.xml
+2021-05-17 08:27:39,685+0000 INFO  [jetty-main-1] *SYSTEM org.sonatype.nexus.bootstrap.jetty.JettyServer - Starting: org.eclipse.jetty.server.Server@3dc0a152
+2021-05-17 08:27:39,688+0000 INFO  [jetty-main-1] *SYSTEM org.eclipse.jetty.server.Server - jetty-8.1.16.v20140903
+2021-05-17 08:27:40,279+0000 INFO  [jetty-main-1] *SYSTEM org.sonatype.nexus.webapp.WebappBootstrap - Initializing
+2021-05-17 08:27:40,280+0000 INFO  [jetty-main-1] *SYSTEM org.sonatype.nexus.webapp.WebappBootstrap - Using bootstrap launcher configuration
+2021-05-17 08:27:41,179+0000 INFO  [jetty-main-1] *SYSTEM org.sonatype.nexus.webapp.metrics.MetricsModule - Metrics support configured
+2021-05-17 08:27:42,548+0000 INFO  [jetty-main-1] *SYSTEM org.sonatype.sisu.goodies.eventbus.internal.DefaultEventBus - Using Reentrant Guava EventBus
+2021-05-17 08:27:42,628+0000 WARN  [jetty-main-1] *SYSTEM org.sonatype.security.configuration.source.FileSecurityConfigurationSource - No configuration file in place, copying the default one and continuing with it.
+2021-05-17 08:27:42,648+0000 INFO  [jetty-main-1] *SYSTEM org.sonatype.security.configuration.source.FileSecurityConfigurationSource - Loading Security configuration from /opt/nexus/sonatype-work/conf/security-configuration.xml
+2021-05-17 08:27:42,669+0000 INFO  [jetty-main-1] *SYSTEM org.sonatype.sisu.ehcache.CacheManagerComponentImpl - Loading configuration from: file:/opt/nexus/nexus-2.14.3-02/nexus/WEB-INF/classes/ehcache.xml
+2021-05-17 08:27:42,888+0000 INFO  [jetty-main-1] *SYSTEM com.thoughtworks.xstream.XStream - Version: 1.4.6-SONATYPE-03, white-list support available
+2021-05-17 08:27:42,973+0000 INFO  [jetty-main-1] *SYSTEM org.sonatype.nexus.proxy.registry.DefaultRepositoryTypeRegistry - Registered default repository types.
+2021-05-17 08:27:43,045+0000 INFO  [jetty-main-1] *SYSTEM org.sonatype.nexus.events.EventSubscriberHost - Initialized
+2021-05-17 08:27:43,053+0000 INFO  [jetty-main-1] *SYSTEM org.sonatype.nexus.NxApplication - 
+-------------------------------------------------
+
+Initializing Nexus Repository Manager OSS 2.14.3-02
+
+-------------------------------------------------
+2021-05-17 08:27:43,053+0000 INFO  [jetty-main-1] *SYSTEM org.sonatype.nexus.NxApplication - Activating locally installed plugins...
+2021-05-17 08:27:44,194+0000 INFO  [jetty-main-1] *SYSTEM org.sonatype.nexus.plugins.bcprov.CryptoPlugin - Unlimited strength JCE policy detected
+2021-05-17 08:27:44,408+0000 INFO  [jetty-main-1] *SYSTEM org.sonatype.nexus.kazuki.KazukiPlugin - Kazuki version: 0.1.8
+2021-05-17 08:27:44,762+0000 INFO  [jetty-main-1] *SYSTEM com.sun.jersey.server.impl.application.WebApplicationImpl - Initiating Jersey application, version 'Jersey: 1.17.1 02/28/2013 12:47 PM'
+2021-05-17 08:27:47,390+0000 INFO  [jetty-main-1] *SYSTEM org.sonatype.nexus.proxy.registry.DefaultRepositoryTypeRegistry - Registered Repository type RepositoryType=(org.sonatype.nexus.proxy.repository.WebSiteRepository:site).
+2021-05-17 08:27:48,213+0000 INFO  [jetty-main-1] *SYSTEM org.sonatype.nexus.proxy.registry.DefaultRepositoryTypeRegistry - Registered Repository type RepositoryType=(org.sonatype.nexus.proxy.repository.GroupRepository:npm-group).
+2021-05-17 08:27:48,213+0000 INFO  [jetty-main-1] *SYSTEM org.sonatype.nexus.proxy.registry.DefaultRepositoryTypeRegistry - Registered Repository type RepositoryType=(org.sonatype.nexus.proxy.repository.Repository:npm-proxy).
+2021-05-17 08:27:48,213+0000 INFO  [jetty-main-1] *SYSTEM org.sonatype.nexus.proxy.registry.DefaultRepositoryTypeRegistry - Registered Repository type RepositoryType=(org.sonatype.nexus.proxy.repository.Repository:npm-hosted).
+2021-05-17 08:27:48,578+0000 INFO  [jetty-main-1] *SYSTEM org.sonatype.nexus.proxy.registry.DefaultRepositoryTypeRegistry - Registered Repository type RepositoryType=(org.sonatype.nexus.proxy.repository.ShadowRepository:nuget-shadow).
+2021-05-17 08:27:48,580+0000 INFO  [jetty-main-1] *SYSTEM org.sonatype.nexus.proxy.registry.DefaultRepositoryTypeRegistry - Registered Repository type RepositoryType=(org.sonatype.nexus.proxy.repository.GroupRepository:nuget-group).
+2021-05-17 08:27:48,580+0000 INFO  [jetty-main-1] *SYSTEM org.sonatype.nexus.proxy.registry.DefaultRepositoryTypeRegistry - Registered Repository type RepositoryType=(org.sonatype.nexus.proxy.repository.Repository:nuget-proxy).
+2021-05-17 08:27:48,743+0000 INFO  [jetty-main-1] *SYSTEM org.sonatype.nexus.proxy.registry.DefaultRepositoryTypeRegistry - Registered Repository type RepositoryType=(org.sonatype.nexus.proxy.repository.GroupRepository:rubygems-group).
+2021-05-17 08:27:48,744+0000 INFO  [jetty-main-1] *SYSTEM org.sonatype.nexus.proxy.registry.DefaultRepositoryTypeRegistry - Registered Repository type RepositoryType=(org.sonatype.nexus.proxy.repository.Repository:rubygems-proxy).
+2021-05-17 08:27:48,744+0000 INFO  [jetty-main-1] *SYSTEM org.sonatype.nexus.proxy.registry.DefaultRepositoryTypeRegistry - Registered Repository type RepositoryType=(org.sonatype.nexus.proxy.repository.Repository:rubygems-hosted).
+2021-05-17 08:27:50,478+0000 INFO  [jetty-main-1] *SYSTEM org.sonatype.nexus.NxApplication - Plugin manager request "ACTIVATE" on plugin "com.sonatype.nexus.plugins:nexus-outreach-plugin:2.14.3-02" was successful.
+2021-05-17 08:27:50,478+0000 INFO  [jetty-main-1] *SYSTEM org.sonatype.nexus.NxApplication - Plugin manager request "ACTIVATE" on plugin "org.sonatype.nexus.plugins:nexus-h2-plugin:2.14.3-02" was successful.
+2021-05-17 08:27:50,478+0000 INFO  [jetty-main-1] *SYSTEM org.sonatype.nexus.NxApplication - Plugin manager request "ACTIVATE" on plugin "org.sonatype.nexus.plugins:nexus-ui-extjs3-plugin:2.14.3-02" was successful.
+2021-05-17 08:27:50,478+0000 INFO  [jetty-main-1] *SYSTEM org.sonatype.nexus.NxApplication - Plugin manager request "ACTIVATE" on plugin "org.sonatype.nexus.plugins:nexus-siesta-plugin:2.14.3-02" was successful.
+2021-05-17 08:27:50,478+0000 INFO  [jetty-main-1] *SYSTEM org.sonatype.nexus.NxApplication - Plugin manager request "ACTIVATE" on plugin "org.sonatype.nexus.plugins:nexus-archetype-plugin:2.14.3-02" was successful.
+2021-05-17 08:27:50,478+0000 INFO  [jetty-main-1] *SYSTEM org.sonatype.nexus.NxApplication - Plugin manager request "ACTIVATE" on plugin "org.sonatype.nexus.plugins:nexus-atlas-plugin:2.14.3-02" was successful.
+2021-05-17 08:27:50,478+0000 INFO  [jetty-main-1] *SYSTEM org.sonatype.nexus.NxApplication - Plugin manager request "ACTIVATE" on plugin "org.sonatype.nexus.plugins:nexus-groovy-plugin:2.14.3-02" was successful.
+2021-05-17 08:27:50,478+0000 INFO  [jetty-main-1] *SYSTEM org.sonatype.nexus.NxApplication - Plugin manager request "ACTIVATE" on plugin "org.sonatype.nexus.plugins:nexus-crypto-plugin:2.14.3-02" was successful.
+2021-05-17 08:27:50,478+0000 INFO  [jetty-main-1] *SYSTEM org.sonatype.nexus.NxApplication - Plugin manager request "ACTIVATE" on plugin "org.sonatype.nexus.plugins:nexus-rutauth-plugin:2.14.3-02" was successful.
+2021-05-17 08:27:50,478+0000 INFO  [jetty-main-1] *SYSTEM org.sonatype.nexus.NxApplication - Plugin manager request "ACTIVATE" on plugin "org.sonatype.nexus.plugins:nexus-content-plugin:2.14.3-02" was successful.
+2021-05-17 08:27:50,478+0000 INFO  [jetty-main-1] *SYSTEM org.sonatype.nexus.NxApplication - Plugin manager request "ACTIVATE" on plugin "org.sonatype.nexus.plugins:nexus-lvo-plugin:2.14.3-02" was successful.
+2021-05-17 08:27:50,478+0000 INFO  [jetty-main-1] *SYSTEM org.sonatype.nexus.NxApplication - Plugin manager request "ACTIVATE" on plugin "org.sonatype.nexus.plugins:nexus-kazuki-plugin:2.14.3-02" was successful.
+2021-05-17 08:27:50,478+0000 INFO  [jetty-main-1] *SYSTEM org.sonatype.nexus.NxApplication - Plugin manager request "ACTIVATE" on plugin "org.sonatype.nexus.plugins:nexus-site-repository-plugin:2.14.3-02" was successful.
+2021-05-17 08:27:50,478+0000 INFO  [jetty-main-1] *SYSTEM org.sonatype.nexus.NxApplication - Plugin manager request "ACTIVATE" on plugin "org.sonatype.nexus.plugins:nexus-webresources-plugin:2.14.3-02" was successful.
+2021-05-17 08:27:50,478+0000 INFO  [jetty-main-1] *SYSTEM org.sonatype.nexus.NxApplication - Plugin manager request "ACTIVATE" on plugin "org.sonatype.nexus.plugins:nexus-npm-repository-plugin:2.14.3-02" was successful.
+2021-05-17 08:27:50,479+0000 INFO  [jetty-main-1] *SYSTEM org.sonatype.nexus.NxApplication - Plugin manager request "ACTIVATE" on plugin "org.sonatype.nexus.plugins:nexus-capabilities-plugin:2.14.3-02" was successful.
+2021-05-17 08:27:50,479+0000 INFO  [jetty-main-1] *SYSTEM org.sonatype.nexus.NxApplication - Plugin manager request "ACTIVATE" on plugin "org.sonatype.nexus.plugins:nexus-orient-plugin:2.14.3-02" was successful.
+2021-05-17 08:27:50,479+0000 INFO  [jetty-main-1] *SYSTEM org.sonatype.nexus.NxApplication - Plugin manager request "ACTIVATE" on plugin "org.sonatype.nexus.plugins:nexus-wonderland-plugin:2.14.3-02" was successful.
+2021-05-17 08:27:50,479+0000 INFO  [jetty-main-1] *SYSTEM org.sonatype.nexus.NxApplication - Plugin manager request "ACTIVATE" on plugin "org.sonatype.nexus.plugins:nexus-yum-repository-plugin:2.14.3-02" was successful.
+2021-05-17 08:27:50,479+0000 INFO  [jetty-main-1] *SYSTEM org.sonatype.nexus.NxApplication - Plugin manager request "ACTIVATE" on plugin "org.sonatype.nexus.plugins:nexus-ldap-realm-plugin:2.14.3-02" was successful.
+2021-05-17 08:27:50,479+0000 INFO  [jetty-main-1] *SYSTEM org.sonatype.nexus.NxApplication - Plugin manager request "ACTIVATE" on plugin "org.sonatype.nexus.plugins:nexus-indexer-lucene-plugin:2.14.3-02" was successful.
+2021-05-17 08:27:50,479+0000 INFO  [jetty-main-1] *SYSTEM org.sonatype.nexus.NxApplication - Plugin manager request "ACTIVATE" on plugin "com.sonatype.nexus.plugins:nexus-nuget-plugin:2.14.3-02" was successful.
+2021-05-17 08:27:50,479+0000 INFO  [jetty-main-1] *SYSTEM org.sonatype.nexus.NxApplication - Plugin manager request "ACTIVATE" on plugin "org.sonatype.nexus.plugins:nexus-restlet1x-plugin:2.14.3-02" was successful.
+2021-05-17 08:27:50,479+0000 INFO  [jetty-main-1] *SYSTEM org.sonatype.nexus.NxApplication - Plugin manager request "ACTIVATE" on plugin "org.sonatype.nexus.plugins:nexus-ruby-plugin:2.14.3-02" was successful.
+2021-05-17 08:27:50,479+0000 INFO  [jetty-main-1] *SYSTEM org.sonatype.nexus.NxApplication - Plugin manager request "ACTIVATE" on plugin "org.sonatype.nexus.plugins:nexus-logging-plugin:2.14.3-02" was successful.
+2021-05-17 08:27:50,479+0000 INFO  [jetty-main-1] *SYSTEM org.sonatype.nexus.NxApplication - Plugin manager request "ACTIVATE" on plugin "org.sonatype.nexus.plugins:nexus-maven-bridge-plugin:2.14.3-02" was successful.
+2021-05-17 08:27:50,479+0000 INFO  [jetty-main-1] *SYSTEM org.sonatype.nexus.NxApplication - Plugin manager request "ACTIVATE" on plugin "com.sonatype.nexus.plugins:nexus-healthcheck-oss-plugin:2.14.3-02" was successful.
+2021-05-17 08:27:50,479+0000 INFO  [jetty-main-1] *SYSTEM org.sonatype.nexus.NxApplication - Plugin manager request "ACTIVATE" on plugin "com.sonatype.nexus.plugins:nexus-migrationagent-plugin:2.14.3-02" was successful.
+2021-05-17 08:27:50,479+0000 INFO  [jetty-main-1] *SYSTEM org.sonatype.nexus.NxApplication - Plugin manager request "ACTIVATE" on plugin "org.sonatype.nexus.plugins:nexus-rrb-plugin:2.14.3-02" was successful.
+2021-05-17 08:27:50,479+0000 INFO  [jetty-main-1] *SYSTEM org.sonatype.nexus.NxApplication - Plugin manager request "ACTIVATE" on plugin "com.sonatype.nexus.plugins:nexus-analytics-plugin:2.14.3-02" was successful.
+2021-05-17 08:27:50,479+0000 INFO  [jetty-main-1] *SYSTEM org.sonatype.nexus.NxApplication - Plugin manager request "ACTIVATE" on plugin "org.sonatype.nexus.plugins:nexus-timeline-plugin:2.14.3-02" was successful.
+2021-05-17 08:27:50,479+0000 INFO  [jetty-main-1] *SYSTEM org.sonatype.nexus.NxApplication - Plugin manager request "ACTIVATE" on plugin "org.sonatype.nexus.plugins:nexus-plugin-console-plugin:2.14.3-02" was successful.
+2021-05-17 08:27:50,479+0000 INFO  [jetty-main-1] *SYSTEM org.sonatype.nexus.events.EventSubscriberHost - Starting
+2021-05-17 08:27:50,516+0000 INFO  [jetty-main-1] *SYSTEM org.sonatype.nexus.timeline.DefaultNexusTimeline - Initializing Nexus Timeline...
+2021-05-17 08:27:50,517+0000 INFO  [jetty-main-1] *SYSTEM org.sonatype.nexus.timeline.DefaultNexusTimeline - Starting Nexus Timeline...
+2021-05-17 08:27:50,653+0000 INFO  [jetty-main-1] *SYSTEM org.sonatype.timeline.internal.DefaultTimeline - Started Timeline...
+2021-05-17 08:27:51,057+0000 INFO  [jetty-main-1] *SYSTEM org.sonatype.nexus.apachehttpclient.Hc4ProviderImpl - Started (connectionPoolMaxSize 200, connectionPoolSize 20, connectionPoolIdleTime 30000 ms, connectionPoolTimeout 30000 ms, keepAliveMaxDuration 30000 ms)
+2021-05-17 08:27:51,375+0000 INFO  [jetty-main-1] *SYSTEM org.sonatype.nexus.orient.DatabaseServerImpl - OrientDB version: 2.1.14
+2021-05-17 08:27:51,392+0000 INFO  [jetty-main-1] *SYSTEM com.orientechnologies.orient.server.OServer - OrientDB Server v2.1.14 is starting up...
+2021-05-17 08:27:51,398+0000 INFO  [jetty-main-1] *SYSTEM com.orientechnologies.orient.server.OServer - Databases directory: /opt/nexus/sonatype-work/db
+2021-05-17 08:27:51,409+0000 INFO  [jetty-main-1] *SYSTEM com.orientechnologies.orient.server.handler.OJMXPlugin - JMX plugin installed and active: profilerManaged=true
+2021-05-17 08:27:51,410+0000 INFO  [jetty-main-1] *SYSTEM com.orientechnologies.orient.server.OServer - OrientDB Server v2.1.14 is active.
+2021-05-17 08:27:51,411+0000 INFO  [jetty-main-1] *SYSTEM org.sonatype.nexus.orient.DatabaseServerImpl - Activated
+2021-05-17 08:27:51,411+0000 INFO  [jetty-main-1] *SYSTEM org.sonatype.nexus.configuration.application.DefaultNexusConfiguration - Loading Nexus Configuration...
+2021-05-17 08:27:51,428+0000 INFO  [jetty-main-1] *SYSTEM org.sonatype.nexus.configuration.source.StaticConfigurationSource - Configuration loaded successfully.
+2021-05-17 08:27:51,428+0000 WARN  [jetty-main-1] *SYSTEM org.sonatype.nexus.configuration.source.FileConfigurationSource - No configuration file in place, copying the default one and continuing with it.
+2021-05-17 08:27:51,546+0000 INFO  [jetty-main-1] *SYSTEM org.sonatype.nexus.configuration.source.FileConfigurationSource - Configuration loaded successfully.
+2021-05-17 08:27:51,577+0000 INFO  [jetty-main-1] *SYSTEM org.sonatype.nexus.configuration.source.FileConfigurationSource - Nexus configuration validated successfully.
+2021-05-17 08:27:51,617+0000 INFO  [jetty-main-1] *SYSTEM org.sonatype.nexus.configuration.application.DefaultNexusConfiguration - Applying Nexus Configuration...
+2021-05-17 08:27:51,623+0000 INFO  [jetty-main-1] *SYSTEM org.sonatype.security.configuration.source.FileSecurityConfigurationSource - Loading Security configuration from /opt/nexus/sonatype-work/conf/security-configuration.xml
+2021-05-17 08:27:51,631+0000 INFO  [jetty-main-1] *SYSTEM org.apache.shiro.cache.ehcache.EhCacheManager - Cache with name 'XmlAuthenticatingRealm.authorizationCache' does not yet exist.  Creating now.
+2021-05-17 08:27:51,633+0000 INFO  [jetty-main-1] *SYSTEM org.apache.shiro.cache.ehcache.EhCacheManager - Added EhCache named [XmlAuthenticatingRealm.authorizationCache]
+2021-05-17 08:27:51,634+0000 INFO  [jetty-main-1] *SYSTEM org.apache.shiro.cache.ehcache.EhCacheManager - Cache with name 'XmlAuthorizingRealm.authorizationCache' does not yet exist.  Creating now.
+2021-05-17 08:27:51,635+0000 INFO  [jetty-main-1] *SYSTEM org.apache.shiro.cache.ehcache.EhCacheManager - Added EhCache named [XmlAuthorizingRealm.authorizationCache]
+2021-05-17 08:27:51,657+0000 INFO  [jetty-main-1] *SYSTEM org.sonatype.nexus.proxy.attributes.DefaultLSAttributeStorage - Default FS AttributeStorage in place, using JacksonJSON marshaller. 
+2021-05-17 08:27:51,973+0000 INFO  [jetty-main-1] *SYSTEM org.sonatype.nexus.proxy.registry.DefaultRepositoryRegistry - Added repository "Central" [id=central][contentClass=Maven2][mainFacet=org.sonatype.nexus.proxy.maven.MavenProxyRepository]
+2021-05-17 08:27:52,021+0000 INFO  [jetty-main-1] *SYSTEM org.sonatype.nexus.proxy.registry.DefaultRepositoryRegistry - Added repository "Apache Snapshots" [id=apache-snapshots][contentClass=Maven2][mainFacet=org.sonatype.nexus.proxy.maven.MavenProxyRepository]
+2021-05-17 08:27:52,080+0000 INFO  [jetty-main-1] *SYSTEM org.sonatype.nexus.proxy.registry.DefaultRepositoryRegistry - Added repository "Releases" [id=releases][contentClass=Maven2][mainFacet=org.sonatype.nexus.proxy.maven.MavenHostedRepository]
+2021-05-17 08:27:52,134+0000 INFO  [jetty-main-1] *SYSTEM org.sonatype.nexus.proxy.registry.DefaultRepositoryRegistry - Added repository "Snapshots" [id=snapshots][contentClass=Maven2][mainFacet=org.sonatype.nexus.proxy.maven.MavenHostedRepository]
+2021-05-17 08:27:52,167+0000 INFO  [jetty-main-1] *SYSTEM org.sonatype.nexus.proxy.registry.DefaultRepositoryRegistry - Added repository "3rd party" [id=thirdparty][contentClass=Maven2][mainFacet=org.sonatype.nexus.proxy.maven.MavenHostedRepository]
+2021-05-17 08:27:52,189+0000 INFO  [jetty-main-1] *SYSTEM org.sonatype.nexus.proxy.registry.DefaultRepositoryRegistry - Added repository "Central M1 shadow" [id=central-m1][contentClass=Maven1][mainFacet=org.sonatype.nexus.proxy.maven.MavenShadowRepository]
+2021-05-17 08:27:52,239+0000 INFO  [jetty-main-1] *SYSTEM org.sonatype.nexus.proxy.registry.DefaultRepositoryRegistry - Added repository "Public Repositories" [id=public][contentClass=Maven2][mainFacet=org.sonatype.nexus.proxy.repository.GroupRepository]
+2021-05-17 08:27:52,240+0000 INFO  [jetty-main-1] *SYSTEM org.sonatype.scheduling.DefaultScheduler - Initializing Scheduler...
+2021-05-17 08:27:52,240+0000 INFO  [jetty-main-1] *SYSTEM org.sonatype.nexus.scheduling.internal.DefaultTaskConfigManager - 0 task(s) to load.
+2021-05-17 08:27:52,240+0000 INFO  [jetty-main-1] *SYSTEM org.sonatype.nexus.NxApplication - This is 1st start of new Nexus instance.
+2021-05-17 08:27:52,241+0000 INFO  [jetty-main-1] *SYSTEM org.sonatype.nexus.NxApplication - Nexus Work Directory : /opt/nexus/sonatype-work
+2021-05-17 08:27:52,241+0000 INFO  [jetty-main-1] *SYSTEM org.sonatype.nexus.NxApplication - Started Nexus Repository Manager OSS 2.14.3-02
+2021-05-17 08:27:52,512+0000 INFO  [ar-4-thread-5] *SYSTEM org.sonatype.nexus.proxy.maven.routing.internal.ManagerImpl - Updated and published prefix file of "3rd party" [id=thirdparty]
+2021-05-17 08:27:52,519+0000 INFO  [ar-4-thread-2] *SYSTEM org.sonatype.nexus.proxy.maven.routing.internal.ManagerImpl - Updated and published prefix file of "Snapshots" [id=snapshots]
+2021-05-17 08:27:52,527+0000 INFO  [ar-4-thread-4] *SYSTEM org.sonatype.nexus.proxy.maven.routing.internal.ManagerImpl - Updated and published prefix file of "Releases" [id=releases]
+2021-05-17 08:27:52,716+0000 INFO  [jetty-main-1] *SYSTEM org.sonatype.nexus.proxy.targets.DefaultTargetRegistryEventInspector - Adding default target for site content class
+2021-05-17 08:27:52,716+0000 INFO  [jetty-main-1] *SYSTEM org.sonatype.nexus.proxy.targets.DefaultTargetRegistryEventInspector - Adding default target for npm content class
+2021-05-17 08:27:52,716+0000 INFO  [jetty-main-1] *SYSTEM org.sonatype.nexus.proxy.targets.DefaultTargetRegistryEventInspector - Adding default target for nuget content class
+2021-05-17 08:27:52,716+0000 INFO  [jetty-main-1] *SYSTEM org.sonatype.nexus.proxy.targets.DefaultTargetRegistryEventInspector - Adding default target for rubygems content class
+2021-05-17 08:27:52,718+0000 INFO  [jetty-main-1] *SYSTEM org.sonatype.nexus.configuration.application.DefaultNexusConfiguration - Applying Nexus Configuration due to changes in [Repository Target Registry]...
+2021-05-17 08:27:52,778+0000 INFO  [pxpool-1-thread-1] *SYSTEM org.sonatype.nexus.index.tasks.UpdateIndexTask - Scheduled task (UpdateIndexTask) started :: Updating repository index "Public Repositories" from path null and below.
+2021-05-17 08:27:53,085+0000 INFO  [pxpool-1-thread-1] *SYSTEM org.sonatype.nexus.index.NexusScanningListener - Scanning of repositoryID="releases" started.
+2021-05-17 08:27:53,356+0000 INFO  [pxpool-1-thread-1] *SYSTEM org.sonatype.nexus.index.NexusScanningListener - Scanning of repositoryID="releases" finished: scanned=0, added=0, updated=0, removed=0, scanningDuration=0:00:00.264
+2021-05-17 08:27:53,364+0000 INFO  [pxpool-1-thread-1] *SYSTEM org.sonatype.nexus.index.DefaultIndexerManager - Publishing index for repository releases
+[INFO] Unable to read properties file, will force index regeneration
+2021-05-17 08:27:53,407+0000 INFO  [pxpool-1-thread-1] *SYSTEM org.sonatype.nexus.index.NexusScanningListener - Scanning of repositoryID="snapshots" started.
+2021-05-17 08:27:53,452+0000 INFO  [jetty-main-1] *SYSTEM com.sonatype.nexus.plugins.nuget.odata.NugetODataGalleryMigrator - Starting Nuget DB migration.
+2021-05-17 08:27:53,454+0000 INFO  [jetty-main-1] *SYSTEM com.sonatype.nexus.plugins.nuget.odata.NugetODataGalleryMigrator - Starting Nuget DB migration to version 1
+2021-05-17 08:27:53,459+0000 INFO  [jetty-main-1] *SYSTEM com.sonatype.nexus.plugins.nuget.odata.NugetODataGalleryMigrator - Completed Nuget DB migration to version 1
+2021-05-17 08:27:53,459+0000 INFO  [jetty-main-1] *SYSTEM com.sonatype.nexus.plugins.nuget.odata.NugetODataGalleryMigrator - Starting Nuget DB migration to version 2
+2021-05-17 08:27:53,460+0000 INFO  [jetty-main-1] *SYSTEM com.sonatype.nexus.plugins.nuget.odata.NugetODataGalleryMigrator - Completed Nuget DB migration to version 2
+2021-05-17 08:27:53,461+0000 INFO  [jetty-main-1] *SYSTEM com.sonatype.nexus.plugins.nuget.odata.NugetODataGalleryMigrator - Starting Nuget DB migration to version 3
+2021-05-17 08:27:53,461+0000 INFO  [jetty-main-1] *SYSTEM com.sonatype.nexus.plugins.nuget.odata.NugetODataGalleryMigrator - Completed Nuget DB migration to version 3
+2021-05-17 08:27:53,461+0000 INFO  [jetty-main-1] *SYSTEM com.sonatype.nexus.plugins.nuget.odata.NugetODataGalleryMigrator - Starting Nuget DB migration to version 4
+2021-05-17 08:27:53,464+0000 INFO  [jetty-main-1] *SYSTEM com.sonatype.nexus.plugins.nuget.odata.NugetODataGalleryMigrator - Completed Nuget DB migration to version 4
+2021-05-17 08:27:53,465+0000 INFO  [jetty-main-1] *SYSTEM com.sonatype.nexus.plugins.nuget.odata.NugetODataGalleryMigrator - Starting Nuget DB migration to version 5
+2021-05-17 08:27:53,467+0000 INFO  [jetty-main-1] *SYSTEM com.sonatype.nexus.plugins.nuget.odata.NugetODataGalleryMigrator - Completed Nuget DB migration to version 5
+2021-05-17 08:27:53,467+0000 INFO  [jetty-main-1] *SYSTEM com.sonatype.nexus.plugins.nuget.odata.NugetODataGalleryMigrator - Starting Nuget DB migration to version 6
+2021-05-17 08:27:53,469+0000 INFO  [jetty-main-1] *SYSTEM com.sonatype.nexus.plugins.nuget.odata.NugetODataGalleryMigrator - Completed Nuget DB migration to version 6
+2021-05-17 08:27:53,474+0000 INFO  [jetty-main-1] *SYSTEM com.sonatype.nexus.plugins.nuget.odata.NugetODataGalleryMigrator - Starting Nuget DB migration to version 7
+2021-05-17 08:27:53,482+0000 INFO  [jetty-main-1] *SYSTEM com.sonatype.nexus.plugins.nuget.odata.NugetODataGalleryMigrator - Completed Nuget DB migration to version 7
+2021-05-17 08:27:53,483+0000 INFO  [jetty-main-1] *SYSTEM com.sonatype.nexus.plugins.nuget.odata.NugetODataGalleryMigrator - Starting Nuget DB migration to version 8
+2021-05-17 08:27:53,484+0000 INFO  [jetty-main-1] *SYSTEM com.sonatype.nexus.plugins.nuget.odata.NugetODataGalleryMigrator - Completed Nuget DB migration to version 8
+2021-05-17 08:27:53,490+0000 INFO  [jetty-main-1] *SYSTEM com.sonatype.nexus.plugins.nuget.odata.NugetODataGalleryMigrator - Starting Nuget DB migration to version 9
+2021-05-17 08:27:53,491+0000 INFO  [jetty-main-1] *SYSTEM com.sonatype.nexus.plugins.nuget.odata.NugetODataGalleryMigrator - Completed Nuget DB migration to version 9
+2021-05-17 08:27:53,491+0000 INFO  [jetty-main-1] *SYSTEM com.sonatype.nexus.plugins.nuget.odata.NugetODataGalleryMigrator - Completed Nuget DB migration.
+2021-05-17 08:27:53,491+0000 INFO  [jetty-main-1] *SYSTEM org.sonatype.nexus.webapp.WebappBootstrap - Initialized
+2021-05-17 08:27:53,594+0000 INFO  [pxpool-1-thread-1] *SYSTEM org.sonatype.nexus.index.NexusScanningListener - Scanning of repositoryID="snapshots" finished: scanned=0, added=0, updated=0, removed=0, scanningDuration=0:00:00.187
+2021-05-17 08:27:53,622+0000 INFO  [pxpool-1-thread-1] *SYSTEM org.sonatype.nexus.index.DefaultIndexerManager - Publishing index for repository snapshots
+[INFO] Unable to read properties file, will force index regeneration
+2021-05-17 08:27:53,671+0000 INFO  [ar-4-thread-3] *SYSTEM org.sonatype.nexus.proxy.storage.remote.httpclient.HttpClientRemoteStorage - Initializing remote transport for proxy repository "Central" [id=central]...
+2021-05-17 08:27:53,692+0000 INFO  [pxpool-1-thread-1] *SYSTEM org.sonatype.nexus.index.NexusScanningListener - Scanning of repositoryID="thirdparty" started.
+2021-05-17 08:27:53,740+0000 INFO  [jetty-main-1] *SYSTEM org.sonatype.nexus.rest.NexusApplication_UriMatching - Strict URI matching: true
+2021-05-17 08:27:53,785+0000 INFO  [pxpool-1-thread-1] *SYSTEM org.sonatype.nexus.index.NexusScanningListener - Scanning of repositoryID="thirdparty" finished: scanned=0, added=0, updated=0, removed=0, scanningDuration=0:00:00.092
+2021-05-17 08:27:53,790+0000 INFO  [pxpool-1-thread-1] *SYSTEM org.sonatype.nexus.index.DefaultIndexerManager - Publishing index for repository thirdparty
+[INFO] Unable to read properties file, will force index regeneration
+2021-05-17 08:27:53,798+0000 INFO  [ar-4-thread-1] *SYSTEM org.sonatype.nexus.proxy.storage.remote.httpclient.HttpClientRemoteStorage - Initializing remote transport for proxy repository "Apache Snapshots" [id=apache-snapshots]...
+2021-05-17 08:27:53,824+0000 INFO  [pxpool-1-thread-1] *SYSTEM org.sonatype.nexus.index.NexusScanningListener - Scanning of repositoryID="central" started.
+2021-05-17 08:27:53,835+0000 INFO  [jetty-main-1] *SYSTEM org.sonatype.nexus.configuration.ModelUtils - Loading model /opt/nexus/sonatype-work/conf/ldap.xml
+2021-05-17 08:27:53,857+0000 INFO  [jetty-main-1] *SYSTEM org.sonatype.nexus.configuration.ModelUtils - Loading model /opt/nexus/sonatype-work/conf/lvo-plugin.xml
+2021-05-17 08:27:53,987+0000 INFO  [pxpool-1-thread-1] *SYSTEM org.sonatype.nexus.index.NexusScanningListener - Scanning of repositoryID="central" finished: scanned=0, added=0, updated=0, removed=0, scanningDuration=0:00:00.163
+2021-05-17 08:27:54,001+0000 INFO  [pxpool-1-thread-1] *SYSTEM org.sonatype.nexus.index.DefaultIndexerManager - Publishing index for repository central
+[INFO] Unable to read properties file, will force index regeneration
+2021-05-17 08:27:54,134+0000 INFO  [pxpool-1-thread-1] *SYSTEM org.sonatype.nexus.index.DefaultIndexerManager - Publishing index for repository public
+[INFO] Unable to read properties file, will force index regeneration
+2021-05-17 08:27:54,212+0000 INFO  [jetty-main-1] *SYSTEM org.sonatype.nexus.plugins.siesta.SiestaModule - Resources:
+2021-05-17 08:27:54,212+0000 INFO  [jetty-main-1] *SYSTEM org.sonatype.nexus.plugins.siesta.SiestaModule -   /service/siesta/analytics/events
+2021-05-17 08:27:54,212+0000 INFO  [jetty-main-1] *SYSTEM org.sonatype.nexus.plugins.siesta.SiestaModule -   /service/siesta/analytics/settings
+2021-05-17 08:27:54,212+0000 INFO  [jetty-main-1] *SYSTEM org.sonatype.nexus.plugins.siesta.SiestaModule -   /service/siesta/atlas/security-diagnostic
+2021-05-17 08:27:54,212+0000 INFO  [jetty-main-1] *SYSTEM org.sonatype.nexus.plugins.siesta.SiestaModule -   /service/siesta/atlas/support-zip
+2021-05-17 08:27:54,212+0000 INFO  [jetty-main-1] *SYSTEM org.sonatype.nexus.plugins.siesta.SiestaModule -   /service/siesta/atlas/system-information
+2021-05-17 08:27:54,212+0000 INFO  [jetty-main-1] *SYSTEM org.sonatype.nexus.plugins.siesta.SiestaModule -   /service/siesta/capabilities
+2021-05-17 08:27:54,212+0000 INFO  [jetty-main-1] *SYSTEM org.sonatype.nexus.plugins.siesta.SiestaModule -   /service/siesta/capabilities/stores
+2021-05-17 08:27:54,212+0000 INFO  [jetty-main-1] *SYSTEM org.sonatype.nexus.plugins.siesta.SiestaModule -   /service/siesta/capabilities/types
+2021-05-17 08:27:54,212+0000 INFO  [jetty-main-1] *SYSTEM org.sonatype.nexus.plugins.siesta.SiestaModule -   /service/siesta/healthcheck/gaDetails
+2021-05-17 08:27:54,212+0000 INFO  [jetty-main-1] *SYSTEM org.sonatype.nexus.plugins.siesta.SiestaModule -   /service/siesta/healthcheck/gavDetails
+2021-05-17 08:27:54,212+0000 INFO  [jetty-main-1] *SYSTEM org.sonatype.nexus.plugins.siesta.SiestaModule -   /service/siesta/healthcheck/healthCheckEula
+2021-05-17 08:27:54,212+0000 INFO  [jetty-main-1] *SYSTEM org.sonatype.nexus.plugins.siesta.SiestaModule -   /service/siesta/healthcheck/healthCheckInfo
+2021-05-17 08:27:54,212+0000 INFO  [jetty-main-1] *SYSTEM org.sonatype.nexus.plugins.siesta.SiestaModule -   /service/siesta/healthcheck/healthCheckStatus
+2021-05-17 08:27:54,213+0000 INFO  [jetty-main-1] *SYSTEM org.sonatype.nexus.plugins.siesta.SiestaModule -   /service/siesta/healthcheck/healthCheckSummary/{repositoryId}/{path:.*}
+2021-05-17 08:27:54,213+0000 INFO  [jetty-main-1] *SYSTEM org.sonatype.nexus.plugins.siesta.SiestaModule -   /service/siesta/logging/log
+2021-05-17 08:27:54,213+0000 INFO  [jetty-main-1] *SYSTEM org.sonatype.nexus.plugins.siesta.SiestaModule -   /service/siesta/logging/loggers
+2021-05-17 08:27:54,213+0000 INFO  [jetty-main-1] *SYSTEM org.sonatype.nexus.plugins.siesta.SiestaModule -   /service/siesta/migrationagent/configuration
+2021-05-17 08:27:54,213+0000 INFO  [jetty-main-1] *SYSTEM org.sonatype.nexus.plugins.siesta.SiestaModule -   /service/siesta/migrationagent/repository
+2021-05-17 08:27:54,213+0000 INFO  [jetty-main-1] *SYSTEM org.sonatype.nexus.plugins.siesta.SiestaModule -   /service/siesta/migrationagent/repository-changelog
+2021-05-17 08:27:54,213+0000 INFO  [jetty-main-1] *SYSTEM org.sonatype.nexus.plugins.siesta.SiestaModule -   /service/siesta/migrationagent/repository-content
+2021-05-17 08:27:54,213+0000 INFO  [jetty-main-1] *SYSTEM org.sonatype.nexus.plugins.siesta.SiestaModule -   /service/siesta/migrationagent/repository-migration
+2021-05-17 08:27:54,213+0000 INFO  [jetty-main-1] *SYSTEM org.sonatype.nexus.plugins.siesta.SiestaModule -   /service/siesta/migrationagent/status
+2021-05-17 08:27:54,213+0000 INFO  [jetty-main-1] *SYSTEM org.sonatype.nexus.plugins.siesta.SiestaModule -   /service/siesta/wonderland/authenticate
+2021-05-17 08:27:54,213+0000 INFO  [jetty-main-1] *SYSTEM org.sonatype.nexus.plugins.siesta.SiestaModule -   /service/siesta/wonderland/download
+2021-05-17 08:27:54,213+0000 INFO  [jetty-main-1] *SYSTEM org.sonatype.nexus.plugins.siesta.SiestaModule -   /service/siesta/wonderland/settings
+2021-05-17 08:27:54,213+0000 INFO  [jetty-main-1] *SYSTEM org.sonatype.nexus.plugins.siesta.SiestaModule - Components:
+2021-05-17 08:27:54,213+0000 INFO  [jetty-main-1] *SYSTEM org.sonatype.nexus.plugins.siesta.SiestaModule -   org.sonatype.nexus.plugins.capabilities.internal.rest.CapabilityNotFoundExceptionMapper
+2021-05-17 08:27:54,213+0000 INFO  [jetty-main-1] *SYSTEM org.sonatype.nexus.plugins.siesta.SiestaModule -   org.sonatype.nexus.plugins.siesta.AuthorizationExceptionMapper
+2021-05-17 08:27:54,213+0000 INFO  [jetty-main-1] *SYSTEM org.sonatype.nexus.plugins.siesta.SiestaModule -   org.sonatype.nexus.plugins.siesta.ErrorStatusRuntimeExceptionMapper
+2021-05-17 08:27:54,213+0000 INFO  [jetty-main-1] *SYSTEM org.sonatype.nexus.plugins.siesta.SiestaModule -   org.sonatype.nexus.plugins.siesta.InvalidConfigurationExceptionMapper
+2021-05-17 08:27:54,213+0000 INFO  [jetty-main-1] *SYSTEM org.sonatype.nexus.plugins.siesta.SiestaModule -   org.sonatype.nexus.plugins.siesta.NoSuchRepositoryExceptionMapper
+2021-05-17 08:27:54,213+0000 INFO  [jetty-main-1] *SYSTEM org.sonatype.nexus.plugins.siesta.SiestaModule -   org.sonatype.sisu.siesta.jackson.JacksonProvider
+2021-05-17 08:27:54,213+0000 INFO  [jetty-main-1] *SYSTEM org.sonatype.nexus.plugins.siesta.SiestaModule -   org.sonatype.sisu.siesta.server.internal.mappers.BadRequestExceptionMapper
+2021-05-17 08:27:54,213+0000 INFO  [jetty-main-1] *SYSTEM org.sonatype.nexus.plugins.siesta.SiestaModule -   org.sonatype.sisu.siesta.server.internal.mappers.ConstraintViolationExceptionMapper
+2021-05-17 08:27:54,213+0000 INFO  [jetty-main-1] *SYSTEM org.sonatype.nexus.plugins.siesta.SiestaModule -   org.sonatype.sisu.siesta.server.internal.mappers.InvalidObjectExceptionMapper
+2021-05-17 08:27:54,213+0000 INFO  [jetty-main-1] *SYSTEM org.sonatype.nexus.plugins.siesta.SiestaModule -   org.sonatype.sisu.siesta.server.internal.mappers.ObjectNotFoundExceptionMapper
+2021-05-17 08:27:54,213+0000 INFO  [jetty-main-1] *SYSTEM org.sonatype.nexus.plugins.siesta.SiestaModule -   org.sonatype.sisu.siesta.server.internal.mappers.ThrowableExceptionMapper
+2021-05-17 08:27:54,213+0000 INFO  [jetty-main-1] *SYSTEM org.sonatype.nexus.plugins.siesta.SiestaModule -   org.sonatype.sisu.siesta.server.internal.mappers.ValidationErrorsExceptionMapper
+2021-05-17 08:27:54,213+0000 INFO  [jetty-main-1] *SYSTEM org.sonatype.nexus.plugins.siesta.SiestaModule -   org.sonatype.sisu.siesta.server.internal.mappers.WebApplicationExceptionMapper
+2021-05-17 08:27:54,213+0000 INFO  [jetty-main-1] *SYSTEM org.sonatype.nexus.plugins.siesta.SiestaModule -   org.sonatype.sisu.siesta.server.internal.mappers.WebApplicationMessageExceptionMapper
+2021-05-17 08:27:54,309+0000 INFO  [pxpool-1-thread-1] *SYSTEM org.sonatype.nexus.index.tasks.UpdateIndexTask - Scheduled task (UpdateIndexTask) finished :: Updating repository index "Public Repositories" from path null and below. (started 2021-05-17T08:27:52+00:00, runtime 0:00:01.531)
+2021-05-17 08:27:54,516+0000 INFO  [pxpool-1-thread-1] *SYSTEM org.sonatype.nexus.configuration.application.DefaultNexusConfiguration - Applying Nexus Configuration due to changes in [Scheduled Tasks] made by *TASK...
+2021-05-17 08:27:54,646+0000 INFO  [ar-4-thread-3] *SYSTEM org.sonatype.nexus.proxy.maven.routing.internal.ManagerImpl - Updated and published prefix file of "Public Repositories" [id=public]
+2021-05-17 08:27:54,961+0000 INFO  [jetty-main-1] *SYSTEM org.sonatype.nexus.webresources.internal.WebResourceServiceImpl - Discovered 1971 resources
+2021-05-17 08:27:54,963+0000 INFO  [jetty-main-1] *SYSTEM org.sonatype.nexus.webresources.internal.WebResourceServlet - Max-age: 30 days (2592000 seconds)
+2021-05-17 08:27:54,991+0000 INFO  [jetty-main-1] *SYSTEM org.sonatype.nexus.bootstrap.jetty.InstrumentedSelectChannelConnector - Metrics enabled
+2021-05-17 08:27:55,016+0000 INFO  [jetty-main-1] *SYSTEM org.eclipse.jetty.server.AbstractConnector - Started InstrumentedSelectChannelConnector@0.0.0.0:8081
+2021-05-17 08:27:55,016+0000 INFO  [jetty-main-1] *SYSTEM org.sonatype.nexus.bootstrap.jetty.JettyServer - Running
+2021-05-17 08:27:55,016+0000 INFO  [main] *SYSTEM org.sonatype.nexus.bootstrap.jetty.JettyServer - Started
+[student@workstation local]$ sudo podman inspect -f '{{.NetworkSettings.IPAddress}}' blissful_rubin
+10.88.0.2
+[student@workstation local]$ curl -v 10.88.0.2:8081/nexus/ 2>&1 | grep -E 'HTTP|<title>'
+> GET /nexus/ HTTP/1.1
+< HTTP/1.1 200 OK
+  <title>Nexus Repository Manager</title>
+[student@workstation local]$ sudo podman 
+
