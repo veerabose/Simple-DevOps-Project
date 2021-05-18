@@ -7775,3 +7775,183 @@ Services Discovery
 Storage
 Application Management
 Cluster Extensibility
+
+--------------------------Describing the Architecture of OpenShift-----------------------------
+Introducing the Declarative Architecture of
+Kubernetes
+
+Introducing the OpenShift Control Plane
+A Kubernetes cluster consists of a set of nodes that run the kubelet system service and a container
+engine. OpenShift runs exclusively the CRI-O container engine.
+Some nodes are control plane nodes that run the REST API, the etcd database, and the platform
+controllers. OpenShift configures its control plane nodes so that they are not schedulable to run
+end-user application pods and are dedicated to running the control plane services. OpenShift
+schedules end-user application pods to be executed on the worker nodes.
+
+Describing OpenShift Extensions
+
+Introducing the OpenShift Default Storage Class
+---------------------------------------------Describing Cluster Operators----------------------------------------------
+ntroducing Kubernetes Operators
+Kubernetes operators are applications that invoke the Kubernetes API to manage Kubernetes
+resources. As for any Kubernetes application, you deploy an operator by defining Kubernetes
+resources such as services and deployments that reference the operator's container image.
+Because operators, unlike common applications, require direct access to the Kubernetes
+resources, they usually require custom security settings.
+Operators usually define custom resources (CR) that store their settings and configurations. An
+OpenShift administrator manages an operator by editing its custom resources. The syntax of a
+custom resource is defined by a custom resource definition (CRD).
+Most operators manage another application; for example, an operator that manages a database
+server. In that case, the operator creates the resources that describe that other application using
+the information from its custom resource.
+The purpose of an operator is usually to automate tasks that a human adm
+
+ntroducing the Operator Framework
+You can develop operators using your preferred programming language. Technically you do not
+need a special-purpose SDK to develop an operator. All you need is the ability to invoke REST APIs
+and consume secrets that contain access credentials to the Kubernetes APIs.
+The Operator Framework is an open source toolkit for building, testing, and packaging operators.
+The Operator Framework makes these tasks easier than coding directly to low-level Kubernetes
+APIs by providing the following components:
+
+Operator Software Development Kit (Operator SDK)
+Operator Life Cycle Manager (OLM)
+
+Introducing OperatorHub
+
+Introducing Red Hat Marketplace
+
+Introducing OpenShift Cluster Operators
+
+Important
+OpenShift 4 deprecates the usage of SSH sessions to manage nodes configuration
+and system services. This ensures that you do not customize the nodes, and that
+they can be safely added or removed from a cluster. You are expected to perform all
+administrative actions indirectly by editing custom resources and then wait for their
+respective operators to apply your changes.
+
+Exploring OpenShift Cluster Operators
+
+Operators are apparent from their name, for example, the console cluster operator provides the
+web console, the ingress cluster operator enables ingresses and routes. The following lists some
+of the cluster operators.
+
+network
+ingress
+storage
+authentication
+console
+monitoring
+image-registry
+cluster-autoscaler
+openshift-apiserver
+dns
+openshift-controller-manager
+cloud-credential
+
+Summary
+In this chapter, you learned:
+• Red Hat OpenShift Container Platform is based on Red Hat Enterprise Linux CoreOS, the CRI-
+O container engine, and Kubernetes.
+• RHOCP 4 provides a number of services on top of Kubernetes, such as an internal container
+image registry, storage, networking providers, and centralized logging and monitoring.
+• Operators package applications that manage Kubernetes resources, and the Operator Lifecycle
+Manager (OLM) handles installation and management of operators.
+• OperatorHub.io is an online catalog for discovering operators.
+
+_____________________________________________________________________CH9-Describing Installation Methods---------------------------------------------------
+Introducing OpenShift Installation Methods
+
+Full-stack Automation
+With this method, the OpenShift installer provisions all compute, storage, and network
+resources from a cloud or virtualization provider. You provide the installer with minimum data,
+such as credentials to a cloud provider and the size of the initial cluster, and then the installer
+deploys a fully functional OpenShift cluster.
+Pre-existing Infrastructure
+With this method, you configure a set of compute, storage, and network resources and the
+OpenShift installer configures an initial cluster using these resources. You can use this method
+to set up an OpenShift cluster using bare-metal servers and cloud or virtualization providers
+that are not supported by the full-stack automation method.
+
+-----------------------------------CH9-Troubleshooting OpenShift Clusters and Applications ------------------------------------------------------------------------
+
+Objectives
+After completing this section, you should be able to:
+• Execute commands that assist in troubleshooting common problems.
+• Verify that your OpenShift cluster nodes are healthy.
+• Troubleshoot common issues with OpenShift and Kubernetes styles of deployment.
+
+Troubleshooting Common Issues with an OpenShift Cluster
+Verifying the Health of OpenShift Nodes
+oc get nodes
+oc adm top nodes
+oc describe node my-node-name
+Reviewing the Cluster Version Resource
+oc get clusterversion
+
+oc describe clusterversion
+
+Reviewing Cluster Operators
+oc get clusteroperators
+
+Displaying the Logs of OpenShift Nodes
+oc adm node-logs -u crio my-node-name
+oc adm node-logs -u kubelet my-node-name
+oc adm node-logs my-node-name
+
+Opening a Shell Prompt on an OpenShift Node
+oc debug node
+[user@demo ~]$ oc debug node/my-node-name
+...output omitted...
+sh-4.2# chroot /host
+sh-4.2# systemctl is-active kubelet
+active
+
+Troubleshooting The Container Engine
+[user@demo ~]$ oc debug node/my-node-name
+...output omitted...
+sh-4.2# chroot /host
+sh-4.2# crictl ps
+...output omitted...
+
+
+Troubleshooting Pods That Fail to Start
+
+A common scenario is that OpenShift creates a pod and that pod never establishes a Running
+state. This means that OpenShift could not start the containers inside that pod. Start
+troubleshooting using the oc get pod and oc status commands to verify whether your pods
+and containers are running. At some point, the pods are in an error state, such as ErrImagePull
+or ImagePullBackOff.
+When this happens, the first step is listing events from the current project using the oc get
+events command. If your project contains many pods, then you can get a list of events filtered by
+pod using the oc describe pod command. You can also run similar oc describe commands
+to filter events by deployments and deployment configurations.
+
+Troubleshooting Running and Terminated Pods
+oc logs my-pod-name
+oc logs my-pod-name -c my-container-name
+
+Creating Troubleshooting Pods
+
+[user@demo ~]$ oc debug deployment/my-deployment-name --as-root
+
+Changing a Running Container
+oc rsh my-pod-name
+oc cp /local/path my-pod-name:/container/path
+oc port-forward my-pod-name local-port:remote-port
+
+Troubleshooting OpenShift CLI Commands
+oc get pod --loglevel 6
+oc get pod --loglevel 10
+oc whoami -t
+
+------------------------------CH9-GE-Troubleshooting OpenShift Clusters and Applications ------------------------------------
+In this exercise, you will execute commands that assist in troubleshooting common problems
+with the OpenShift control plane and with application deployments.
+Outcomes
+You should be able to:
+• Inspect the general state of an OpenShift cluster.
+• Inspect local services and pods running in an OpenShift worker node.
+• Diagnose and fix issues with the deployment of an application.
+
+
