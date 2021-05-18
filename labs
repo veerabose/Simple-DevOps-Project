@@ -8384,4 +8384,86 @@ Completing Guided Exercise: Troubleshooting OpenShift Clusters and Applications
 Please use start if you wish to do the exercise again.
 
 [student@workstation ~]$ 
+-------------------------------Chapter 9- Introducing OpenShift Dynamic Storage ----------------------
 
+Persistent Storage Overview:
+Containers have ephemeral storage by default. For example, when a container is deleted, all the
+files and data inside it are deleted also. To preserve the files, containers offer two main ways of
+maintaining persistent storage: volumes and bind mounts. Volumes are the preferred OpenShift
+way of managing persistent storage. Volumes are managed manually by the administrator or
+dynamically through a storage class. Developers working with containers on a local system can
+mount a local directory into a container using a bind mount.
+OpenShift cluster administrators use the Kubernetes persistent volume framework to manage
+persistent storage for the users of a cluster. There are two ways of provisioning storage for
+the cluster: static and dynamic. Static provisioning requires the cluster administrator to create
+persistent volumes manually. Dynamic provisioning uses storage classes to create the persistent
+volumes on demand.
+The OpenShift Container Platform uses storage classes to allow administrators to provide
+persistent storage. Storage classes are a way to describe types of storage for the cluster and
+provision dynamic storage on demand.
+
+Persistent Volume and Persistent Volume Claim Life Cycle:
+Persistent volume claims request persistent volume resources. To be eligible, a PV must not be
+bound to another PVC. Additionally, the PV must provide the access mode specified in the PVC
+and it must be at least as large as the size requested in the PVC. A PVC can specify additional
+criteria, such as the name of a storage class. If a PVC cannot find a PV that matches all criteria,
+the PVC enters a pending state and waits until an appropriate PV becomes available. A cluster
+administrator can manually create the PV or a storage class can dynamically create the PV. A
+bound persistent volume can be mounted as a volume to a specific mount point in the pod (for
+example, /var/lib/pgsql for a PostgreSQL database).
+
+Verifying the Dynamic Provisioned Storage:
+Use the oc get storageclass command to view available storage classes. The output
+identifies the default storage class. If a storage class exists, then persistent volumes are created
+dynamically to match persistent volume claims. A persistent volume claim that does not specify a
+storage class uses the default storage class.
+[user@demo ~]$ oc get storageclass
+NAME                 PROVISIONER
+nfs-storage (default)  nfs-storage-provisioner
+
+Deploying Dynamically Provisioned Storage
+To add a volume to an application create a PersistentVolumeClaim resource and add it to the
+application as a volume. Create the persistent volume claim using either a Kubernetes manifest
+or the oc set volumes command. In addition to either creating a new persistent volume claim
+or using an existing persistent volume claim, the oc set volumes command can modify a
+deployment or a deployment configuration to mount the persistent volume claim as a volume
+within the pod
+
+To create a PersistentVolumeClaim API object:
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+name: example-pv-claim
+labels:
+app: example-application
+spec:
+accessModes:
+- ReadWriteOnce
+  resources:
+  requests:
+  storage: 15Gi
+Indicates that it is a persistent volume claim.
+The name to use in the claimName field of the persistentVolumeClaim element in the
+volumes section of a deployment manifest.
+The storage class provisioner must provide this access mode. If persistent volumes are
+created statically, then an eligible persistent volume must provide this access mode.
+The storage class will create a persistent volume matching this size request. If persistent
+volumes are created statically, then an eligible persistent volume must be at least the
+requested size.
+
+Access Mode          CLI Abbreviation                      Description
+ReadWriteMany         RWX                         Kubernetes can mount the volume as read-write on many nodes.
+ReadOnlyMany          ROX                         Kubernetes can mount the volume as read-only on many nodes
+ReadWriteOnce         RWO                         Kubernetes can mount the volume as read-write on only a single node.
+
+Deleting Persistent Volume Claims
+oc delete pvc/example-pvc-storage
+
+-------------------------------------------CH9-GE-Introducing OpenShift Dynamic Storage------------------------------
+In this exercise, you will deploy a PostgreSQL database using a persistent volume claim and
+identify its dynamically allocated volume.
+Outcomes
+You should be able to:
+• Identify the default storage settings of an OpenShift cluster.
+• Create persistent volume claims.
+• Manage persistent volumes.
