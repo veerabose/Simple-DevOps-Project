@@ -1,0 +1,102 @@
+
+--------------------------------------CH10-GE-Configuring Identity Providers--------------------------------
+In this exercise, you will configure the HTPasswd identity provider and create users for cluster
+administrators.
+Outcomes
+You should be able to:
+ Create users and passwords for HTPasswd authentication.
+  Configure the Identity Provider for HTPasswd authentication.
+   Assign cluster administration rights to users.
+   
+[student@workstation ~]$ lab auth-provider start
+
+Checking prerequisites for Guided Exercise: Configuring Identity Providers
+
+ Verify the OpenShift cluster is running:
+ · Router pods are available...................................  SUCCESS
+ · OAuth pods are available....................................  SUCCESS
+ · API pods are available......................................  SUCCESS
+ · Control plane node 'master01' is ready......................  SUCCESS
+ · Control plane node 'master02' is ready......................  SUCCESS
+ · Control plane node 'master03' is ready......................  SUCCESS
+ Checking for conflicts with existing OpenShift projects:
+ · The 'auth-provider' project is absent.......................  SUCCESS
+
+Setting up the classroom for Guided Exercise: Configuring Identity Providers
+
+ Preparing the student's workstation:
+ · Download exercise files.....................................  SUCCESS
+ · Download solution files.....................................  SUCCESS
+ Restoring authentication settings to installation defaults:
+ · No need to perform any change...............................  SUCCESS
+
+Overall start status...........................................  SUCCESS
+
+[student@workstation ~]$ source /usr/local/etc/ocp4.config
+[student@workstation ~]$ htpasswd -c -B -b ~/DO280/labs/auth-provider/htpasswd admin redhat
+Adding password for user admin
+[student@workstation ~]$ htpasswd -b ~/DO280/labs/auth-provider/htpasswd developer developer
+Adding password for user developer
+[student@workstation ~]$ cat ~/DO280/labs/auth-provider/htpasswd
+admin:$2y$05$xEETU3573YrbGmznTMMBZOSrgcSUpXX5WBqivpRVKDF6MUMO0qSs2
+developer:$apr1$fwuleoSK$fijQ.FKM0XsUwedL9EAQ60
+[student@workstation ~]$ oc login -u kubeadmin -p ${RHT_OCP4_KUBEADM_PASSWD} https://api.ocp4.example.com:6443
+Login successful.
+
+You have access to 59 projects, the list has been suppressed. You can list all projects with 'oc projects'
+
+Using project "default".
+[student@workstation ~]$ oc create secret generic localusers --from-file htpasswd=/home/student/DO280/labs/auth-provider/htpasswd -n openshift-config
+secret/localusers created
+[student@workstation ~]$ oc adm policy add-cluster-role-to-user cluster-admin admin
+Warning: User 'admin' not found
+clusterrole.rbac.authorization.k8s.io/cluster-admin added: "admin"
+[student@workstation ~]$ oc get oauth cluster -o yaml > ~/DO280/labs/auth-provider/oauth.yaml
+[student@workstation ~]$ vim ~/DO280/labs/auth-provider/oauth.yaml
+[student@workstation ~]$ cat !$
+cat ~/DO280/labs/auth-provider/oauth.yaml
+apiVersion: config.openshift.io/v1
+kind: OAuth
+metadata:
+  annotations:
+    kubectl.kubernetes.io/last-applied-configuration: |
+      {"apiVersion":"config.openshift.io/v1","kind":"OAuth","metadata":{"annotations":{},"name":"cluster"},"spec":{"identityProviders":[{"challenge":true,"htpasswd":{"fileData":{"name":"localusers"}},"login":true,"mappingMethod":"claim","name":"localusers","type":"HTPasswd"}]}}
+    release.openshift.io/create-only: "true"
+  creationTimestamp: "2020-08-05T18:23:41Z"
+  generation: 3
+  managedFields:
+  - apiVersion: config.openshift.io/v1
+    fieldsType: FieldsV1
+    fieldsV1:
+      f:metadata:
+        f:annotations:
+          .: {}
+          f:release.openshift.io/create-only: {}
+      f:spec: {}
+    manager: cluster-version-operator
+    operation: Update
+    time: "2020-08-05T18:23:41Z"
+  - apiVersion: config.openshift.io/v1
+    fieldsType: FieldsV1
+    fieldsV1:
+      f:metadata:
+        f:annotations:
+          f:kubectl.kubernetes.io/last-applied-configuration: {}
+    manager: oc
+    operation: Update
+    time: "2020-11-23T15:53:12Z"
+  name: cluster
+  resourceVersion: "82447"
+  selfLink: /apis/config.openshift.io/v1/oauths/cluster
+  uid: c96a18f6-b8de-4722-b5bf-ca6c39cdb78b
+spec:
+  identityProviders:
+  - htpasswd:
+      fileData:
+        name: localusers
+    mappingMethod: claim
+    name: myusers
+    type: HTPasswd
+[student@workstation ~]$ oc replace -f ~/DO280/labs/auth-provider/oauth.yaml
+oauth.config.openshift.io/cluster replaced
+[student@workstation ~]$ 
