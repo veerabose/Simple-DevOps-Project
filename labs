@@ -8665,5 +8665,153 @@ In this chapter, you learned:
     provide troubleshooting information about OpenShift nodes.
 -----------------------------------------------------CH-10-Configuring Identity Providers----------- --------------------   
     
+Describing OpenShift Users and Groups
+There are several OpenShift resources related to authentication and authorization. The following is
+a list of the primary resource types and their definitions:
+
+User
+In the OpenShift Container Platform architecture, users are entities that interact with the API
+server. The user resource represents an actor within the system. Assign permissions by adding
+roles to the user directly or to the groups of which the user is a member.
+
+Identity
+The identity resource keeps a record of successful authentication attempts from a specific
+user and identity provider. Any data concerning the source of the authentication is stored on
+the identity. Only a single user resource is associated with an identity resource.
+
+Service Account
+In OpenShift, applications can communicate with the API independently when user credentials
+cannot be acquired. To preserve the integrity of a regular user's credentials, credentials are
+not shared and service accounts are used instead. Service accounts enable you to control API
+access without the need to borrow a regular user's credentials.
+
+Group
+Groups represent a specific set of users. Users are assigned to one or to multiple groups.
+Groups are leveraged when implementing authorization policies to assign permissions to
+multiple users at the same time. For example, if you want to allow twenty users access to
+objects within a project, then it is advantageous to use a group instead of granting access to
+each of the users individually. OpenShift Container Platform also provides system groups or
+virtual groups that are provisioned automatically by the cluster.
+
+Role
+A role defines a set of permissions that enables a user to perform API operations over one
+or more resource types. You grant permissions to users, groups, and service accounts by
+assigning roles to them.
+
+Introducing Identity Providers
+
+OpenShift OAuth server can be configured to use many identity providers. The following lists
+includes the more common ones:
+
+HTPasswd
+Validates user names and passwords against a secret that stores credentials generated using
+the htpasswd command.
+
+Keystone
+Enables shared authentication with an OpenStack Keystone v3 server.
+
+LDAP
+Configures the LDAP identity provider to validate user names and passwords against an
+LDAPv3 server, using simple bind authentication.
+GitHub or GitHub Enterprise
+Configures a GitHub identity provider to validate user names and passwords against GitHub
+or the GitHub Enterprises OAuth authentication server.
+
+OpenID Connect
+Integrates with an OpenID Connect identity provider using an Authorization Code Flow.
+The OAuth custom resource must be updated with your desired identity provider. You can define
+multiple identity providers, of the same or different kinds, on the same OAuth custom resource.
+
+                         Authenticating as a Cluster Administrator
+                        ------------------------------------------
+Before you can configure an identity provider and manage users, you must access your OpenShift
+cluster as a cluster administrator. A newly-installed OpenShift cluster provides two ways to
+authenticate API requests with cluster administrator privileges:
+• Authenticate as the kubeadmin virtual user. Successful authentication grants an OAuth access
+token.
+• Use the kubeconfig file, which embeds an X.509 client certificate that never expires.
+To create additional users and grant them different access levels, you must configure an identity
+
+                     Authenticating Using the X.509 Certificate
+During installation, the OpenShift installer creates a unique kubeconfig file in the auth
+directory. The kubeconfig file contains specific details and parameters used by the CLI to
+connect a client to the correct API server, including an X.509 certificate.
+The installation logs provide the location of the kubeconfig file:
+INFO Run 'export KUBECONFIG=root/auth/kubeconfig' to manage the cluster with 'oc'.
+Note
+In the classroom environment, the utility machine stores the kubeconfig file at
+/home/lab/ocp4/auth/kubeconfig.
+provider and assign roles to your users.
     
-    
+To use the kubeconfig file to authenticate oc commands, you must copy the file to your
+workstation and set the absolute or relative path to the KUBECONFIG environment variable. Then,
+you can run any oc that requires cluster administrator privileges without logging in to OpenShift.
+[user@demo ~]$ export KUBECONFIG=/home/user/auth/kubeconfig
+[user@demo ~]$ oc get nodes
+As an alternative, you can use the --kubeconfig option of the oc command.
+[user@demo ~]$ oc --kubeconfig /home/user/auth/kubeconfig get nodes
+
+                             Deleting the Virtual User
+After you define an identity provider, create a new user, and assign that user the cluster-admin
+role, you can remove the kubeadmin user credentials to improve cluster security.
+[user@demo ~]$ oc delete secret kubeadmin -n kube-system
+Warning
+If you delete the kubeadmin secret before you configure another user with cluster
+admin privileges, then the only way you can administer your cluster is using the
+kubeconfig file. If you do not have a copy of this file in a safe location, then
+you cannot recover administrative access to your cluster. The only alternative is
+destroying and reinstalling your cluster.
+
+ ------------------------------Configuring the HTPasswd Identity Provider-----------------------
+ Configuring the OAuth Custom Resource
+ Updating the OAuth Custom Resource
+ oc get oauth cluster -o yaml > oauth.yaml
+ oc replace -f oauth.yaml
+ 
+Managing Users with the HTPasswd Identity Provider
+Creating an HTPasswd File
+htpasswd -c -B -b /tmp/htpasswd student redhat123
+Important
+Use the -c option only when creating a new file. The -c option replaces all file
+content if the file already exists.
+Add or update credentials.
+[user@demo ~]$ htpasswd -b /tmp/htpasswd student redhat1234
+Delete credentials.
+[user@demo ~]$ htpasswd -D /tmp/htpasswd student
+
+Creating the HTPasswd Secret
+To use the HTPasswd provider, you must create a secret that contains the htpasswd file data. The
+following example uses a secret named htpasswd-secret.
+[user@demo ~]$ oc create secret generic htpasswd-secret --from-file htpasswd=/tmp/htpasswd -n openshift-config
+Important
+A secret used by the HTPasswd identity provider requires adding the htpasswd=
+prefix before specifying the path to the file.
+
+Extracting Secret Data
+
+[user@demo ~]$ oc extract secret/htpasswd-secret -n openshift-config --to /tmp/ --confirm
+/tmp/htpasswd
+
+Updating the HTPasswd Secret
+user@demo ~]$ oc set data secret/htpasswd-secret --from-file htpasswd=/tmp/htpasswd -n openshift-config
+
+Deleting Users and Identities
+[user@demo ~]$ htpasswd -D /tmp/htpasswd manager
+[user@demo ~]$ oc set data secret/htpasswd-secret --from-file htpasswd=/tmp/htpasswd -n openshift-config
+[user@demo ~]$ oc delete user manager
+user.user.openshift.io "manager" deleted
+
+Identity resources include the name of the identity provider. To delete the identity resource for the
+manager user, find the resource and then delete it.
+[user@demo ~]$ oc get identities | grep manager
+my_htpasswd_provider:manager my_htpasswd_provider manager manager  ...
+
+[user@demo ~]$ oc delete identity my_htpasswd_provider:manager
+identity.user.openshift.io "my_htpasswd_provider:manager" deleted
+
+Assigning Administrative Privileges
+The cluster-wide cluster-admin role grants cluster administration privileges to users and
+groups. This role enables the user to perform any action on any resources within the cluster. The
+following example assigns the cluster-admin role to the student user.
+[user@demo ~]$ oc adm policy add-cluster-role-to-user cluster-admin student
+-----------------------------------------------CH-10-Configuring Identity Providers--------------------------------------
