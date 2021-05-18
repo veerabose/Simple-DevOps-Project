@@ -7954,4 +7954,434 @@ You should be able to:
 • Inspect local services and pods running in an OpenShift worker node.
 • Diagnose and fix issues with the deployment of an application.
 
+[student@workstation ~]$ lab execute-troubleshoot start
+
+Checking prerequisites for Guided Exercise: Troubleshooting OpenShift Clusters and Applications
+
+ Preparing the student's workstation:
+ · Download exercise files.....................................  SUCCESS
+ Verify the OpenShift cluster is running:
+ · Router pods are available...................................  SUCCESS
+ · OAuth pods are available....................................  SUCCESS
+ · API pods are available......................................  SUCCESS
+ · Control plane node 'master01' is ready......................  SUCCESS
+ · Control plane node 'master02' is ready......................  SUCCESS
+ · Control plane node 'master03' is ready......................  SUCCESS
+ Checking for conflicts with existing OpenShift projects:
+ · The 'execute-troubleshoot' project is absent................  SUCCESS
+
+Setting up the classroom for Guided Exercise: Troubleshooting OpenShift Clusters and Applications
+
+ Restoring authentication settings to installation defaults:
+ · Removing 'cluster-admin' role from the 'admin' user.........  SUCCESS
+ · Remove HTPasswd secret: 'localusers'........................  SUCCESS
+ · Remove all configured Identity Providers....................  SUCCESS
+ · Remove all existing users...................................  SUCCESS
+ · Remove all existing identities..............................  SUCCESS
+ Preparing the exercise:
+ · Create project 'execute-troubleshoot'.......................  SUCCESS
+ · Deploy PostgreSQL in 'execute-troubleshoot'.................  SUCCESS
+
+Overall start status...........................................  SUCCESS
+
+[student@workstation ~]$ source /usr/local/etc/ocp4.config
+[student@workstation ~]$ oc login -u kubeadmin -p ${RHT_OCP4_KUBEADM_PASSWD} https://api.ocp4.example.com:6443
+Login successful.
+
+You have access to 60 projects, the list has been suppressed. You can list all projects with 'oc projects'
+
+Using project "default".
+[student@workstation ~]$ oc get nodes
+NAME       STATUS   ROLES           AGE    VERSION
+master01   Ready    master,worker   285d   v1.18.3+012b3ec
+master02   Ready    master,worker   285d   v1.18.3+012b3ec
+master03   Ready    master,worker   285d   v1.18.3+012b3ec
+[student@workstation ~]$ oc adm top node
+NAME       CPU(cores)   CPU%   MEMORY(bytes)   MEMORY%   
+master01   2519m        71%    5948Mi          39%       
+master02   796m         22%    3509Mi          23%       
+master03   2417m        69%    6225Mi          41%       
+[student@workstation ~]$ oc describe node master01
+Name:               master01
+Roles:              master,worker
+Labels:             beta.kubernetes.io/arch=amd64
+                    beta.kubernetes.io/os=linux
+                    kubernetes.io/arch=amd64
+                    kubernetes.io/hostname=master01
+                    kubernetes.io/os=linux
+                    node-role.kubernetes.io/master=
+                    node-role.kubernetes.io/worker=
+                    node.openshift.io/os_id=rhcos
+Annotations:        machineconfiguration.openshift.io/currentConfig: rendered-master-6138b4e92dcc2266ec7bb66fb565d008
+                    machineconfiguration.openshift.io/desiredConfig: rendered-master-6138b4e92dcc2266ec7bb66fb565d008
+                    machineconfiguration.openshift.io/reason: 
+                    machineconfiguration.openshift.io/state: Done
+                    volumes.kubernetes.io/controller-managed-attach-detach: true
+CreationTimestamp:  Wed, 05 Aug 2020 14:23:06 -0400
+Taints:             <none>
+Unschedulable:      false
+Lease:
+  HolderIdentity:  master01
+  AcquireTime:     <unset>
+  RenewTime:       Tue, 18 May 2021 06:02:17 -0400
+Conditions:
+  Type             Status  LastHeartbeatTime                 LastTransitionTime                Reason                       Message
+  ----             ------  -----------------                 ------------------                ------                       -------
+  MemoryPressure   False   Tue, 18 May 2021 05:57:40 -0400   Wed, 05 Aug 2020 14:42:05 -0400   KubeletHasSufficientMemory   kubelet has sufficient memory available
+  DiskPressure     False   Tue, 18 May 2021 05:57:40 -0400   Wed, 05 Aug 2020 14:42:05 -0400   KubeletHasNoDiskPressure     kubelet has no disk pressure
+  PIDPressure      False   Tue, 18 May 2021 05:57:40 -0400   Wed, 05 Aug 2020 14:42:05 -0400   KubeletHasSufficientPID      kubelet has sufficient PID available
+  Ready            True    Tue, 18 May 2021 05:57:40 -0400   Wed, 05 Aug 2020 14:42:05 -0400   KubeletReady                 kubelet is posting ready status
+Addresses:
+  InternalIP:  192.168.50.10
+  Hostname:    master01
+Capacity:
+  cpu:                4
+  ephemeral-storage:  41391084Ki
+  hugepages-1Gi:      0
+  hugepages-2Mi:      0
+  memory:             16419132Ki
+  pods:               250
+Allocatable:
+  cpu:                3500m
+  ephemeral-storage:  37072281128
+  hugepages-1Gi:      0
+  hugepages-2Mi:      0
+  memory:             15268156Ki
+  pods:               250
+System Info:
+  Machine ID:                                 8647fbfd86c5432aa6c9da08d596d4cc
+  System UUID:                                06f556fa-4726-4a64-a044-27954d38d66a
+  Boot ID:                                    ea5cf4e0-a835-4d13-87db-b3a286c34acc
+  Kernel Version:                             4.18.0-193.13.2.el8_2.x86_64
+  OS Image:                                   Red Hat Enterprise Linux CoreOS 45.82.202007240629-0 (Ootpa)
+  Operating System:                           linux
+  Architecture:                               amd64
+  Container Runtime Version:                  cri-o://1.18.3-5.rhaos4.5.git1c13d1d.el8
+  Kubelet Version:                            v1.18.3+012b3ec
+  Kube-Proxy Version:                         v1.18.3+012b3ec
+PodCIDR:                                      10.8.1.0/24
+PodCIDRs:                                     10.8.1.0/24
+Non-terminated Pods:                          (48 in total)
+  Namespace                                   Name                                                 CPU Requests  CPU Limits  Memory Requests  Memory Limits  AGE
+  ---------                                   ----                                                 ------------  ----------  ---------------  -------------  ---
+  execute-troubleshoot                        psql-69676884f8-gbmmz                                0 (0%)        0 (0%)      512Mi (3%)       512Mi (3%)     105s
+  openshift-apiserver                         apiserver-59b6b7968c-pjlbc                           100m (2%)     0 (0%)      200Mi (1%)       0 (0%)         285d
+  openshift-authentication                    oauth-openshift-77664d84f6-lf9mj                     10m (0%)      0 (0%)      50Mi (0%)        0 (0%)         103s
+  openshift-cloud-credential-operator         cloud-credential-operator-5bf8fb79db-2g78t           10m (0%)      0 (0%)      150Mi (1%)       0 (0%)         285d
+  openshift-cluster-node-tuning-operator      tuned-qjbhv                                          10m (0%)      0 (0%)      50Mi (0%)        0 (0%)         285d
+  openshift-cluster-storage-operator          csi-snapshot-controller-77bd8876fb-k5p5x             10m (0%)      0 (0%)      50Mi (0%)        0 (0%)         8m17s
+  openshift-cluster-storage-operator          csi-snapshot-controller-operator-6f9d5b4bfc-vwtct    10m (0%)      0 (0%)      50Mi (0%)        0 (0%)         285d
+  openshift-console                           console-5df4fcbb47-67c52                             10m (0%)      0 (0%)      100Mi (0%)       0 (0%)         285d
+  openshift-console                           downloads-5565cdb86b-2nknx                           10m (0%)      0 (0%)      50Mi (0%)        0 (0%)         285d
+  openshift-controller-manager                controller-manager-jxqm4                             100m (2%)     0 (0%)      100Mi (0%)       0 (0%)         25h
+  openshift-dns                               dns-default-tfhlc                                    65m (1%)      0 (0%)      110Mi (0%)       512Mi (3%)     285d
+  openshift-etcd-operator                     etcd-operator-fcd9d5cb7-qzzdm                        10m (0%)      0 (0%)      50Mi (0%)        0 (0%)         285d
+  openshift-etcd                              etcd-master01                                        460m (13%)    0 (0%)      920Mi (6%)       0 (0%)         285d
+  openshift-image-registry                    image-registry-64b69c4bf9-48xl5                      100m (2%)     0 (0%)      256Mi (1%)       0 (0%)         285d
+  openshift-image-registry                    node-ca-qrrpd                                        10m (0%)      0 (0%)      10Mi (0%)        0 (0%)         285d
+  openshift-kube-apiserver-operator           kube-apiserver-operator-595f668595-svk4h             10m (0%)      0 (0%)      50Mi (0%)        0 (0%)         285d
+  openshift-kube-apiserver                    kube-apiserver-master01                              330m (9%)     0 (0%)      1174Mi (7%)      0 (0%)         25h
+  openshift-kube-controller-manager-operator  kube-controller-manager-operator-5658d865f7-6b54k    10m (0%)      0 (0%)      50Mi (0%)        0 (0%)         285d
+  openshift-kube-controller-manager           kube-controller-manager-master01                     100m (2%)     0 (0%)      500Mi (3%)       0 (0%)         285d
+  openshift-kube-scheduler                    openshift-kube-scheduler-master01                    20m (0%)      0 (0%)      100Mi (0%)       0 (0%)         25h
+  openshift-kube-storage-version-migrator     migrator-84d87c7d77-g8wvq                            100m (2%)     0 (0%)      200Mi (1%)       0 (0%)         285d
+  openshift-machine-api                       cluster-autoscaler-operator-d5698d448-xcjl5          30m (0%)      0 (0%)      70Mi (0%)        0 (0%)         285d
+  openshift-machine-config-operator           etcd-quorum-guard-5fc4989788-ffw7c                   10m (0%)      0 (0%)      5Mi (0%)         0 (0%)         285d
+  openshift-machine-config-operator           machine-config-daemon-l4ftv                          40m (1%)      0 (0%)      100Mi (0%)       0 (0%)         285d
+  openshift-machine-config-operator           machine-config-operator-5b87d8f4c5-lkgjx             20m (0%)      0 (0%)      50Mi (0%)        0 (0%)         285d
+  openshift-machine-config-operator           machine-config-server-cn4cx                          20m (0%)      0 (0%)      50Mi (0%)        0 (0%)         285d
+  openshift-marketplace                       certified-operators-5c8f5b9f44-4qdrx                 10m (0%)      0 (0%)      100Mi (0%)       0 (0%)         9m9s
+  openshift-marketplace                       community-operators-6c96784457-czlkx                 10m (0%)      0 (0%)      100Mi (0%)       0 (0%)         9m9s
+  openshift-marketplace                       redhat-marketplace-fff5bbd8d-qskpv                   10m (0%)      0 (0%)      100Mi (0%)       0 (0%)         9m7s
+  openshift-marketplace                       redhat-operators-747c9f5f48-2wwsc                    10m (0%)      0 (0%)      100Mi (0%)       0 (0%)         9m7s
+  openshift-monitoring                        alertmanager-main-1                                  8m (0%)       0 (0%)      260Mi (1%)       0 (0%)         285d
+  openshift-monitoring                        alertmanager-main-2                                  8m (0%)       0 (0%)      260Mi (1%)       0 (0%)         285d
+  openshift-monitoring                        grafana-68bbfbdf97-99bb6                             5m (0%)       0 (0%)      120Mi (0%)       0 (0%)         285d
+  openshift-monitoring                        node-exporter-7z66r                                  9m (0%)       0 (0%)      210Mi (1%)       0 (0%)         285d
+  openshift-monitoring                        openshift-state-metrics-9f97df6b7-kdkxf              3m (0%)       0 (0%)      190Mi (1%)       0 (0%)         285d
+  openshift-monitoring                        prometheus-k8s-1                                     76m (2%)      0 (0%)      1184Mi (7%)      0 (0%)         285d
+  openshift-monitoring                        thanos-querier-6c89f5cff9-mx6gv                      8m (0%)       0 (0%)      72Mi (0%)        0 (0%)         285d
+  openshift-multus                            multus-admission-controller-plrpp                    20m (0%)      0 (0%)      20Mi (0%)        0 (0%)         285d
+  openshift-multus                            multus-xpkf5                                         10m (0%)      0 (0%)      150Mi (1%)       0 (0%)         285d
+  openshift-network-operator                  network-operator-6bd8b9b698-ggvst                    10m (0%)      0 (0%)      50Mi (0%)        0 (0%)         285d
+  openshift-operator-lifecycle-manager        catalog-operator-5d4588db56-29s5x                    10m (0%)      0 (0%)      80Mi (0%)        0 (0%)         285d
+  openshift-operator-lifecycle-manager        olm-operator-7d9844479b-txwc6                        10m (0%)      0 (0%)      160Mi (1%)       0 (0%)         285d
+  openshift-operator-lifecycle-manager        packageserver-5c5c549ccc-bmdcw                       0 (0%)        0 (0%)      0 (0%)           0 (0%)         9m1s
+  openshift-sdn                               ovs-7bzt6                                            100m (2%)     0 (0%)      400Mi (2%)       0 (0%)         285d
+  openshift-sdn                               sdn-controller-czjdg                                 10m (0%)      0 (0%)      50Mi (0%)        0 (0%)         285d
+  openshift-sdn                               sdn-xgl8z                                            100m (2%)     0 (0%)      200Mi (1%)       0 (0%)         285d
+  openshift-service-ca-operator               service-ca-operator-5f596775f8-6chts                 10m (0%)      0 (0%)      80Mi (0%)        0 (0%)         285d
+  openshift-service-ca                        service-ca-8b8db557b-zlhpn                           10m (0%)      0 (0%)      120Mi (0%)       0 (0%)         285d
+Allocated resources:
+  (Total limits may be over 100 percent, i.e., overcommitted.)
+  Resource           Requests      Limits
+  --------           --------      ------
+  cpu                2052m (58%)   0 (0%)
+  memory             9013Mi (60%)  1Gi (6%)
+  ephemeral-storage  0 (0%)        0 (0%)
+  hugepages-1Gi      0 (0%)        0 (0%)
+  hugepages-2Mi      0 (0%)        0 (0%)
+Events:
+  Type     Reason                   Age                  From               Message
+  ----     ------                   ----                 ----               -------
+  Normal   NodeNotSchedulable       285d                 kubelet, master01  Node master01 status is now: NodeNotSchedulable
+  Normal   Starting                 285d                 kubelet, master01  Starting kubelet.
+  Normal   NodeReady                285d                 kubelet, master01  Node master01 status is now: NodeReady
+  Normal   NodeHasNoDiskPressure    285d (x2 over 285d)  kubelet, master01  Node master01 status is now: NodeHasNoDiskPressure
+  Normal   NodeHasSufficientPID     285d (x2 over 285d)  kubelet, master01  Node master01 status is now: NodeHasSufficientPID
+  Warning  Rebooted                 285d                 kubelet, master01  Node master01 has been rebooted, boot id: 087a4978-52e9-4981-a3e4-9a640017b061
+  Normal   NodeNotReady             285d                 kubelet, master01  Node master01 status is now: NodeNotReady
+  Normal   NodeNotSchedulable       285d                 kubelet, master01  Node master01 status is now: NodeNotSchedulable
+  Normal   NodeHasSufficientMemory  285d (x2 over 285d)  kubelet, master01  Node master01 status is now: NodeHasSufficientMemory
+  Normal   NodeAllocatableEnforced  285d                 kubelet, master01  Updated Node Allocatable limit across pods
+  Normal   NodeSchedulable          285d                 kubelet, master01  Node master01 status is now: NodeSchedulable
+  Normal   Starting                 10m                  kubelet, master01  Starting kubelet.
+  Normal   NodeHasSufficientMemory  10m (x8 over 10m)    kubelet, master01  Node master01 status is now: NodeHasSufficientMemory
+  Normal   NodeHasNoDiskPressure    10m (x8 over 10m)    kubelet, master01  Node master01 status is now: NodeHasNoDiskPressure
+  Normal   NodeHasSufficientPID     10m (x7 over 10m)    kubelet, master01  Node master01 status is now: NodeHasSufficientPID
+  Normal   NodeAllocatableEnforced  10m                  kubelet, master01  Updated Node Allocatable limit across pods
+[student@workstation ~]$ oc get pod -n openshift-image-registry
+NAME                                               READY   STATUS    RESTARTS   AGE
+cluster-image-registry-operator-5f47f6fcf7-bh22s   2/2     Running   0          285d
+image-registry-64b69c4bf9-48xl5                    1/1     Running   0          285d
+node-ca-24k9d                                      1/1     Running   0          285d
+node-ca-lfh4z                                      1/1     Running   0          285d
+node-ca-qrrpd                                      1/1     Running   0          285d
+[student@workstation ~]$ oc logs --tail 3 -n openshift-image-registry cluster-image-registry-operator-5f47f6fcf7-bh22s
+error: a container name must be specified for pod cluster-image-registry-operator-5f47f6fcf7-bh22s, choose one of: [cluster-image-registry-operator cluster-image-registry-operator-watch]
+[student@workstation ~]$ oc logs --tail 3 -n openshift-image-registry -c cluster-image-registry-operator cluster-image-registry-operator-5f47f6fcf7-bh22s
+I0518 10:08:10.923831      12 controllerimagepruner.go:309] event from image pruner workqueue successfully processed
+I0518 10:08:11.302176      12 controller.go:314] event from workqueue successfully processed
+I0518 10:08:11.906499      12 controller.go:314] event from workqueue successfully processed
+[student@workstation ~]$ oc logs --tail 1 -n openshift-image-registry
+error: expected 'logs [-f] [-p] (POD | TYPE/NAME) [-c CONTAINER]'.
+POD or TYPE/NAME is a required argument for the logs command
+See 'oc logs -h' for help and examples
+[student@workstation ~]$ oc logs --tail 1 -n openshift-image-registry image-registry-64b69c4bf9-48xl5
+time="2021-05-18T10:13:02.301237868Z" level=info msg=response go.version=go1.13.4 http.request.host="10.10.0.5:5000" http.request.id=aefbf2cb-42d3-4661-ad02-7ad3d675a6b9 http.request.method=GET http.request.remoteaddr="10.10.0.1:57802" http.request.uri=/healthz http.request.useragent=kube-probe/1.18+ http.response.duration="50.142µs" http.response.status=200 http.response.written=0
+[student@workstation ~]$ oc adm node-logs --tail 1 -u kubelet master01
+-- Logs begin at Wed 2020-08-05 18:20:28 UTC, end at Tue 2021-05-18 10:13:20 UTC. --
+May 17 08:51:25.929333 master01 systemd[1]: kubelet.service: Consumed 5min 12.774s CPU time
+-- Logs begin at Wed 2020-08-05 18:20:28 UTC, end at Tue 2021-05-18 10:13:20 UTC. --
+May 18 10:13:20.118179 master01 hyperkube[1492]: I0518 10:13:20.118078    1492 prober.go:133] Readiness probe for "dns-default-tfhlc_openshift-dns(3f4e39a6-60dc-49d0-9c32-fbe61780e292):dns" succeeded
+[student@workstation ~]$ oc debug node/master01
+Starting pod/master01-debug ...
+To use host binaries, run `chroot /host`
+
+Pod IP: 192.168.50.10
+If you don't see a command prompt, try pressing enter.
+sh-4.2# 
+sh-4.2# chroot /host
+sh-4.4# systemctl status kubelet
+● kubelet.service - MCO environment configuration
+   Loaded: loaded (/etc/systemd/system/kubelet.service; enabled; vendor preset: enabled)
+  Drop-In: /etc/systemd/system/kubelet.service.d
+           └─10-mco-default-env.conf
+   Active: active (running) since Tue 2021-05-18 09:52:05 UTC; 22min ago
+  Process: 1490 ExecStartPre=/bin/rm -f /var/lib/kubelet/cpu_manager_state (code=exited, status=0/SUCCESS)
+  Process: 1488 ExecStartPre=/bin/mkdir --parents /etc/kubernetes/manifests (code=exited, status=0/SUCCESS)
+ Main PID: 1492 (kubelet)
+    Tasks: 28 (limit: 102120)
+   Memory: 488.2M
+      CPU: 2min 41.047s
+   CGroup: /system.slice/kubelet.service
+           └─1492 kubelet --config=/etc/kubernetes/kubelet.conf --bootstrap-kubeconfig=/etc/kubernetes/kubeconfig --kubeconfig=/var/lib/kubelet/kubeconfig --container-runtime=remote --c>
+
+May 18 10:14:28 master01 hyperkube[1492]: I0518 10:14:28.140194    1492 helpers.go:781] eviction manager: observations: signal=allocatableMemory.available, available: 9604552Ki, capacit>
+May 18 10:14:28 master01 hyperkube[1492]: I0518 10:14:28.140201    1492 helpers.go:781] eviction manager: observations: signal=nodefs.available, available: 27392632Ki, capacity: 4139108>
+May 18 10:14:28 master01 hyperkube[1492]: I0518 10:14:28.140207    1492 helpers.go:781] eviction manager: observations: signal=nodefs.inodesFree, available: 20537268, capacity: 20700608>
+May 18 10:14:28 master01 hyperkube[1492]: I0518 10:14:28.140214    1492 helpers.go:781] eviction manager: observations: signal=imagefs.available, available: 27392632Ki, capacity: 413910>
+May 18 10:14:28 master01 hyperkube[1492]: I0518 10:14:28.140219    1492 helpers.go:781] eviction manager: observations: signal=imagefs.inodesFree, available: 20537268, capacity: 2070060>
+May 18 10:14:28 master01 hyperkube[1492]: I0518 10:14:28.140463    1492 eviction_manager.go:329] eviction manager: no resources are starved
+May 18 10:14:28 master01 hyperkube[1492]: I0518 10:14:28.227371    1492 prober.go:181] HTTP-Probe Host: https://192.168.50.10, Port: 10357, Path: healthz
+May 18 10:14:28 master01 hyperkube[1492]: I0518 10:14:28.227408    1492 prober.go:184] HTTP-Probe Headers: map[]
+May 18 10:14:28 master01 hyperkube[1492]: I0518 10:14:28.237299    1492 http.go:128] Probe succeeded for https://192.168.50.10:10357/healthz, Response: {200 OK 200 HTTP/1.1 1 1 map[Cont>
+May 18 10:14:28 master01 hyperkube[1492]: I0518 10:14:28.237342    1492 prober.go:133] Liveness probe for "kube-controller-manager-master01_openshift-kube-controller-manager(c63b91dbcc9>
+sh-4.4# systemctl status cri-o
+● crio.service - MCO environment configuration
+   Loaded: loaded (/usr/lib/systemd/system/crio.service; disabled; vendor preset: disabled)
+  Drop-In: /etc/systemd/system/crio.service.d
+           └─10-mco-default-env.conf
+   Active: active (running) since Tue 2021-05-18 09:51:58 UTC; 22min ago
+     Docs: https://github.com/cri-o/cri-o
+ Main PID: 1443 (crio)
+    Tasks: 34
+   Memory: 402.9M
+      CPU: 3min 23.321s
+   CGroup: /system.slice/crio.service
+           ├─  1443 /usr/bin/crio --enable-metrics=true --metrics-port=9537
+           ├─108765 /usr/libexec/crio/conmon -c 8de94b023e44fff6f249e777009fed3663d7b392f777ef92b1fc1f67e30c98b6 -n k8s_openvswitch_ovs-7bzt6_openshift-sdn_ee45e66f-3caf-4033-a029-89cfa>
+           └─108766 /usr/bin/runc --root=/run/runc exec --pid-file /tmp/pidfile111882275 --process /tmp/exec-process-869677133 -d 8de94b023e44fff6f249e777009fed3663d7b392f777ef92b1fc1f6>
+
+May 18 10:14:02 master01 crio[1443]: time="2021-05-18 10:14:02.465182726Z" level=info msg="Starting container: 6a67ed92b4d9282e8fce3cf992cc16dac5c8d9a5f9da10764493efdc5a8b94fb" id=6a14a>
+May 18 10:14:02 master01 crio[1443]: time="2021-05-18 10:14:02.489903158Z" level=info msg="Started container 6a67ed92b4d9282e8fce3cf992cc16dac5c8d9a5f9da10764493efdc5a8b94fb: default/ma>
+May 18 10:14:02 master01 crio[1443]: time="2021-05-18 10:14:02.564406052Z" level=info msg="Checking image status: registry.access.redhat.com/rhscl/postgresq-96-rhel7:1" id=a775b69b-76ee>
+May 18 10:14:02 master01 crio[1443]: time="2021-05-18 10:14:02.564626280Z" level=info msg="Image registry.access.redhat.com/rhscl/postgresq-96-rhel7:1 not found" id=a775b69b-76ee-4463-b>
+May 18 10:14:15 master01 crio[1443]: time="2021-05-18 10:14:15.568662272Z" level=info msg="Checking image status: registry.access.redhat.com/rhscl/postgresq-96-rhel7:1" id=65d70748-dc14>
+May 18 10:14:15 master01 crio[1443]: time="2021-05-18 10:14:15.570364527Z" level=info msg="Image registry.access.redhat.com/rhscl/postgresq-96-rhel7:1 not found" id=65d70748-dc14-4414-9>
+May 18 10:14:28 master01 crio[1443]: time="2021-05-18 10:14:28.564994873Z" level=info msg="Checking image status: registry.access.redhat.com/rhscl/postgresq-96-rhel7:1" id=ec9229a2-d953>
+May 18 10:14:28 master01 crio[1443]: time="2021-05-18 10:14:28.565628825Z" level=info msg="Image registry.access.redhat.com/rhscl/postgresq-96-rhel7:1 not found" id=ec9229a2-d953-4401-8>
+May 18 10:14:40 master01 crio[1443]: time="2021-05-18 10:14:40.564664137Z" level=info msg="Checking image status: registry.access.redhat.com/rhscl/postgresq-96-rhel7:1" id=ddaa38ae-1bf5>
+May 18 10:14:40 master01 crio[1443]: time="2021-05-18 10:14:40.564895265Z" level=info msg="Image registry.access.redhat.com/rhscl/postgresq-96-rhel7:1 not found" id=ddaa38ae-1bf5-4ac5-b>
+sh-4.4# exit
+exit
+sh-4.2# exit
+exit
+
+Removing debug pod ...
+[student@workstation ~]$ oc project execute-troubleshoot
+Now using project "execute-troubleshoot" on server "https://api.ocp4.example.com:6443".
+[student@workstation ~]$ oc get pod
+NAME                    READY   STATUS             RESTARTS   AGE
+psql-69676884f8-gbmmz   0/1     ImagePullBackOff   0          15m
+[student@workstation ~]$ oc status
+In project execute-troubleshoot on server https://api.ocp4.example.com:6443
+
+svc/psql - 172.30.196.55:5432
+
+deployment/psql deploys registry.access.redhat.com/rhscl/postgresq-96-rhel7:1
+  deployment #1 running for 15 minutes - 0/1 pods
+
+View details with 'oc describe <resource>/<name>' or list everything with 'oc get all'.
+[student@workstation ~]$ oc get events
+LAST SEEN   TYPE      REASON              OBJECT                       MESSAGE
+15m         Normal    Scheduled           pod/psql-69676884f8-gbmmz    Successfully assigned execute-troubleshoot/psql-69676884f8-gbmmz to master01
+15m         Normal    AddedInterface      pod/psql-69676884f8-gbmmz    Add eth0 [10.10.0.35/23]
+14m         Normal    Pulling             pod/psql-69676884f8-gbmmz    Pulling image "registry.access.redhat.com/rhscl/postgresq-96-rhel7:1"
+14m         Warning   Failed              pod/psql-69676884f8-gbmmz    Failed to pull image "registry.access.redhat.com/rhscl/postgresq-96-rhel7:1": rpc error: code = Unknown desc = Error reading manifest 1 in registry.access.redhat.com/rhscl/postgresq-96-rhel7: name unknown: Repo not found
+14m         Warning   Failed              pod/psql-69676884f8-gbmmz    Error: ErrImagePull
+14m         Normal    BackOff             pod/psql-69676884f8-gbmmz    Back-off pulling image "registry.access.redhat.com/rhscl/postgresq-96-rhel7:1"
+42s         Warning   Failed              pod/psql-69676884f8-gbmmz    Error: ImagePullBackOff
+15m         Normal    SuccessfulCreate    replicaset/psql-69676884f8   Created pod: psql-69676884f8-gbmmz
+15m         Normal    ScalingReplicaSet   deployment/psql              Scaled up replica set psql-69676884f8 to 1
+[student@workstation ~]$ skopeo inspect docker://registry.access.redhat.com/rhscl/postgresq-96-rhel7:1
+FATA[0000] Error parsing image name "docker://registry.access.redhat.com/rhscl/postgresq-96-rhel7:1": Error reading manifest 1 in registry.access.redhat.com/rhscl/postgresq-96-rhel7: name unknown: Repo not found 
+[student@workstation ~]$ skopeo inspect docker://registry.access.redhat.com/rhscl/postgresql-96-rhel7:1
+{
+    "Name": "registry.access.redhat.com/rhscl/postgresql-96-rhel7",
+    "Digest": "sha256:6c3090779c0553d773380ff4cb0532086075376964de398417d494313f9a933b",
+    "RepoTags": [
+        "1-42.1561731092",
+        "1-59",
+        "1-58",
+        "1-17",
+        "1-10",
+        "1-13",
+        "1-12",
+        "1-51",
+        "1-53",
+        "1-52",
+        "1-57",
+        "1-38",
+        "1-37",
+        "1-36",
+        "1-32",
+        "1",
+        "1-25.1535384678",
+        "1-8",
+        "1-5",
+        "1-4",
+        "1-7",
+        "1-6",
+        "1-61",
+        "1-63",
+        "1-48",
+        "1-49",
+        "1-46",
+        "1-47",
+        "1-44",
+        "1-45",
+        "1-42",
+        "1-40",
+        "1-51.1575996559",
+        "1-28",
+        "1-14",
+        "1-25",
+        "1-27",
+        "latest"
+    ],
+    "Created": "2020-09-21T15:39:59.766636Z",
+    "DockerVersion": "1.13.1",
+    "Labels": {
+        "architecture": "x86_64",
+        "build-date": "2020-09-21T15:38:28.666467",
+        "com.redhat.build-host": "cpt-1002.osbs.prod.upshift.rdu2.redhat.com",
+        "com.redhat.component": "rh-postgresql96-container",
+        "com.redhat.license_terms": "https://www.redhat.com/en/about/red-hat-end-user-license-agreements#rhel",
+        "description": "PostgreSQL is an advanced Object-Relational database management system (DBMS). The image contains the client and server programs that you'll need to create, run, maintain and access a PostgreSQL DBMS server.",
+        "distribution-scope": "public",
+        "io.k8s.description": "PostgreSQL is an advanced Object-Relational database management system (DBMS). The image contains the client and server programs that you'll need to create, run, maintain and access a PostgreSQL DBMS server.",
+        "io.k8s.display-name": "PostgreSQL 9.6",
+        "io.openshift.expose-services": "5432:postgresql",
+        "io.openshift.s2i.assemble-user": "26",
+        "io.openshift.s2i.scripts-url": "image:///usr/libexec/s2i",
+        "io.openshift.tags": "database,postgresql,postgresql96,rh-postgresql96",
+        "io.s2i.scripts-url": "image:///usr/libexec/s2i",
+        "maintainer": "SoftwareCollections.org \u003csclorg@redhat.com\u003e",
+        "name": "rhscl/postgresql-96-rhel7",
+        "release": "63",
+        "summary": "PostgreSQL is an advanced Object-Relational database management system",
+        "url": "https://access.redhat.com/containers/#/registry.access.redhat.com/rhscl/postgresql-96-rhel7/images/1-63",
+        "usage": "podman run -d --name postgresql_database -e POSTGRESQL_USER=user -e POSTGRESQL_PASSWORD=pass -e POSTGRESQL_DATABASE=db -p 5432:5432 rhscl/postgresql-96-rhel7",
+        "vcs-ref": "ae9489bc8bf8f1c543d15dbe9ed5b9d1b6adcacd",
+        "vcs-type": "git",
+        "vendor": "Red Hat, Inc.",
+        "version": "1"
+    },
+    "Architecture": "amd64",
+    "Os": "linux",
+    "Layers": [
+        "sha256:1323a241cc068f2816dd88f00168be73339471d6dc6eb2e6c761b63b734501b6",
+        "sha256:2bd25ca124579d6fce8668ff5d4ed83866d7e7438cb561a51ddde8cc40272822",
+        "sha256:5d011ac93e7456d4c646b0fbb53712598bda9a6b0d027b2be788016e078ded77",
+        "sha256:16634824fe3f2f2bbbf87f9a3082ec4b3d1b3b084ce14b3e63419a4dc5b3150d"
+    ],
+    "Env": [
+        "PATH=/opt/app-root/src/bin:/opt/app-root/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+        "container=oci",
+        "SUMMARY=PostgreSQL is an advanced Object-Relational database management system",
+        "DESCRIPTION=PostgreSQL is an advanced Object-Relational database management system (DBMS). The image contains the client and server programs that you'll need to create, run, maintain and access a PostgreSQL DBMS server.",
+        "STI_SCRIPTS_URL=image:///usr/libexec/s2i",
+        "STI_SCRIPTS_PATH=/usr/libexec/s2i",
+        "APP_ROOT=/opt/app-root",
+        "HOME=/var/lib/pgsql",
+        "PLATFORM=el7",
+        "BASH_ENV=/usr/share/container-scripts/postgresql/scl_enable",
+        "ENV=/usr/share/container-scripts/postgresql/scl_enable",
+        "PROMPT_COMMAND=. /usr/share/container-scripts/postgresql/scl_enable",
+        "POSTGRESQL_VERSION=9.6",
+        "POSTGRESQL_PREV_VERSION=9.5",
+        "PGUSER=postgres",
+        "APP_DATA=/opt/app-root",
+        "CONTAINER_SCRIPTS_PATH=/usr/share/container-scripts/postgresql",
+        "ENABLED_COLLECTIONS=rh-postgresql96"
+    ]
+}
+[student@workstation ~]$ oc edit deployment/psql
+deployment.apps/psql edited
+[student@workstation ~]$ oc status
+In project execute-troubleshoot on server https://api.ocp4.example.com:6443
+
+svc/psql - 172.30.196.55:5432
+
+deployment/psql deploys registry.access.redhat.com/rhscl/postgresql-96-rhel7:1
+  deployment #2 running for 13 seconds - 0/1 pods
+  deployment #1 deployed 18 minutes ago - 0/1 pods
+
+View details with 'oc describe <resource>/<name>' or list everything with 'oc get all'.
+[student@workstation ~]$ oc get pods
+NAME                    READY   STATUS             RESTARTS   AGE
+psql-69676884f8-gbmmz   0/1     ImagePullBackOff   0          18m
+psql-7b586df5d-rrlcx    0/1     Running            0          27s
+[student@workstation ~]$ lab execute-troubleshoot finish
+
+Completing Guided Exercise: Troubleshooting OpenShift Clusters and Applications
+
+ · Delete OpenShift project 'execute-troubleshoot'.............  SUCCESS
+ · Wait for project 'execute-troubleshoot' to be gone..........  SUCCESS
+ · Remove exercise files.......................................  SUCCESS
+
+Please use start if you wish to do the exercise again.
+
+[student@workstation ~]$ 
 
