@@ -811,8 +811,65 @@ In this chapter, you learned:
        To control user interaction, assign a user to one or more roles. A role binding contains all of the
        associations of a role to users and groups.
         To grant a user cluster administrator privileges, assign the cluster-admin role to that user.
- -----------------------------------------------------------------------------------------------------------------------------------------------------------------------
-        
+ --------------------------------CH-11-Configuring Application Security-------------------------------
+  ----------------------Managing Sensitive Information with Secrets------------------------------------
+  Secrets Overview
+Modern applications are designed to loosely couple code, configuration, and data. Configuration
+files and data are not hard-coded as part of the software. Instead, the software loads configuration
+and data from an external source. This enables deploying an application to different environments
+without requiring a change to the application source code.
+Applications often require access to sensitive information. For example, a back-end web
+application requires access to database credentials to perform a database query.
+Kubernetes and OpenShift use secret resources to hold sensitive information, such as:
+• Passwords.
+• Sensitive configuration files.
+• Credentials to an external resource, such as an SSH key or OAuth token.
+A secret can store any type of data. Data in a secret is Base64-encoded, not stored in plain text.
+Secret data is not encrypted; you can decode the secret from Base64 format to access the
+original data.
+Although secrets can store any type of data, Kubernetes and OpenShift support different types
+of secrets. Different types of secret resources exist, including service account tokens, SSH keys,
+and TLS certificates. When you store information in a specific secret resource type, Kubernetes
+validates that the data conforms to the type of secret.
+Note
+You can encrypt the Etcd database, although this is not the default setting. When
+enabled, Etcd encrypts the following resources: secrets, configuration maps, routes,
+OAuth access tokens, and OAuth authorize tokens. Enabling Etcd encryption is
+outside the scope of this class.
+
+Features of Secrets
+The main features of secrets include:
+• Secret data can be shared within a project namespace.
+• Secret data is referenced independently of secret definition. Administrators can create and
+manage a secret resource that other team members can reference in their deployment
+configurations.
+Secret data is injected into pods when OpenShift creates a pod. You can expose a secret as an
+environment variable or as a mounted file in the pod.
+• If the value of a secret changes during pod execution, the secret data in the pod does not
+update. After a secret value changes, you must create new pods to inject the new secret data.
+• Any secret data that OpenShift injects into a pod is ephemeral. If OpenShift exposes sensitive
+data to a pod as environment variables, then those variables are destroyed when the pod is
+destroyed.
+Secret data volumes are backed by temporary file storage. If a secret is mounted as a file in the
+pod, then the file is also destroyed when the pod is destroyed. A stopped pod does not contain
+secret data.
+
+Use Cases for Secrets
+Two primary use cases for secrets are storing credentials and securing communication between
+services.
+ 
+Credentials
+Store sensitive information, such as passwords and user names, in a secret.
+If an application expects to read sensitive information from a file, then you mount the secret as
+a data volume to the pod. The application can read the secret as an ordinary file to access the
+sensitive information. Some databases, for example, read credentials from a file to authenticate
+users.
+Some applications use environment variables to read configuration and sensitive data. You can link
+secret variables to pod environment variables in a deployment configuration.
+Transport Layer Security (TLS) and Key Pairs
+Use a TLS certificate and key to secure communication to a pod. A TLS secret stores the
+certificate as tls.crt and the certificate key as tls.key. Developers can mount the secret as a
+volume and create a pass through route to the application.
         
         
         
