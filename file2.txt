@@ -323,3 +323,56 @@ provisioner      project role.
 
 view              Users with this role can view project resources, but cannot modify project resources.
 
+The admin role gives a user access to project resources such as quotas and limit ranges, and
+also the ability to create new applications. The edit role gives a user sufficient access to act
+as a developer inside the project, but working under the constraints configured by a project
+administrator.
+Project administrators can use the oc policy command to add and remove namespace roles.
+
+Add a specified role to a user with the add-role-to-user subcommand. For example:
+[user@demo ~]$ oc policy add-role-to-user role-name username -n project
+
+For example, to add the user dev to the role basic-user in the wordpress project:
+[user@demo ~]$ oc policy add-role-to-user basic-user dev -n wordpress
+
+User Types
+Interaction with OpenShift Container Platform is associated with a user. An OpenShift Container
+Platform user object represents a user who can be granted permissions in the system by adding
+roles to that user or to a user's group via rolebindings.
+
+Regular users
+This is the way most interactive OpenShift Container Platform users are represented. Regular
+users are represented with the User object. This type of user represents a person that has
+been allowed access to the platform. Examples of regular users include user1 and user2.
+
+System users
+Many of these are created automatically when the infrastructure is defined, mainly for
+the purpose of enabling the infrastructure to securely interact with the API. System users
+include a cluster administrator (with access to everything), a per-node user, users for
+routers and registries to use, and various others. An anonymous system user is used by
+default for unauthenticated requests. Examples of system users include: system:admin,
+system:openshift-registry, and system:node:node1.example.com.
+
+Service accounts
+These are special system users associated with projects; some are created automatically
+when the project is first created, and project administrators can create more for the
+purpose of defining access to the contents of each project. Service accounts are
+often used to give extra privileges to pods or deployment configurations. Service
+accounts are represented with the ServiceAccount object. Examples of service
+ccount users include system:serviceaccount:default:deployer and
+
+system:serviceaccount:foo:builder.
+
+Every user must authenticate before they can access OpenShift Container Platform. API requests
+with no authentication or invalid authentication are authenticated as requests by the anonymous
+system user. After successful authentication, policy determines what the user is authorized to do.
+
+----------------------CH-10-GE-Defining and Applying Permissions using RBAC -------------------------------
+In this exercise, you will define role-based access controls and apply permissions to users.
+Outcomes
+You should be able to:
+• Remove project creation privileges from users who are not OpenShift cluster
+administrators.
+• Create OpenShift groups and add members to these groups.
+• Create a project and assign project administration privileges to the project.
+• As a project administrator, assign read and write privileges to different groups of users.
