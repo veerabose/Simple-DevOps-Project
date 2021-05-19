@@ -259,4 +259,67 @@ Completing Guided Exercise: Configuring Identity Providers
 Please use start if you wish to do the exercise again.
 
 [student@workstation ~]$ 
---------------------------------------------------------------------------------------------------------------------------------------------------------------
+------------------CH10-Defining and Applying Permissions Using RBAC-----------------------------------------------
+Role-based Access Control (RBAC)
+Role-based access control (RBAC) is a technique for managing access to resources in a computer
+system. In Red Hat OpenShift, RBAC determines if a user can perform certain actions within the
+cluster or project. There are two types of roles that can be used depending on the user's level of
+responsibility: cluster and local.
+Note
+Authorization is a separate step from authentication.
+
+Authorization Process
+RBAC Object        Description
+Rule              Allowed actions for objects or groups of objects.
+Role              Sets of rules. Users and groups can be associated with multiple roles.
+Binding           Assignment of users or groups to a role.
+
+RBAC Scope
+Role Level        Description
+Cluster Role      Users or groups with this role level can manage the OpenShift cluster.
+Local Role        Users or groups with this role level can only manage elements at a project level.
+
+Note
+Cluster role bindings take precedence over local role bindings.
+
+Managing RBAC Using the CLI
+Cluster administrators can use the oc adm policy command to both add and remove cluster
+roles and namespace roles.
+
+To add a cluster role to a user, use the add-cluster-role-to-user subcommand:
+
+[user@demo ~]$ oc adm policy add-cluster-role-to-user cluster-role username
+
+For example, to change a regular user to a cluster administrator, use the following command:
+[user@demo ~]$ oc adm policy add-cluster-role-to-user cluster-admin username
+
+To remove a cluster role from a user, use the remove-cluster-role-from-user
+subcommand:
+[user@demo ~]$ oc adm policy remove-cluster-role-from-user cluster-role username
+
+For example, to change a cluster administrator to a regular user, use the following command:
+[user@demo ~]$ oc adm policy remove-cluster-role-from-user cluster-admin username
+
+Rules are defined by an action and a resource. For example, the create user rule is part of the
+cluster-admin role.
+You can use the oc adm policy who-can command to determine if a user can execute an
+action on a resource. For example:
+[user@demo ~]$ oc adm policy who-can delete user
+
+Default roles   Description
+admin           Users with this role can manage all project resources,including granting access to other users to access the project.
+basic-user      Users with this role have read access to the project.
+
+cluster-        Users with this role have superuser access to the cluster resources. These users can perform any action on the c       admin           custer and have full control of all projects.
+
+cluster-        Users with this role can get cluster status information.
+status
+
+edit            Users with this role can create, change, and delete common application resources from the project, such as services                   and deployment configurations. These users cannot act on management resources such
+                as limit ranges and quotas, and cannot manage access permissions to the project.
+                
+self-           Users with this role can create new projects. This is a cluster role, not a
+provisioner      project role.
+
+view              Users with this role can view project resources, but cannot modify project resources.
+
