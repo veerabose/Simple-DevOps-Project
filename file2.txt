@@ -376,3 +376,154 @@ administrators.
 • Create OpenShift groups and add members to these groups.
 • Create a project and assign project administration privileges to the project.
 • As a project administrator, assign read and write privileges to different groups of users.
+
+[student@workstation ~]$ lab auth-rbac start
+
+Checking prerequisites for Guided Exercise: Defining and Applying permissions using RBAC
+
+ Verify the OpenShift cluster is running:
+ · Router pods are available...................................  SUCCESS
+ · OAuth pods are available....................................  SUCCESS
+ · API pods are available......................................  SUCCESS
+ · Control plane node 'master01' is ready......................  SUCCESS
+ · Control plane node 'master02' is ready......................  SUCCESS
+ · Control plane node 'master03' is ready......................  SUCCESS
+ Checking for conflicts with existing OpenShift projects:
+ · The 'auth-rbac' project is absent...........................  SUCCESS
+
+Setting up the classroom for Guided Exercise: Defining and Applying permissions using RBAC
+
+ · Validate 'admin' can log in with password 'redhat'..........  SUCCESS
+ · Validate 'leader' can log in with password 'redhat'.........  SUCCESS
+ · Validate 'developer' can log in with password 'developer'...  SUCCESS
+ · Validate 'qa-engineer' can log in with password 'redhat'....  SUCCESS
+ · Restore project creation privileges.........................  SUCCESS
+
+Overall start status...........................................  SUCCESS
+
+[student@workstation ~]$ oc login -u admin -p redhat https://api.ocp4.example.com:6443
+Login successful.
+
+You have access to 59 projects, the list has been suppressed. You can list all projects with 'oc projects'
+
+Using project "default".
+[student@workstation ~]$ oc get clusterrolebinding -o wide | grep -E 'NAME|self-provisioner'
+NAME                                                                             ROLE                                                                               AGE     USERS                                   GROUPS                                         SERVICEACCOUNTS
+self-provisioners                                                                ClusterRole/self-provisioner                                                       25s                                             system:authenticated:oauth                     
+[student@workstation ~]$ oc describe clusterrolebindings self-provisioners
+Name:         self-provisioners
+Labels:       <none>
+Annotations:  rbac.authorization.kubernetes.io/autoupdate: true
+Role:
+  Kind:  ClusterRole
+  Name:  self-provisioner
+Subjects:
+  Kind   Name                        Namespace
+  ----   ----                        ---------
+  Group  system:authenticated:oauth  
+[student@workstation ~]$ oc adm policy remove-cluster-role-from-group self-provisioner system:authenticated:oauth
+Warning: Your changes may get lost whenever a master is restarted, unless you prevent reconciliation of this rolebinding using the following command: oc annotate clusterrolebinding.rbac self-provisioners 'rbac.authorization.kubernetes.io/autoupdate=false' --overwrite
+clusterrole.rbac.authorization.k8s.io/self-provisioner removed: "system:authenticated:oauth"
+[student@workstation ~]$ oc get clusterrolebinding -o wide | grep -E 'NAME|self-provisioner'
+NAME                                                                             ROLE                                                                               AGE     USERS                                   GROUPS                                         SERVICEACCOUNTS
+[student@workstation ~]$ oc login -u leader -p redhat
+Login successful.
+
+You have one project on this server: "default"
+
+Using project "default".
+[student@workstation ~]$ oc new-project test
+Error from server (Forbidden): You may not request a new project via this API.
+[student@workstation ~]$ oc login -u admin -p redhat
+Login successful.
+
+You have access to 59 projects, the list has been suppressed. You can list all projects with 'oc projects'
+
+Using project "default".
+[student@workstation ~]$ oc policy add-role-to-user admin leader
+clusterrole.rbac.authorization.k8s.io/admin added: "leader"
+[student@workstation ~]$ oc adm groups new dev-group
+Error from server (AlreadyExists): groups.user.openshift.io "dev-group" already exists
+[student@workstation ~]$ oc adm groups add-users dev-group developer
+group.user.openshift.io/dev-group added: "developer"
+[student@workstation ~]$ oc adm groups new qa-group
+Error from server (AlreadyExists): groups.user.openshift.io "qa-group" already exists
+[student@workstation ~]$ oc adm groups add-users qa-group qa-engineer
+group.user.openshift.io/qa-group added: "qa-engineer"
+[student@workstation ~]$ oc get groups
+NAME        USERS
+dev-group   developer
+qa-group    qa-engineer
+[student@workstation ~]$ oc login -u leader -p redhat
+Login successful.
+
+You have one project on this server: "default"
+
+Using project "default".
+[student@workstation ~]$ oc policy add-role-to-group edit dev-group
+clusterrole.rbac.authorization.k8s.io/edit added: "dev-group"
+[student@workstation ~]$ oc policy add-role-to-group view qa-group
+clusterrole.rbac.authorization.k8s.io/view added: "qa-group"
+[student@workstation ~]$ oc get rolebindings -o wide
+NAME                           ROLE                                       AGE     USERS    GROUPS                           SERVICEACCOUNTS
+admin                          ClusterRole/admin                          9m45s   leader                                    
+edit                           ClusterRole/edit                           8m17s            dev-group                        
+machine-config-daemon-events   ClusterRole/machine-config-daemon-events   286d                                              openshift-machine-config-operator/machine-config-daemon
+prometheus-k8s                 Role/prometheus-k8s                        286d                                              openshift-monitoring/prometheus-k8s
+system:deployers               ClusterRole/system:deployer                286d                                              default/deployer
+system:image-builders          ClusterRole/system:image-builder           286d                                              default/builder
+system:image-pullers           ClusterRole/system:image-puller            286d             system:serviceaccounts:default   
+view                           ClusterRole/view                           7m35s            qa-group                         
+[student@workstation ~]$ oc login -u developer -p developer
+Login successful.
+
+You have one project on this server: "default"
+
+Using project "default".
+[student@workstation ~]$ oc new-app --name httpd httpd:2.4
+--> Found image d9163e7 (10 months old) in image stream "default/httpd" under tag "2.4" for "httpd:2.4"
+
+    Apache httpd 2.4 
+    ---------------- 
+    Apache httpd 2.4 available as container, is a powerful, efficient, and extensible web server. Apache supports a variety of features, many implemented as compiled modules which extend the core functionality. These can range from server-side programming language support to authentication schemes. Virtual hosting allows one Apache installation to serve many different Web sites.
+
+    Tags: builder, httpd, httpd24
+
+
+--> Creating resources ...
+    error: deployments.apps "httpd" already exists
+    error: services "httpd" already exists
+--> Failed
+[student@workstation ~]$ oc policy add-role-to-user edit qa-engineer
+Error from server (Forbidden): rolebindings.rbac.authorization.k8s.io is forbidden: User "developer" cannot list resource "rolebindings" in API group "rbac.authorization.k8s.io" in the namespace "default"
+[student@workstation ~]$ oc login -u qa-engineer -p redhat
+Login successful.
+
+You have one project on this server: "default"
+
+Using project "default".
+[student@workstation ~]$ oc scale deployment httpd --replicas 3
+Error from server (Forbidden): deployments.apps "httpd" is forbidden: User "qa-engineer" cannot patch resource "deployments/scale" in API group "apps" in the namespace "default"
+[student@workstation ~]$ oc login -u admin -p redhat
+Login successful.
+
+You have access to 59 projects, the list has been suppressed. You can list all projects with 'oc projects'
+
+Using project "default".
+[student@workstation ~]$ oc adm policy add-cluster-role-to-group --rolebinding-name self-provisioners self-provisioner system:authenticated:oauth
+Warning: Group 'system:authenticated:oauth' not found
+clusterrole.rbac.authorization.k8s.io/self-provisioner added: "system:authenticated:oauth"
+[student@workstation ~]$ lab auth-rbac finish
+
+Completing Guided Exercise: Defining and Applying permissions using RBAC
+
+ · Remove group 'dev-group'....................................  SUCCESS
+ · Remove group 'qa-group'.....................................  SUCCESS
+ · Delete HTPasswd entry for 'qa-engineer'.....................  SUCCESS
+ · Update the 'localusers' secret data.........................  SUCCESS
+ · Remove user 'qa-engineer'...................................  SUCCESS
+ · Remove identity 'localusers:qa-engineer'....................  SUCCESS
+
+Please use start if you wish to do the exercise again.
+
+[student@workstation ~]$ 
