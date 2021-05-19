@@ -871,8 +871,63 @@ Use a TLS certificate and key to secure communication to a pod. A TLS secret sto
 certificate as tls.crt and the certificate key as tls.key. Developers can mount the secret as a
 volume and create a pass through route to the application.
         
+ env:
+- name: MYSQL_ROOT_PASSWORD
+valueFrom:
+secretKeyRef:
+name: demo-secret
+key: root_password
+
+The environment variable name in the pod that contains data from a secret.
+The secretKeyRef key expects a secret. Use the configMapKeyRef key for configuration
+maps.
+The name of the secret that contains the desired sensitive information.
+The name of the key that contains the sensitive information in the secret.
         
-        
-        
-        
-        
+[user@demo ~]$ oc set env deployment/demo --from secret/demo-secret --prefix MYSQL_
+
+Secrets as Files in a Pod
+A secret can be mounted to a directory within a pod. A file is created for each key in the secret
+using the name of the key. The content of each file is the decoded value of the secret.
+
+[user@demo ~]$ oc set volume deployment/demo -add --type secret --secret-name demo-secret --mount-path /app-secrets
+Modify the volume configuration in the demo deployment.
+Add a new volume from a secret. Configuration maps can also be mounted as volumes.
+Use the demo-secret secret.
+Make the secret data available in the /app-secrets directory in the pod. The content
+of the /app-secrets/user file is demo-user. The content of the /app-secrets/
+root_password file is zT1KTgk.
+
+Important
+If the mount point already exists in the pod, then any existing files at the mount
+point are obscured by the mounted secret. The existing files are not visible and are
+not accessible.
+
+Configuration Map Overview
+Similar to secrets, configuration maps decouple configuration information from container images.
+Unlike secrets, the information contained in configuration maps does not require protection. You
+can use the data in a configuration map to set environment variables in the container image, or
+mount the configuration map as a volume within the container image.
+Container images do not need to be rebuilt when a secret or a configuration map changes. New
+pods use the updated secrets and configuration maps. You can delete pods using the older secrets
+and configuration maps.
+The syntax for creating a configuration map closely matches the syntax for creating a secret. Key-
+value pairs can be entered on the command line or the content of a file can be used as the value of
+a specified key.
+
+[user@demo ~]$ oc create configmap my-config --from-literal key1=config1 --from-literal key2=config2
+
+Updating Secrets and Configuration Maps
+
+[user@demo ~]$ oc extract secret/htpasswd-ppklq -n openshift-config --to /tmp/ --confirm
+
+[user@demo ~]$ oc set data secret/htpasswd-ppklq -n openshift-config --from-file /tmp/htpasswd
+
+--------------------------CH11-GE-Managing Sensitive Information With Secrets ---------------------------------------
+In this exercise, you will manage information using secrets.
+Outcomes
+You should be able to:
+• Manage secrets and use them to initialize environment variables in applications.
+• Use secrets for a MySQL database application.
+• Assign secrets to an application that connects to a MySQL database.
+
