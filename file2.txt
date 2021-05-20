@@ -1611,4 +1611,10 @@ Please use start if you wish to do the exercise again.
 [student@workstation ~]$ 
 -------------------------------CH-ll-Lab-Configuring Application Security--------------------
 
-
+In this lab, you will create a secret to share sensitive configuration information and modify a
+deployment so that it runs with less restrictive settings.
+Outcomes
+You should be able to:
+• Provide sensitive information to deployments using secrets.
+• Allow applications to run in a less restrictive environment using security context
+constraints.
