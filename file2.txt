@@ -1032,4 +1032,94 @@ database: test_secrets
 hostname: mysql
 password: redhat123
 user: myuser
-sh-4.2$ 
+sh-4.2$ exit
+exit
+[student@workstation ~]$
+
+[student@workstation ~]$ oc get pods
+NAME                     READY   STATUS    RESTARTS   AGE
+mysql-64b946f96c-2dzrr   1/1     Running   0          10m
+[student@workstation ~]$ oc new-app --name quotes --docker-image quay.io/redhattraining/famous-quotes:2.1
+--> Found container image 7ff1a7b (7 months old) from quay.io for "quay.io/redhattraining/famous-quotes:2.1"
+
+    Quotes 2.1 
+    ---------- 
+    Famous Quotes is a PoC application for Go and MySQL
+
+    Tags: poc, mysql, golang
+
+    * An image stream tag will be created as "quotes:2.1" that will track this image
+
+--> Creating resources ...
+    imagestream.image.openshift.io "quotes" created
+    deployment.apps "quotes" created
+    service "quotes" created
+--> Success
+    Application is not exposed. You can expose services to the outside world by executing one or more of the commands below:
+     'oc expose svc/quotes' 
+    Run 'oc status' to view your app.
+[student@workstation ~]$ oc get pods -l deployment=quotes -w
+NAME                      READY   STATUS              RESTARTS   AGE
+quotes-6b8b7d87ff-t6fcc   0/1     ContainerCreating   0          18s
+quotes-6b8b7d87ff-t6fcc   0/1     Error               0          34s
+quotes-6b8b7d87ff-t6fcc   0/1     Error               1          36s
+quotes-6b8b7d87ff-t6fcc   0/1     CrashLoopBackOff    1          37s
+^C[student@workstation ~]$ oc set env deployment/quotes --from secret/mysql --prefix QUOTES_
+deployment.apps/quotes updated
+[student@workstation ~]$ oc get pods -l deployment=quotes
+NAME                      READY   STATUS              RESTARTS   AGE
+quotes-6b8b7d87ff-t6fcc   0/1     CrashLoopBackOff    3          98s
+quotes-9c8495c4-vbx6w     0/1     ContainerCreating   0          15s
+[student@workstation ~]$ oc logs quotes-9c8495c4-vbx6w
+2021/05/20 05:08:07 Connecting to the database: myuser:redhat123@tcp(mysql:3306)/test_secrets
+2021/05/20 05:08:07 Database connection OK
+2021/05/20 05:08:07 Creating schema
+2021/05/20 05:08:07 Adding quotes
+2021/05/20 05:08:07 Adding quote: When words fail, music speaks.
+- William Shakespeare
+2021/05/20 05:08:07 Adding quote: Happiness depends upon ourselves.
+- Aristotle
+2021/05/20 05:08:07 Adding quote: The secret of change is to focus all your energy not on fighting the old but on building the new.
+- Socrates
+2021/05/20 05:08:07 Adding quote: Nothing that glitters is gold.
+- Mark Twain
+2021/05/20 05:08:07 Adding quote: Imagination is more important than knowledge.
+- Albert Einstein
+2021/05/20 05:08:07 Adding quote: Hell, if I could explain it to the average person, it wouldn't have been worth the Nobel prize.
+- Richard Feynman
+2021/05/20 05:08:07 Adding quote: Young man, in mathematics you don't understand things. You just get used to them.
+- John von Neumann
+2021/05/20 05:08:07 Adding quote: Those who can imagine anything, can create the impossible.
+- Alan Turing
+2021/05/20 05:08:07 Database Setup Completed
+2021/05/20 05:08:07 Starting Application
+Services:
+/
+/random
+/env
+/status
+[student@workstation ~]$ oc expose service quotes --hostname quotes.apps.ocp4.example.com
+route.route.openshift.io/quotes exposed
+[student@workstation ~]$ oc get route quotes
+NAME     HOST/PORT                      PATH   SERVICES   PORT       TERMINATION   WILDCARD
+quotes   quotes.apps.ocp4.example.com          quotes     8000-tcp                 None
+[student@workstation ~]$ curl -s http://quotes.apps.ocp4.example.com/env | grep QUOTES_
+                <li>QUOTES_USER: myuser </li>
+                <li>QUOTES_PASSWORD: redhat123 </li>
+                <li>QUOTES_DATABASE: test_secrets</li>
+                <li>QUOTES_HOST: mysql</li>
+[student@workstation ~]$ curl -s http://quotes.apps.ocp4.example.com/status
+Database connection OK
+[student@workstation ~]$ curl -s http://quotes.apps.ocp4.example.com/random
+2: Happiness depends upon ourselves.
+- Aristotle
+[student@workstation ~]$ oc delete project authorization-secrets
+project.project.openshift.io "authorization-secrets" deleted
+[student@workstation ~]$ lab authorization-secrets finish
+
+Completing Guided Exercise: Managing Sensitive Information With Secrets
+
+
+Please use start if you wish to do the exercise again.
+
+[student@workstation ~]$ 
