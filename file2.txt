@@ -1853,3 +1853,84 @@ secrets to an application pod either as environment variables or as ordinary fil
 • OpenShift uses security context constraints (SCCs) to define allowed pod interactions with
 system resources. By default, pods operate under the restricted context which limits access
 to node resources.
+
+-----------------------------Ch-12-Configuring OpenShift Networking Components -------------------------------------
+
+Introducing OpenShift Software-defined Networking
+
+OpenShift implements a software-defined network (SDN) to manage the network infrastructure of
+the cluster and user applications. Software-defined networking is a networking model that allows
+you to manage network services through the abstraction of several networking layers. It decouples
+the software that handles the traffic, called the control plane, and the underlying mechanisms
+that route the traffic, called the data plane. Among the many features of SDN, open standards
+enable vendors to propose their solutions, centralized management, dynamic routing, and tenant
+isolation.
+
+In OpenShift Container Platform, the SDN satisfies the following five requirements:
+• Managing the network traffic and network resources programmatically, so that the organization
+teams can decide how to expose their applications.
+• Managing communication between containers that run in the same project.
+• Managing communication between pods, whether they belong to a same project or run in
+separate projects.
+• Managing network communication from a pod to a service.
+• Managing network communication from an external network to a service, or from containers to
+external networks.
+The SDN implementation creates a backward-compatible model, in which pods are akin to virtual
+machines in terms of port allocation, IP address leasing, and reservation.
+
+Discussing OpenShift Networking Model
+
+The Container Network Interface (CNI) is a common interface between the network provider
+and the container execution and is implemented as network plug-ins. The CNI provides the
+specification for plug-ins to configure network interfaces inside containers. Plug-ins written to the
+specification allow different network providers to control the OpenShift cluster network.
+
+The SDN uses CNI plug-ins to create Linux namespaces to partition the usage of resources and
+processes on physical and virtual hosts. This implementation allows containers inside pods to share
+network resources, such as devices, IP stacks, firewall rules, and routing tables. The SDN allocates
+a unique routable IP to each pod so that you can access the pod from any other service in the
+
+Using Services for Accessing Pods
+
+Kubernetes provides the concept of a service, which is an essential resource in any OpenShift
+application. Services allow for the logical grouping of pods under a common access route. A
+service acts as a load balancer in front of one or more pods, thus decoupling the application
+
+Services rely on selectors (labels) that indicate which pods receive the traffic through the service.
+Each pod matching these selectors is added to the service resource as an endpoint. As pods are
+created and killed, the service automatically updates the endpoints.
+
+kind: Service
+apiVersion: v1
+metadata:
+name: application-frontend
+labels:
+app: frontend-svc
+spec:
+ports:
+- name: HTTP
+protocol: TCP
+port: 443
+targetPort: 8443
+selector:
+app: shopping-cart
+name: frontend
+type: ClusterIP
+
+The name of the service. This identifier allows you to manage the service after its creation.
+A label that you can use as a selector. This allow you to logically group your services.
+An array of objects that describes network ports to expose.
+Each entry defines the name for the port mapping. This value is generic and is used for
+identification purposes only.
+This is the port that the service exposes. You use this port to connect to the application that
+the service exposes.
+This is the port on which the application listens. The service creates a forwarding rule from
+the service port to the service target port.
+The selector defines which pods are in the service pool. Services use this selector to
+determine where to route the traffic.
+In this example, the service targets all pods whose labels match app: shopping-cart and
+name: frontend.
+This is how the service is exposed. ClusterIP exposes the service using an IP address
+internal to the cluster and is the default value. Other service types will be described in elsewhere this course.
+specifications (such as the number running of replicas) from the access to the application.
+same network.
