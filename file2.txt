@@ -124,3 +124,6 @@ Re-encryption is a variation on edge termination, whereby the router terminates 
 certificate, and then re-encrypts its connection to the endpoint, which might have a different
 certificate. Therefore, the full path of the connection is encrypted, even over the internal
 network. The router uses health checks to determine the authenticity of the host.
+
+
+-------------------------CH-12-GE-Exposing Applications for External Access----------------------------------------
