@@ -1934,3 +1934,43 @@ This is how the service is exposed. ClusterIP exposes the service using an IP ad
 internal to the cluster and is the default value. Other service types will be described in elsewhere this course.
 specifications (such as the number running of replicas) from the access to the application.
 same network.
+
+Discussing the DNS Operator
+The DNS operator deploys and runs a DNS server managed by CoreDNS, a lightweight DNS
+server written in GoLang. The DNS operator provides DNS name resolution between pods, which
+enables services to discover their endpoints.
+
+Every time you create a new application, OpenShift configures the pods so that they contact the
+CoreDNS service IP for DNS resolution.
+
+The DNS operator is responsible for the following:
+• Creating a default cluster DNS name (cluster.local)
+• Assigning DNS names to services that you define (for example,
+db.backend.svc.cluster.local)
+For example, from a pod named example-6c4984d949-7m26r you can reach the hello pod
+through the hello service in the test project via the FQDN for the service.
+
+Note
+When services do not have a cluster IP, the DNS operator assigns them a DNS A
+record that resolves to the set of IPs of the pods behind the service.
+Similarly, the newly created SRV record resolves to all the pods that are behind the
+service.
+
+Introducing the Cluster Network Operator
+OpenShift Container Platform uses the Cluster Network Operator for managing the SDN. This
+includes the network CIDR to use, the network provider, and the IP address pools. Configuration
+of the Cluster Network Operator is done before installation, although it is possible to migrate from
+the OpenShift SDN default CNI network provider to the OVN-Kubernetes network provider.
+Run the following oc get command as an administrative user to consult the SDN configuration,
+which is managed by the Network.config.openshift.io custom resource definition.
+
+-------------------------------Ch12-Troubleshooting OpenShift Software-defined Networking----------------------------------
+
+In this exercise, you will diagnose and fix connectivity issues with a Kubernetes-style
+application deployment.
+Outcomes
+You should be able to:
+• Deploy the To Do Node.js application.
+• Create a route to expose an application service.
+• Troubleshoot communication between pods in your application using oc debug.
+• Update an OpenShift service.
