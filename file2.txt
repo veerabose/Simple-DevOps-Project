@@ -512,3 +512,33 @@ Completing Guided Exercise: Controlling Cluster Network Ingress
 Please use start if you wish to do the exercise again.
 
 [student@workstation ~]$ 
+
+---------------------------CH-12-Configuring Network Policies---------------------
+Managing Network Policies in OpenShift
+Network policies allow you to configure isolation policies for individual pods. Network policies do
+not require administrative privileges, giving developers more control over the applications in their
+projects.
+You can use network policies to create logical zones in the SDN that map to your organization
+network zones. The benefit of this approach is that the location of running pods becomes
+irrelevant because network policies allow you to segregate traffic regardless of where it originates.
+To manage network communication between two namespaces, assign a label to the namespace
+that needs access to another namespace. The following command assigns the name=network-1
+label to the network-1 namespace.
+[user@demo ~]$ oc label namespace network-1 name=network-1
+
+Important
+If the default Ingress Controller uses the HostNetwork endpoint publishing
+strategy, then the default namespace requires the network.openshift.io/
+policy-group=ingress label.
+Check the endpoint publishing strategy using the oc describe command to
+describe the ingresscontroller/default resource in the openshift-
+ingress-controller namespace.
+For more information, refer to the documentation linked below in the references.
+
+--------------------------------------CH-12-GE-Configuring Network Policies------------------
+In this exercise, you will create network policies and review pod isolation created by these
+network policies.
+Outcomes
+You should be able to:
+• Create network policies to control communication between pods.
+• Verify ingress traffic is limited to pods.
