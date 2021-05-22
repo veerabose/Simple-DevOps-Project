@@ -542,3 +542,295 @@ Outcomes
 You should be able to:
 • Create network policies to control communication between pods.
 • Verify ingress traffic is limited to pods.
+[student@workstation ~]$ lab network-policy start
+
+Checking prerequisites for Guided Exercise: Configuring Network Policies
+
+ Verify the OpenShift cluster is running:
+ · Router pods are available...................................  SUCCESS
+ · OAuth pods are available....................................  SUCCESS
+ · API pods are available......................................  SUCCESS
+ · Control plane node 'master01' is ready......................  SUCCESS
+ · Control plane node 'master02' is ready......................  SUCCESS
+ · Control plane node 'master03' is ready......................  SUCCESS
+ Checking for conflicts with existing OpenShift projects:
+ · The 'network-policy' project is absent......................  SUCCESS
+ · The 'network-test' project is absent........................  SUCCESS
+
+Setting up the classroom for Guided Exercise: Configuring Network Policies
+
+ · Validate 'admin' can log in with password 'redhat'..........  SUCCESS
+ · Validate 'leader' can log in with password 'redhat'.........  SUCCESS
+ · Validate 'developer' can log in with password 'developer'...  SUCCESS
+ Preparing Workstation:
+ · Download exercise files.....................................  SUCCESS
+ · Download solution files.....................................  SUCCESS
+
+Overall start status...........................................  SUCCESS
+
+[student@workstation ~]$ oc login -u developer -p developer https://api.ocp4.example.com:6443
+Login successful.
+
+You don't have any projects. You can try to create a new project, by running
+
+    oc new-project <projectname>
+
+[student@workstation ~]$ oc new-project network-policy
+Now using project "network-policy" on server "https://api.ocp4.example.com:6443".
+
+You can add applications to this project with the 'new-app' command. For example, try:
+
+    oc new-app ruby~https://github.com/sclorg/ruby-ex.git
+
+to build a new example application in Ruby. Or use kubectl to deploy a simple Kubernetes application:
+
+    kubectl create deployment hello-node --image=gcr.io/hello-minikube-zero-install/hello-node
+
+[student@workstation ~]$ oc new-app --name hello --docker-image quay.io/redhattraining/hello-world-nginx:v1.0
+--> Found container image 44eaa13 (23 months old) from quay.io for "quay.io/redhattraining/hello-world-nginx:v1.0"
+
+    Red Hat Universal Base Image 8 
+    ------------------------------ 
+    The Universal Base Image is designed and engineered to be the base layer for all of your containerized applications, middleware and utilities. This base image is freely redistributable, but Red Hat only supports Red Hat technologies through subscriptions for Red Hat products. This image is maintained by Red Hat and updated regularly.
+
+    Tags: base rhel8
+
+    * An image stream tag will be created as "hello:v1.0" that will track this image
+
+--> Creating resources ...
+    imagestream.image.openshift.io "hello" created
+    deployment.apps "hello" created
+    service "hello" created
+--> Success
+    Application is not exposed. You can expose services to the outside world by executing one or more of the commands below:
+     'oc expose svc/hello' 
+    Run 'oc status' to view your app.
+[student@workstation ~]$ oc status
+In project network-policy on server https://api.ocp4.example.com:6443
+
+svc/hello - 172.30.5.180:8080
+  deployment/hello deploys istag/hello:v1.0 
+    deployment #2 running for 4 seconds - 0/1 pods
+    deployment #1 deployed 5 seconds ago - 0/1 pods growing to 1
+
+
+1 info identified, use 'oc status --suggest' to see details.
+[student@workstation ~]$ oc get all
+NAME                         READY   STATUS              RESTARTS   AGE
+pod/hello-6c4984d949-mrlvr   0/1     ContainerCreating   0          10s
+
+NAME            TYPE        CLUSTER-IP     EXTERNAL-IP   PORT(S)    AGE
+service/hello   ClusterIP   172.30.5.180   <none>        8080/TCP   11s
+
+NAME                    READY   UP-TO-DATE   AVAILABLE   AGE
+deployment.apps/hello   0/1     1            0           11s
+
+NAME                               DESIRED   CURRENT   READY   AGE
+replicaset.apps/hello-546fb597f8   1         0         0       11s
+replicaset.apps/hello-6c4984d949   1         1         0       10s
+
+NAME                                   IMAGE REPOSITORY                                                        TAGS   UPDATED
+imagestream.image.openshift.io/hello   image-registry.openshift-image-registry.svc:5000/network-policy/hello   v1.0   10 seconds ago
+[student@workstation ~]$ oc new-app --name test --docker-image quay.io/redhattraining/hello-world-nginx:v1.0
+--> Found container image 44eaa13 (23 months old) from quay.io for "quay.io/redhattraining/hello-world-nginx:v1.0"
+
+    Red Hat Universal Base Image 8 
+    ------------------------------ 
+    The Universal Base Image is designed and engineered to be the base layer for all of your containerized applications, middleware and utilities. This base image is freely redistributable, but Red Hat only supports Red Hat technologies through subscriptions for Red Hat products. This image is maintained by Red Hat and updated regularly.
+
+    Tags: base rhel8
+
+    * An image stream tag will be created as "test:v1.0" that will track this image
+
+--> Creating resources ...
+    imagestream.image.openshift.io "test" created
+    deployment.apps "test" created
+    service "test" created
+--> Success
+    Application is not exposed. You can expose services to the outside world by executing one or more of the commands below:
+     'oc expose svc/test' 
+    Run 'oc status' to view your app.
+[student@workstation ~]$ oc expose service hello
+route.route.openshift.io/hello exposed
+[student@workstation ~]$ ~/DO280/labs/network-policy/display-project-info.sh
+===================================================================
+PROJECT: network-policy
+
+POD NAME                 IP ADDRESS
+hello-6c4984d949-mrlvr   10.10.0.36
+test-c4d74c9d5-9dqlr     10.10.0.37
+
+SERVICE NAME   CLUSTER-IP
+hello          172.30.5.180
+test           172.30.245.80
+
+ROUTE NAME   HOSTNAME                                     PORT
+hello        hello-network-policy.apps.ocp4.example.com   8080-tcp
+
+===================================================================
+[student@workstation ~]$ oc rsh test-c4d74c9d5-9dqlr curl 10.10.0.36 | grep Hello
+command terminated with exit code 7
+[student@workstation ~]$ oc rsh test-c4d74c9d5-9dqlr curl 10.10.0.36:8080 | grep Hello
+    <h1>Hello, world from nginx!</h1>
+[student@workstation ~]$ oc rsh test-c4d74c9d5-9dqlr curl 172.30.5.180:8080 | grep Hello
+    <h1>Hello, world from nginx!</h1>
+[student@workstation ~]$ curl -s hello-network-policy.apps.ocp4.example.com | grep Hello
+    <h1>Hello, world from nginx!</h1>
+[student@workstation ~]$ oc new-project network-test
+Now using project "network-test" on server "https://api.ocp4.example.com:6443".
+
+You can add applications to this project with the 'new-app' command. For example, try:
+
+    oc new-app ruby~https://github.com/sclorg/ruby-ex.git
+
+to build a new example application in Ruby. Or use kubectl to deploy a simple Kubernetes application:
+
+    kubectl create deployment hello-node --image=gcr.io/hello-minikube-zero-install/hello-node
+
+[student@workstation ~]$ oc new-app --name sample-app --docker-image quay.io/redhattraining/hello-world-nginx:v1.0
+--> Found container image 44eaa13 (23 months old) from quay.io for "quay.io/redhattraining/hello-world-nginx:v1.0"
+
+    Red Hat Universal Base Image 8 
+    ------------------------------ 
+    The Universal Base Image is designed and engineered to be the base layer for all of your containerized applications, middleware and utilities. This base image is freely redistributable, but Red Hat only supports Red Hat technologies through subscriptions for Red Hat products. This image is maintained by Red Hat and updated regularly.
+
+    Tags: base rhel8
+
+    * An image stream tag will be created as "sample-app:v1.0" that will track this image
+
+--> Creating resources ...
+    imagestream.image.openshift.io "sample-app" created
+    deployment.apps "sample-app" created
+    service "sample-app" created
+--> Success
+    Application is not exposed. You can expose services to the outside world by executing one or more of the commands below:
+     'oc expose svc/sample-app' 
+    Run 'oc status' to view your app.
+[student@workstation ~]$ ~/DO280/labs/network-policy/display-project-info.sh
+===================================================================
+PROJECT: network-policy
+
+POD NAME                 IP ADDRESS
+hello-6c4984d949-mrlvr   10.10.0.36
+test-c4d74c9d5-9dqlr     10.10.0.37
+
+SERVICE NAME   CLUSTER-IP
+hello          172.30.5.180
+test           172.30.245.80
+
+ROUTE NAME   HOSTNAME                                     PORT
+hello        hello-network-policy.apps.ocp4.example.com   8080-tcp
+
+===================================================================
+PROJECT: network-test
+
+POD NAME
+sample-app-d5f945-5wj29
+
+===================================================================
+[student@workstation ~]$ oc rsh sample-app-d5f945-5wj29 curl 10.10.0.36:8080 | grep Hello
+    <h1>Hello, world from nginx!</h1>
+[student@workstation ~]$ oc project network-policy
+Now using project "network-policy" on server "https://api.ocp4.example.com:6443".
+[student@workstation ~]$ cd ~/DO280/labs/network-policy/
+[student@workstation network-policy]$ vi deny-all.yaml 
+[student@workstation network-policy]$ oc create -f deny-all.yaml
+networkpolicy.networking.k8s.io/deny-all created
+[student@workstation network-policy]$ curl -s hello-network-policy.apps.ocp4.example.com | grep Hello
+^C
+[student@workstation network-policy]$ oc rsh test-c4d74c9d5-9dqlr curl 10.10.0.36:8080 | grep Hello
+command terminated with exit code 130
+[student@workstation network-policy]$ oc project network-test
+Now using project "network-test" on server "https://api.ocp4.example.com:6443".
+[student@workstation network-policy]$ oc rsh sample-app-d5f945-5wj29 curl 10.10.0.36:8080 | grep Hello
+command terminated with exit code 130
+[student@workstation network-policy]$ vi allow-specific.yaml 
+[student@workstation network-policy]$ at allow-specific.yaml 
+syntax error. Last token seen: a
+Garbled time
+[student@workstation network-policy]$ cat allow-specific.yaml 
+kind: NetworkPolicy
+apiVersion: networking.k8s.io/v1
+metadata:
+  name: allow-specific
+spec:
+  podSelector:
+    matchLabels:
+      deployment: hello
+  ingress:
+    - from:
+      - namespaceSelector:
+          matchLabels:
+            name: network-test
+        podSelector:
+          matchLabels:
+            deployment: sample-app
+      ports:
+      - port: 8080
+        protocol: TCP
+[student@workstation network-policy]$ oc create -n network-policy -f allow-specific.yaml 
+networkpolicy.networking.k8s.io/allow-specific created
+[student@workstation network-policy]$ oc get networkpolicies -n network-policy
+NAME             POD-SELECTOR       AGE
+allow-specific   deployment=hello   12s
+deny-all         <none>             5m5s
+[student@workstation network-policy]$ oc login -u admin -p redhat
+Login successful.
+
+You have access to 61 projects, the list has been suppressed. You can list all projects with 'oc projects'
+
+Using project "network-test".
+[student@workstation network-policy]$ oc label namespace network-test name=network-test
+namespace/network-test labeled
+[student@workstation network-policy]$ oc rsh sample-app-d5f945-5wj29 curl 10.10.0.36:8080 | grep Hello
+    <h1>Hello, world from nginx!</h1>
+[student@workstation network-policy]$ oc rsh sample-app-d5f945-5wj29 curl 10.10.0.36:8181 | grep Hello
+command terminated with exit code 130
+[student@workstation network-policy]$ oc rsh sample-app-d5f945-5wj29 curl 10.10.0.37:8181 | grep Hello
+command terminated with exit code 130
+[student@workstation network-policy]$ vim ~/DO280/solutions/network-policy/allow-from-openshift-ingress.yaml
+[student@workstation network-policy]$ oc create -n network-policy -f allow-from-openshift-ingress.yam
+error: the path "allow-from-openshift-ingress.yam" does not exist
+[student@workstation network-policy]$ oc create -n network-policy -f allow-from-openshift-ingress.yaml
+Error from server (BadRequest): error when creating "allow-from-openshift-ingress.yaml": NetworkPolicy in version "v1" cannot be handled as a NetworkPolicy: v1.NetworkPolicy.Spec: v1.NetworkPolicySpec.Ingress: []v1.NetworkPolicyIngressRule: v1.NetworkPolicyIngressRule.From: []v1.NetworkPolicyPeer: v1.NetworkPolicyPeer.NamespaceSelector: v1.LabelSelector.MatchLabels: ReadMapCB: expect { or n, but found ", error found in #10 byte of ...|hLabels":"CHANGE_ME"|..., bigger context ...|s":[{"from":[{"namespaceSelector":{"matchLabels":"CHANGE_ME"}}]}],"podSelector":"CHANGE_ME"}}
+|...
+[student@workstation network-policy]$ vim ~/DO280/solutions/network-policy/allow-from-openshift-ingress.yaml
+[student@workstation network-policy]$ vi ~/DO280/solutions/network-policy/allow-from-openshift-ingress.yaml
+[student@workstation network-policy]$ pwd
+/home/student/DO280/labs/network-policy
+[student@workstation network-policy]$ vi allow-from-openshift-ingress.yaml 
+[student@workstation network-policy]$ oc create -n network-policy -f allow-from-openshift-ingress.yaml
+networkpolicy.networking.k8s.io/allow-from-openshift-ingress created
+[student@workstation network-policy]$ oc get networkpolicies -n network-policy
+NAME                           POD-SELECTOR       AGE
+allow-from-openshift-ingress   <none>             16s
+allow-specific                 deployment=hello   7m36s
+deny-all                       <none>             12m
+[student@workstation network-policy]$ oc login -u admin -p redhat
+Login successful.
+
+You have access to 61 projects, the list has been suppressed. You can list all projects with 'oc projects'
+
+Using project "network-test".
+[student@workstation network-policy]$ oc label namespace default network.openshift.io/policy-group=ingress
+namespace/default labeled
+[student@workstation network-policy]$ curl -s hello-network-policy.apps.ocp4.example.com | grep Hello
+[student@workstation network-policy]$ curl -s hello-network-policy.apps.ocp4.example.com | grep Hello
+[student@workstation network-policy]$ cd
+[student@workstation ~]$ lab network-policy finish
+
+Completing Guided Exercise: Configuring Network Policies
+
+ · Delete OpenShift project 'network-policy'...................  SUCCESS
+ · Wait for project 'network-policy' to be gone................  SUCCESS
+ · Delete OpenShift project 'network-test'.....................  SUCCESS
+ · Wait for project 'network-test' to be gone..................  SUCCESS
+ · Remove network.openshift.io/policy-group=ingress label from 
+   the default project.........................................  SUCCESS
+ · Remove exercise files.......................................  SUCCESS
+ · Remove solution files.......................................  SUCCESS
+
+Please use start if you wish to do the exercise again.
+
+[student@workstation ~]$ 
+
