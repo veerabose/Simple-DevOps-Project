@@ -1225,3 +1225,108 @@ certificates, and insecure routes forward traffic over an unencrypted connection
 Secure routes support three modes: edge, passthrough, and re-encryption.
 • Network policies control network traffic to pods. Logical zones can be created in the SDN to
 segregate traffic among pods in any namespace.
+------------------------------------------------------------------------------------------------------------------------
+--------------------------------------CH13-Controlling Pod Scheduling Behavior------------------------------------
+Introducing the OpenShift Scheduler Algorithm
+The pod scheduler determines placement of new pods onto nodes in the OpenShift cluster. It is
+designed to be highly configurable and adaptable to different clusters. The default configuration
+shipped with Red Hat OpenShift Container Platform supports the common data center concepts
+of zones and regions by using node labels, affinity rules, and anti-affinity rules.
+
+1. Filtering nodes.
+The scheduler filters the list of running nodes by evaluating each node against a set of
+predicates, such as the availability of host ports, or whether a pod can be scheduled to a node
+experiencing either disk or memory pressure.
+Additionally, a pod can define a node selector that matches the labels in the cluster nodes.
+Nodes whose labels do not match are not eligible.
+
+2. Prioritizing the filtered list of nodes.
+The list of candidate nodes is evaluated using multiple priority criteria that add up to a
+weighted score. Nodes with higher values are better candidates to run the pod.
+Among the criteria are affinity and anti-affinity rules. Nodes with higher affinity for
+the pod have a higher score, and nodes with higher anti-affinity have a lower score.
+
+3. Selecting the best fit node.
+The candidate list is sorted based on these scores, and the node with the highest score is
+selected to host the pod. If multiple nodes have the same high score, then one is selected in a
+round-robin fashion.
+
+Labeling Nodes
+----------------
+As an OpenShift cluster administrator, you can add additional labels to your nodes. For example,
+you might label nodes with the env label using the values of dev, qa, or prod with the intent that
+development, quality assurance, and production workloads will be deployed to a specific subset
+of nodes. The labels you choose are arbitrary, but you must publish the labels and their associated
+values to your developers so that they can configure their applications appropriately.
+
+Use the oc label command as a cluster administrator to immediately add, update, or remove a
+node label. For example, use the following command to label a node with env=dev:
+
+[user@demo ~]$ oc label node node1.us-west-1.compute.internal env=dev
+
+Use the --overwrite option to change an existing label.
+
+[user@demo ~]$ oc label node node1.us-west-1.compute.internal env=prod --overwrite
+
+Remove a label by specifying the label name followed by a hyphen, such as env-.
+
+[user@demo ~]$ oc label node node1.us-west-1.compute.internal env-
+
+[user@demo ~]$ oc get node node2.us-west-1.compute.internal --show-labels
+
+[user@demo ~]$ oc get node -L failure-domain.beta.kubernetes.io/region
+
+[user@demo ~]$ oc get node -L failure-domain.beta.kubernetes.io/region -L failure-domain.beta.kubernetes.io/zone -L env
+
+Labeling Machine Sets
+---------------------
+Although node labels are persistent, if your OpenShift cluster contains machine sets, then you
+should also add labels to the machine set configuration. This ensures that new machines (and the
+nodes generated from them) will also contain the desired labels. Machine sets are found in clusters
+
+[user@demo ~]$ oc get machines -n openshift-machine-api -o wide
+
+[user@demo ~]$ oc get machineset -n openshift-machine-api
+
+[user@demo ~]$ oc edit machineset ocp-qz7hf-worker-us-west-1b -n openshift-machine-api
+
+Controlling Pod Placement
+-----------------------------
+Many infrastructure-related pods in an OpenShift cluster are configured to run on control
+plane nodes. Examples include pods for the DNS operator, the OAuth operator, and the
+OpenShift API server. In some cases, this is accomplished by using the node selector node-
+role.kubernetes.io/master: '' in the configuration of a daemon set or a replica set.
+
+Whether using the oc edit command or the oc patch command, the change triggers a new
+deployment and the new pods are scheduled according to the node selector.
+
+Configuring a Node Selector for a Project
+------------------------------------------
+If the cluster administrator does not want developers controlling the node selector for their pods,
+then a default node selector should be configured in the project resource. A cluster administrator
+can either define a node selector when a project is created, or can add or update a node selector
+after a project is created. Use the oc adm new-project command to add the node selector at
+project creation. For example, the following command creates a new project named demo, where
+all pods will be deployed to nodes that have the label of tier=1.
+
+[user@demo ~]$ oc adm new-project demo --node-selector "tier=1"
+
+Scaling the Number of Pod Replicas
+----------------------------------
+Although most deployment and deployment configuration resources start with creating a single
+pod, the number of replicas (or copies) of a pod is frequently increased. This is accomplished by
+scaling the deployment or deployment configuration. Multiple methods for scaling will be covered
+later, but one method uses the oc scale command. For example, the number of pods in the
+myapp deployment can be scaled to three using the following command:
+
+[user@demo ~]$ oc scale --replicas 3 deployment/myapp
+
+-------------------CH13-GE-Controlling Pod Scheduling Behavior-----------------------------------------------------
+In this exercise, you will configure an application to run on a subset of the cluster worker
+nodes.
+Outcomes
+You should be able to use the OpenShift command-line interface to:
+• Add a new label to a node.
+• Deploy pods to nodes that match a specified label.
+• Remove a label from a node.
+• Troubleshoot when pods fail to deploy to a node.
