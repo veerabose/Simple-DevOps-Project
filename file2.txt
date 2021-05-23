@@ -1330,3 +1330,255 @@ You should be able to use the OpenShift command-line interface to:
 • Deploy pods to nodes that match a specified label.
 • Remove a label from a node.
 • Troubleshoot when pods fail to deploy to a node.
+
+[student@workstation ~]$ lab schedule-pods start
+
+Checking prerequisites for Guided Exercise: Controlling Pod Scheduling Behavior
+
+ Verify the OpenShift cluster is running:
+ · Router pods are available...................................  SUCCESS
+ · OAuth pods are available....................................  SUCCESS
+ · API pods are available......................................  SUCCESS
+ · Control plane node 'master01' is ready......................  SUCCESS
+ · Control plane node 'master02' is ready......................  SUCCESS
+ · Control plane node 'master03' is ready......................  SUCCESS
+
+ Checking for conflicts with existing OpenShift projects:
+ · The 'schedule-pods' project is absent.......................  SUCCESS
+ · The 'schedule-pods-ts' project is absent....................  SUCCESS
+
+Setting up the classroom for Guided Exercise: Controlling Pod Scheduling Behavior
+
+ · Validate 'admin' can log in with password 'redhat'..........  SUCCESS
+ · Validate 'leader' can log in with password 'redhat'.........  SUCCESS
+ · Validate 'developer' can log in with password 'developer'...  SUCCESS
+
+ Preparing the student's cluster:
+ · Download exercise files.....................................  SUCCESS
+ · Download solution files.....................................  SUCCESS
+ · Label the first worker node with 'client=ACME'..............  SUCCESS
+ · Create project 'schedule-pods-ts' for troubleshooting.......  SUCCESS
+ · Assign 'edit' role to 'developer' on 'schedule-pods-ts'.....  SUCCESS
+ · Deploy 'hello-ts' application to 'schedule-pods-ts'.........  SUCCESS
+
+Overall start status...........................................  SUCCESS
+
+[student@workstation ~]$ oc login -u developer -p developer https://api.ocp4.example.com:6443
+Login successful.
+
+You have access to the following projects and can switch between them with 'oc project <projectname>':
+
+  * network-review
+    schedule-pods-ts
+
+Using project "network-review".
+[student@workstation ~]$ oc new-project schedule-pods
+Now using project "schedule-pods" on server "https://api.ocp4.example.com:6443".
+
+You can add applications to this project with the 'new-app' command. For example, try:
+
+    oc new-app ruby~https://github.com/sclorg/ruby-ex.git
+
+to build a new example application in Ruby. Or use kubectl to deploy a simple Kubernetes application:
+
+    kubectl create deployment hello-node --image=gcr.io/hello-minikube-zero-install/hello-node
+
+[student@workstation ~]$ oc new-app --name hello --docker-image quay.io/redhattraining/hello-world-nginx:v1.0
+--> Found container image 44eaa13 (23 months old) from quay.io for "quay.io/redhattraining/hello-world-nginx:v1.0"
+
+    Red Hat Universal Base Image 8 
+    ------------------------------ 
+    The Universal Base Image is designed and engineered to be the base layer for all of your containerized applications, middleware and utilities. This base image is freely redistributable, but Red Hat only supports Red Hat technologies through subscriptions for Red Hat products. This image is maintained by Red Hat and updated regularly.
+
+    Tags: base rhel8
+
+    * An image stream tag will be created as "hello:v1.0" that will track this image
+
+--> Creating resources ...
+    imagestream.image.openshift.io "hello" created
+    deployment.apps "hello" created
+    service "hello" created
+--> Success
+    Application is not exposed. You can expose services to the outside world by executing one or more of the commands below:
+     'oc expose svc/hello' 
+    Run 'oc status' to view your app.
+[student@workstation ~]$
+
+
+[student@workstation ~]$ oc get all
+NAME                         READY   STATUS    RESTARTS   AGE
+pod/hello-6c4984d949-qmmxg   1/1     Running   0          21s
+
+NAME            TYPE        CLUSTER-IP       EXTERNAL-IP   PORT(S)    AGE
+service/hello   ClusterIP   172.30.244.195   <none>        8080/TCP   22s
+
+NAME                    READY   UP-TO-DATE   AVAILABLE   AGE
+deployment.apps/hello   1/1     1            1           22s
+
+NAME                               DESIRED   CURRENT   READY   AGE
+replicaset.apps/hello-546fb597f8   0         0         0       22s
+replicaset.apps/hello-6c4984d949   1         1         1       21s
+
+NAME                                   IMAGE REPOSITORY                                                       TAGS   UPDATED
+imagestream.image.openshift.io/hello   image-registry.openshift-image-registry.svc:5000/schedule-pods/hello   v1.0   22 seconds ago
+[student@workstation ~]$ oc expose svc/hello
+route.route.openshift.io/hello exposed
+[student@workstation ~]$ oc scale --replicas 4 deployment/hello
+deployment.apps/hello scaled
+[student@workstation ~]$ oc get pods -o wide
+NAME                     READY   STATUS    RESTARTS   AGE   IP           NODE       NOMINATED NODE   READINESS GATES
+hello-6c4984d949-5jslv   1/1     Running   0          8s    10.9.0.39    master03   <none>           <none>
+hello-6c4984d949-8s787   1/1     Running   0          8s    10.8.0.18    master02   <none>           <none>
+hello-6c4984d949-pmcwh   1/1     Running   0          8s    10.10.0.37   master01   <none>           <none>
+hello-6c4984d949-qmmxg   1/1     Running   0          47s   10.8.0.17    master02   <none>           <none>
+[student@workstation ~]$ oc login -u admin -p redhat
+Login successful.
+
+You have access to 62 projects, the list has been suppressed. You can list all projects with 'oc projects'
+
+Using project "schedule-pods".
+[student@workstation ~]$ oc get nodes -L env
+NAME       STATUS   ROLES           AGE    VERSION           ENV
+master01   Ready    master,worker   290d   v1.18.3+012b3ec   dev
+master02   Ready    master,worker   290d   v1.18.3+012b3ec   prod
+master03   Ready    master,worker   290d   v1.18.3+012b3ec   
+[student@workstation ~]$ oc label node master01 env=dev
+error: 'env' already has a value (dev), and --overwrite is false
+[student@workstation ~]$ oc label node master02 env=prod
+error: 'env' already has a value (prod), and --overwrite is false
+[student@workstation ~]$ oc get nodes -L env
+NAME       STATUS   ROLES           AGE    VERSION           ENV
+master01   Ready    master,worker   290d   v1.18.3+012b3ec   dev
+master02   Ready    master,worker   290d   v1.18.3+012b3ec   prod
+master03   Ready    master,worker   290d   v1.18.3+012b3ec   
+[student@workstation ~]$ oc login -u developer -p developer
+Login successful.
+
+You have access to the following projects and can switch between them with 'oc project <projectname>':
+
+    network-review
+  * schedule-pods
+    schedule-pods-ts
+
+Using project "schedule-pods".
+[student@workstation ~]$ oc edit deployment/hello
+deployment.apps/hello edited
+
+Modify the deployment resource for the hello application to select a development
+node. Make sure to add the node selector the spec group in the template section.
+[student@workstation ~]$ oc edit deployment/hello
+
+Add the highlighted lines below to the deployment resource, indenting as shown.
+
+...output omitted...
+terminationMessagePath: /dev/termination-log
+terminationMessagePolicy: File
+dnsPolicy: ClusterFirst
+nodeSelector:
+env: dev
+restartPolicy: Always
+...output omitted...
+The following output from oc edit is displayed after you save your changes.
+deployment.apps/hello edited
+
+[student@workstation ~]$ oc get pods -o wide
+NAME                    READY   STATUS    RESTARTS   AGE   IP           NODE       NOMINATED NODE   READINESS GATES
+hello-b556ccf8b-5rk68   1/1     Running   0          11s   10.10.0.40   master01   <none>           <none>
+hello-b556ccf8b-9v7q2   1/1     Running   0          10s   10.10.0.41   master01   <none>           <none>
+hello-b556ccf8b-dvkg5   1/1     Running   0          14s   10.10.0.38   master01   <none>           <none>
+hello-b556ccf8b-sx6p4   1/1     Running   0          14s   10.10.0.39   master01   <none>           <none>
+[student@workstation ~]$ oc delete project schedule-pods
+project.project.openshift.io "schedule-pods" deleted
+[student@workstation ~]$ oc login -u admin -p redhat
+Login successful.
+
+You have access to 62 projects, the list has been suppressed. You can list all projects with 'oc projects'
+
+Using project "schedule-pods".
+[student@workstation ~]$ oc label node -l env env-
+node/master01 labeled
+node/master02 labeled
+[student@workstation ~]$ oc login -u developer -p developer
+Login successful.
+
+You have access to the following projects and can switch between them with 'oc project <projectname>':
+
+  * network-review
+    schedule-pods-ts
+
+Using project "network-review".
+[student@workstation ~]$ oc project schedule-pods-ts
+Now using project "schedule-pods-ts" on server "https://api.ocp4.example.com:6443".
+[student@workstation ~]$ oc get pods
+NAME                        READY   STATUS    RESTARTS   AGE
+hello-ts-6bc96f8664-rb8xf   0/1     Pending   0          13m
+[student@workstation ~]$ oc describe pod hello-ts-6bc96f8664-rb8xf 
+Name:           hello-ts-6bc96f8664-rb8xf
+Namespace:      schedule-pods-ts
+Priority:       0
+Node:           <none>
+Labels:         app=hello-ts
+                pod-template-hash=6bc96f8664
+Annotations:    openshift.io/scc: restricted
+Status:         Pending
+IP:             
+IPs:            <none>
+Controlled By:  ReplicaSet/hello-ts-6bc96f8664
+Containers:
+  hello-world-nginx:
+    Image:        quay.io/redhattraining/hello-world-nginx:v1.0
+    Port:         <none>
+    Host Port:    <none>
+    Environment:  <none>
+    Mounts:
+      /var/run/secrets/kubernetes.io/serviceaccount from default-token-mbm44 (ro)
+Conditions:
+  Type           Status
+  PodScheduled   False 
+Volumes:
+  default-token-mbm44:
+    Type:        Secret (a volume populated by a Secret)
+    SecretName:  default-token-mbm44
+    Optional:    false
+QoS Class:       BestEffort
+Node-Selectors:  client=acme
+Tolerations:     node.kubernetes.io/not-ready:NoExecute for 300s
+                 node.kubernetes.io/unreachable:NoExecute for 300s
+Events:
+  Type     Reason            Age                 From               Message
+  ----     ------            ----                ----               -------
+  Warning  FailedScheduling  48s (x24 over 14m)  default-scheduler  0/3 nodes are available: 3 node(s) didn't match node selector.
+[student@workstation ~]$ oc edit deployment/hello-ts
+deployment.apps/hello-ts edited
+
+Based on this information, the pod should be scheduled to a node with the label
+client=acme, but none of the three nodes have this label. The information provided
+indicates that at least one worker node has the label client=ACME. You have found
+the problem. The application must be modified so that it uses the correct node
+selector.
+
+[student@workstation ~]$ oc edit deployment/hello-ts
+Change acme to ACME as shown below.
+...output omitted...
+dnsPolicy: ClusterFirst
+nodeSelector:
+client: ACME
+restartPolicy: Always
+...output omitted...
+
+[student@workstation ~]$ oc get pods
+NAME                        READY   STATUS    RESTARTS   AGE
+hello-ts-7b66d48c8d-x99qv   1/1     Running   0          13s
+[student@workstation ~]$ lab schedule-pods finish
+
+Completing Guided Exercise: Controlling Pod Scheduling Behavior
+
+ · Delete OpenShift project 'schedule-pods-ts'.................  SUCCESS
+ · Wait for project 'schedule-pods-ts' to be gone..............  SUCCESS
+ · Remove exercise files.......................................  SUCCESS
+ · Remove solution files.......................................  SUCCESS
+ · Remove 'client' label from worker nodes.....................  SUCCESS
+
+Please use start if you wish to do the exercise again.
+
+[student@workstation ~]$ 
