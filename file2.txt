@@ -1211,3 +1211,17 @@ Grading the student's work for Lab: Configuring OpenShift Networking for Applica
 Overall exercise grade.........................................  PASS
 
 [student@workstation ~]$ 
+
+Summary
+In this chapter, you learned:
+• OpenShift implements a software-defined networking (SDN) to manage the network
+infrastructure of the cluster. SDN decouples the software that handles the traffic from the
+underlying mechanisms that route the traffic.
+• Kubernetes provides services that allow the logical grouping of pods under a common access
+route. Services act as load balancers in front of one or more pods.
+• Services use selectors (labels) that indicate which pods available to the service.
+• There are two kind of routes: secure, and insecure. Secure routes encrypt the traffic using TLS
+certificates, and insecure routes forward traffic over an unencrypted connection.
+Secure routes support three modes: edge, passthrough, and re-encryption.
+• Network policies control network traffic to pods. Logical zones can be created in the SDN to
+segregate traffic among pods in any namespace.
