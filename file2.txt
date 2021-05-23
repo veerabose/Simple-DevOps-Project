@@ -834,3 +834,12 @@ Please use start if you wish to do the exercise again.
 
 [student@workstation ~]$ 
 
+------------------------------Ch-12-Lab-Configuring OpenShift Networking for Applications------------------------------------
+In this lab, you will configure a TLS passthrough route for your application.
+Outcomes
+You should be able to:
+• Deploy an application and configure an insecure route.
+• Restrict traffic to the applications.
+• Generate a TLS certificate for an application.
+• Configure a passthrough route for an application with a TLS certificate.
+
