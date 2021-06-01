@@ -1,5 +1,11 @@
 -------------------------CH-12-Exposing Applications for External Access----------------------------------
-
+Started by user admin
+Running as SYSTEM
+Building in workspace /var/lib/jenkins/workspace/1st job
+[1st job] $ /bin/sh -xe /tmp/jenkins7217043844649160385.sh
++ id jenkins
+uid=123(jenkins) gid=127(jenkins) groups=127(jenkins)
+Finished: SUCCESS
 Accessing Application from External Networks
 
 OpenShift Container Platform offers many ways to expose your applications to external networks.
