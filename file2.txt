@@ -1,6 +1,8 @@
 -------------------------CH-12-Exposing Applications for External Access----------------------------------
 https://github.com/LableOrg/java-maven-junit-helloworld
 https://github.com/pdurbin/maven-hello-world.git
+https://github.com/jabedhasan21/java-hello-world-with-maven
+
 Started by user admin
 Running as SYSTEM
 Building in workspace /var/lib/jenkins/workspace/1st job
